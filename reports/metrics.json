@@ -1,0 +1,247 @@
+{
+  "01": {
+    "ablations": [
+      {
+        "name": "без крюка",
+        "solvable": false
+      },
+      {
+        "name": "крюк без крепления",
+        "solvable": false
+      }
+    ],
+    "corridor": "мало ложных веток",
+    "deadPct": 38.4,
+    "falseBranches": 0,
+    "grid": "9×7",
+    "id": 1,
+    "length": [
+      2,
+      4
+    ],
+    "minMoves": 15,
+    "monkey": 0.76,
+    "name": "Не той стороной",
+    "note": "ложных веток 0: на 211 состояниях областей ≥ 50 не бывает, ошибки здесь наказываются сразу (слив), а не тихим тупиком",
+    "pressure": 0,
+    "shortest": 3,
+    "shortestWidth": 3,
+    "solvable": true,
+    "states": 211,
+    "target": {
+      "dead": 25,
+      "fb": 1,
+      "moves": [
+        12,
+        30
+      ],
+      "states": 20000
+    },
+    "unstable": 0,
+    "winStates": 1
+  },
+  "02": {
+    "ablations": [
+      {
+        "name": "крючья замурованы",
+        "solvable": false
+      },
+      {
+        "name": "резьба крючьев",
+        "solvable": false
+      }
+    ],
+    "corridor": "ходы вне коридора",
+    "deadPct": 53.5,
+    "falseBranches": 13,
+    "grid": "9×10",
+    "id": 2,
+    "length": [
+      2,
+      4
+    ],
+    "minMoves": 19,
+    "monkey": 0,
+    "name": "Скалолаз",
+    "note": "19 ходов при коридоре 22–38: перебор 384 вариантов не дал 22+ с сохранением ловушек; решает плейтест",
+    "pressure": 0,
+    "shortest": 1,
+    "shortestWidth": 1,
+    "solvable": true,
+    "states": 172,
+    "target": {
+      "dead": 30,
+      "fb": 2,
+      "moves": [
+        22,
+        38
+      ],
+      "states": 50000
+    },
+    "unstable": 0,
+    "winStates": 1
+  },
+  "03": {
+    "ablations": [
+      {
+        "name": "без фаянса",
+        "solvable": false
+      }
+    ],
+    "corridor": "ok",
+    "deadPct": 80.3,
+    "falseBranches": 9,
+    "grid": "11×8",
+    "id": 3,
+    "length": [
+      2,
+      5
+    ],
+    "minMoves": 43,
+    "monkey": 0,
+    "name": "Мыло",
+    "pressure": 0,
+    "shortest": 6,
+    "shortestWidth": 3,
+    "solvable": true,
+    "states": 9040,
+    "target": {
+      "dead": 35,
+      "fb": 2,
+      "moves": [
+        25,
+        45
+      ],
+      "states": 100000
+    },
+    "unstable": 0,
+    "winStates": 1
+  },
+  "04": {
+    "ablations": [
+      {
+        "name": "без деталей",
+        "solvable": false
+      }
+    ],
+    "corridor": "ходы вне коридора",
+    "deadPct": 68.6,
+    "falseBranches": 6,
+    "grid": "11×8",
+    "id": 4,
+    "length": [
+      2,
+      4
+    ],
+    "minMoves": 26,
+    "monkey": 0,
+    "name": "Резьба",
+    "note": "26 ходов при коридоре 30–50: старт перенесён к деталям (25.09), дорога без событий 18 → 10 ходов, ложных веток 2 → 6",
+    "pressure": 0,
+    "shortest": 6,
+    "shortestWidth": 3,
+    "solvable": true,
+    "states": 2700,
+    "target": {
+      "dead": 40,
+      "fb": 2,
+      "moves": [
+        30,
+        50
+      ],
+      "states": 300000
+    },
+    "unstable": 0,
+    "winStates": 1
+  },
+  "05": {
+    "ablations": [
+      {
+        "name": "без заглушки",
+        "solvable": false
+      },
+      {
+        "name": "тройник заглушён заранее",
+        "solvable": false
+      },
+      {
+        "name": "ступенька запрещена",
+        "solvable": false
+      }
+    ],
+    "corridor": "ok",
+    "deadPct": 41.7,
+    "falseBranches": 1,
+    "grid": "9×7",
+    "id": 5,
+    "length": [
+      2,
+      4
+    ],
+    "minMoves": 15,
+    "monkey": 0.05,
+    "name": "Лишний выход",
+    "note": "минимальная раскладка 9×7: 15 ходов вместо коридора 35–60 — по решению Lao красота важнее длины; идея §6 доказана абляцией «ступенька запрещена»",
+    "pressure": 0,
+    "shortest": 1,
+    "shortestWidth": 1,
+    "solvable": true,
+    "states": 1682,
+    "target": {
+      "dead": 35,
+      "fb": 1,
+      "moves": [
+        12,
+        40
+      ],
+      "states": 100000
+    },
+    "unstable": 0,
+    "winStates": 1
+  },
+  "06": {
+    "ablations": [
+      {
+        "name": "без ниппеля",
+        "solvable": false
+      },
+      {
+        "name": "кран запрещён",
+        "solvable": false
+      },
+      {
+        "name": "деталь не падает",
+        "solvable": false
+      }
+    ],
+    "corridor": "ok",
+    "deadPct": 70.8,
+    "falseBranches": 9,
+    "grid": "8×7",
+    "id": 6,
+    "length": [
+      3,
+      5
+    ],
+    "minMoves": 17,
+    "monkey": 0,
+    "name": "Намертво",
+    "note": "минимальная раскладка 8×7: 17 ходов вместо коридора 40–70 — красота важнее длины, как в кв. 1 и 5; теорема «он сам себе кран» доказана абляциями «кран запрещён» и «деталь не падает»",
+    "pressure": 0,
+    "shortest": 4,
+    "shortestWidth": 3,
+    "solvable": true,
+    "states": 3258,
+    "target": {
+      "dead": 50,
+      "fb": 3,
+      "moves": [
+        12,
+        40
+      ],
+      "states": 1000000
+    },
+    "unstable": 0,
+    "winStates": 1
+  }
+}

@@ -1,0 +1,553 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""art/screens2.py — все макеты в утверждённом стиле (стиль-кадр gen2): три квартиры, элементы, экраны."""
+import json, math, os, random, subprocess, sys, traceback
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import gen
+from gen import n, R, C, E, Ln, Pg, Pa, G, T, dd, wrap, TILE, HAND
+import gen2
+from gen2 import (Q, frame, headL, heelL, hero, source2, stub2, port2, bath2, toilet2, sink2, porcelain2, fitting2, drain2, defs2,
+                  button2, fluff2)
+
+OUT = os.path.join(gen2.ROOT, 'build', 'review2')
+_IDS = [str(i) for i in range(1, 11) if os.path.exists(os.path.join(gen2.ROOT, 'levels', '%02d.lua' % i))]
+L = json.loads(subprocess.check_output(['luajit', 'tools/dumplevels.lua'] + _IDS, cwd=gen2.ROOT).decode('utf-8'))
+for lv in L:
+    for ob in lv['objects']:
+        if ob['kind'] == 'lapidus' and ob.get('head') == 1 and len(ob['cells']) > 1:
+            ob['cells'] = list(reversed(ob['cells']))
+INK, O = '#23304E', Q['ol']
+
+
+def tile_pat(pid, c, tile):
+    base, grout, hi = TILE[tile]
+    h = c / 2
+    return ('<pattern id="%s" patternUnits="userSpaceOnUse" width="%s" height="%s">' % (pid, n(h), n(h)) + R(0, 0, h, h, grout)
+            + R(c * .022, c * .022, h - c * .044, h - c * .044, base, rx=c * .05) + Ln(c * .07, c * .07, h - c * .13, c * .07, hi, c * .03, opacity='.9') + '</pattern>')
+
+
+BASE = defs2(120, 0, 0, 'mint') + tile_pat('tpM', 120, 'mint') + tile_pat('tpB', 120, 'blue') + tile_pat('tpY', 120, 'mustard')
+
+
+def render(name, body, extra, w=1920, h=1080):
+    p = os.path.join(OUT, name + '.svg')
+    with open(p, 'w', encoding='utf-8') as f:
+        f.write('<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="%d" height="%d" viewBox="0 0 %d %d"><defs>%s%s</defs>%s</svg>'
+                % (w, h, w, h, gen.DEFS, extra, body))
+    subprocess.run(['rsvg-convert', '-w', str(w), '-h', str(h), '-o', os.path.join(OUT, name + '.png'), p], check=True)
+
+
+def plate(x, y, w, h, body=''):
+    return G(R(x, y, w, h, Q['plate'], rx=16, stroke='#8E6819', stroke_width=4) + R(x + 7, y + 7, w - 14, h - 14, 'none', rx=11, stroke='#C99A2E', stroke_width=1.5, opacity='.5')
+             + ''.join(C(px, py, 5, '#8E8A80') for px in (x + 16, x + w - 16) for py in (y + 16, y + h - 16)) + body, filter='url(#dsh)')
+
+
+def toast2(msg):
+    w = 90 + len(msg) * 18
+    return plate(960 - w / 2, 956, w, 84, T(960, 1011, msg, 40, Q['cream'], anchor='middle'))
+
+
+def level(i, moves=0, active='head', overlay=''):
+    body, extra, _ = frame(L[i], moves, active)
+    return body + overlay, extra
+
+
+# ---------------------------------------------------------------- экраны поверх квартир
+
+def request2():
+    body, extra = level(0)
+    note = [R(610, 300, 700, 430, '#FBFAF4', rx=6)]
+    note += [Ln(610, 300 + i * 34, 1310, 300 + i * 34, '#C4D6EC', 1.5) for i in range(1, 13)]
+    note += [Ln(610 + i * 34, 300, 610 + i * 34, 730, '#C4D6EC', 1.5) for i in range(1, 21)]
+    note.append(Ln(690, 300, 690, 730, '#E28A8A', 2.5))
+    note += [T(720, 420 + i * 82, ln, 64, '#1D3A8F', font=HAND) for i, ln in enumerate(wrap(L[0]['texts']['request'], 22))]
+    note.append(T(1270, 700, '— жилец кв. 1', 40, '#1D3A8F', font=HAND, anchor='end'))
+    note.append(R(890, 282, 140, 46, '#E9DFB8', opacity='.9', transform='rotate(-4 960 305)'))
+    over = (R(0, 0, 1920, 1080, '#000000', opacity='.55') + G(''.join(note), filter='url(#dsh)', transform='rotate(-2 960 515)')
+            + T(960, 250, 'ЗАЯВКА', 46, Q['cream'], weight='bold', anchor='middle', letter_spacing='6') + T(960, 822, 'любая клавиша — к работе', 32, '#F6DB8A', anchor='middle'))
+    return body + over, extra
+
+
+def hint2():
+    body, extra = level(1, moves=7)
+    x0, y0, w, h = 330, 690, 1260, 360
+    hx, hy = x0 + 80, y0 + 94
+    inner = [Pa(dd('M', hx - 22, hy - 34, 'Q', hx - 48, hy, hx - 22, hy + 34), stroke=O, stroke_width=26, stroke_linecap='round'),
+             Pa(dd('M', hx - 22, hy - 34, 'Q', hx - 48, hy, hx - 22, hy + 34), stroke='#D1A238', stroke_width=16, stroke_linecap='round'),
+             R(hx - 38, hy - 56, 36, 26, 'url(#cylG)', rx=9, stroke=O, stroke_width=3, transform='rotate(-28 %s %s)' % (n(hx - 20), n(hy - 43))),
+             R(hx - 38, hy + 30, 36, 26, 'url(#cylG)', rx=9, stroke=O, stroke_width=3, transform='rotate(28 %s %s)' % (n(hx - 20), n(hy + 43))),
+             T(x0 + 150, y0 + 70, 'Горячая линия управляющей компании', 36, '#F6DB8A', weight='bold'),
+             T(x0 + w - 36, y0 + 52, 'ожидание: до окончания работ', 26, '#9FB0B8', anchor='end')]
+    inner += [T(x0 + 150, y0 + 132 + i * 50, ln, 40, Q['cream']) for i, ln in enumerate(wrap(L[1]['texts']['hints'][0], 58))]
+    for i, lab in enumerate(('1 · Суть', '2 · Я в тупике?', '3 · Вызвать мастера')):
+        bx, by = x0 + 150 + i * 354, y0 + 268
+        inner.append(R(bx, by, 330, 64, 'url(#cylG)' if i == 0 else '#3A342D', rx=32, stroke=O if i == 0 else '#8E6819', stroke_width=3))
+        inner.append(T(bx + 165, by + 44, lab, 34, O if i == 0 else Q['cream'], weight='bold', anchor='middle'))
+    return body + R(0, 0, 1920, 1080, '#000000', opacity='.35') + plate(x0, y0, w, h, ''.join(inner)), extra
+
+
+def act2():
+    body, extra = level(0)
+    a = [R(560, 50, 800, 980, '#F3EDDC', rx=6), R(560, 50, 800, 980, '#000000', filter='url(#grain)', opacity='.18'),
+         C(1250, 170, 62, 'none', stroke='#9B6B3A', stroke_width=7, opacity='.25'),
+         T(960, 140, 'АКТ № 1', 66, INK, weight='bold', anchor='middle', letter_spacing='3'), T(960, 190, 'выполненных работ', 40, INK, anchor='middle'), Ln(620, 222, 1300, 222, INK, 2.5)]
+    y = 290
+    for k, v in (('Адрес', 'подъезд 1, квартира 1'), ('Работы', 'вода к прибору «ванна»'), ('Исполнитель', 'гофра самоходная «Лапидус»'),
+                 ('Ходов', '21 при норме 18'), ('Горячая линия', 'не вызывалась'), ('Мастер', 'не вызывался')):
+        a += [T(620, y, k + ':', 34, INK, weight='bold'), T(840, y, v, 40, '#1C3C9A', font=HAND), Ln(836, y + 12, 1300, y + 12, '#9AA4B8', 1.5)]
+        y += 66
+    a += [R(620, 700, 330, 150, 'none', rx=10, stroke=INK, stroke_width=3), T(785, 745, 'РАЗРЯД', 30, INK, weight='bold', anchor='middle', letter_spacing='4'),
+          T(785, 830, '4-й', 84, '#C73E2E', font=HAND, anchor='middle'), T(620, 930, 'Исполнитель ____________', 30, INK),
+          T(790, 922, 'Лапидус', 46, '#1C3C9A', font=HAND, transform='rotate(-6 840 915)'), T(620, 985, 'Жилец ________________', 30, INK)]
+    sx, sy, r = 1150, 845, 118
+    st = (C(sx, sy, r, 'none', stroke='#2B56B8', stroke_width=8) + C(sx, sy, r - 30, 'none', stroke='#2B56B8', stroke_width=3)
+          + '<text font-family="PT Sans Narrow" font-size="25" font-weight="bold" fill="#2B56B8" letter-spacing="2"><textPath href="#ring" xlink:href="#ring">ЖЭУ № 3 · АВАРИЙНО-ДИСПЕТЧЕРСКАЯ СЛУЖБА ·</textPath></text>'
+          + T(sx, sy + 12, 'ВЫПОЛНЕНО', 34, '#2B56B8', weight='bold', anchor='middle'))
+    a.append(G(st, transform='rotate(-14 %d %d)' % (sx, sy), opacity='.86'))
+    over = R(0, 0, 1920, 1080, '#000000', opacity='.62') + G(''.join(a), filter='url(#dsh)', transform='rotate(-1.2 960 540)')
+    for i, lab in enumerate(('Дальше ›', 'Ещё раз')):
+        by = 820 + i * 110
+        over += G(R(1440, by, 380, 84, 'url(#cylG)' if i == 0 else '#2A2622', rx=42, stroke=O if i == 0 else '#8E6819', stroke_width=4)
+                  + T(1630, by + 56, lab, 42, O if i == 0 else Q['cream'], weight='bold', anchor='middle'), filter='url(#dsh)')
+    return body + over, extra + '<path id="ring" d="M %d %d m -104 0 a 104 104 0 1 1 208 0 a 104 104 0 1 1 -208 0"/>' % (sx, sy)
+
+
+def washed2():
+    body, extra, (c, ox, oy) = frame(L[0], 9, 'head', no_lap=True)
+    sw = []
+    for y, row in enumerate(L[0]['grid']):
+        for x, ch in enumerate(row):
+            if ch == '~':
+                dx, dy = ox + (x + .5) * c, oy + (y + .5) * c
+                for k in range(4):
+                    r = c * (.3 + k * .25)
+                    sw.append(Pa(dd('M', dx - r, dy - c * .1, 'A', r, r * .38, 0, 0, 1, dx + r, dy - c * .1), stroke=Q['water'], stroke_width=c * .05, opacity='%.2f' % (.9 - k * .2), stroke_linecap='round'))
+    band = R(0, 420, 1920, 210, 'rgba(12,14,16,0.84)') + T(960, 510, 'Лапидус ушёл в канализацию.', 68, Q['cream'], weight='bold', anchor='middle') + T(960, 585, 'Не навсегда. Отмена — Z.', 48, '#F6DB8A', anchor='middle')
+    return body + ''.join(sw) + band, extra
+
+
+# ---------------------------------------------------------------- меню и хрущёвка
+
+def menu2(items=True):
+    s = [R(0, 0, 1920, 1080, 'url(#bsm)'), R(0, 0, 1920, 1080, '#000000', filter='url(#grain)', opacity='.6')]
+    for row in range(13):
+        for col in range(15):
+            s.append(R(col * 150 + (75 if row % 2 else 0) - 60, 280 + row * 64, 146, 60, 'none', stroke='#000000', stroke_width=2, opacity='.22'))
+    s.append(Pg([(960, 60), (470, 1080), (1450, 1080)], 'url(#bulb)'))
+    s.append(G(R(-10, 136, 1940, 58, 'url(#ironH)', stroke=O, stroke_width=5) + R(-10, 224, 1940, 36, 'url(#ironH)', stroke=O, stroke_width=4)
+               + ''.join(R(xk, 128, 30, 74, 'url(#ironH)', rx=6, stroke=O, stroke_width=4) for xk in (260, 720, 1180, 1640)), filter='url(#dsh)'))
+    s.append(Ln(960, 0, 960, 62, '#1A1A1A', 4) + C(960, 90, 30, '#FFF3C4', stroke=O, stroke_width=4) + C(951, 81, 9, '#FFFFFF', opacity='.9'))
+    s.append(G(R(330, 258, 96, 840, 'url(#ironV)', stroke=O, stroke_width=5) + R(312, 330, 132, 40, 'url(#ironH)', rx=10, stroke=O, stroke_width=4)
+               + R(312, 1010, 132, 40, 'url(#ironH)', rx=10, stroke=O, stroke_width=4), filter='url(#dsh)'))
+    wx, wy, wr = 378, 640, 160
+    wheel = [C(wx, wy, wr, 'none', stroke=O, stroke_width=52), C(wx, wy, wr, 'none', stroke=Q['red'], stroke_width=36),
+             Pa(dd('M', wx - wr * .9, wy - wr * .35, 'A', wr, wr, 0, 0, 1, wx - wr * .2, wy - wr * .98), stroke='#F59A83', stroke_width=10, stroke_linecap='round')]
+    for k in range(6):
+        a = math.pi / 3 * k + .26
+        wheel += [Ln(wx, wy, wx + math.cos(a) * wr, wy + math.sin(a) * wr, O, 32), Ln(wx, wy, wx + math.cos(a) * wr, wy + math.sin(a) * wr, Q['red'], 20)]
+    wheel.append(C(wx, wy, 44, 'url(#cylG)', stroke=O, stroke_width=5))
+    s.append(G(''.join(wheel), filter='url(#dsh)'))
+    s.append(Ln(520, 520, 600, 626, '#8A8A8A', 3))
+    s.append(G(R(560, 620, 260, 104, '#E9DFB8', rx=8, stroke=O, stroke_width=3) + T(690, 664, 'ГЛАВНЫЙ', 34, O, weight='bold', anchor='middle')
+               + T(690, 704, 'ВЕНТИЛЬ ДОМА', 32, O, weight='bold', anchor='middle'), filter='url(#dsh)', transform='rotate(6 690 672)'))
+    s.append(hero([(472, 990), (612, 990), (612, 850), (752, 850)], 140, 2, 5, active='head', ring=False))
+    s.append(gen.logo(522, 300, 1.12))
+    s.append(T(960, 548, 'НИ КАПЛИ', 76, Q['cream'], weight='bold', anchor='middle', letter_spacing='14', stroke=O, stroke_width=3, paint_order='stroke'))
+    for i, it in enumerate(['Продолжить', 'Квартиры', 'Паспорт изделия', 'Настройки', 'Выход'] if items else []):
+        by, sel = 606 + i * 90, i == 0
+        s.append(G(R(1180, by, 540, 74, 'url(#cylG)' if sel else '#2A2622', rx=14, stroke=O if sel else '#8E6819', stroke_width=4)
+                   + C(1200, by + 37, 7, '#C9CFD6', stroke=O, stroke_width=2) + C(1700, by + 37, 7, '#C9CFD6', stroke=O, stroke_width=2)
+                   + T(1450, by + 52, it, 46, O if sel else Q['cream'], weight='bold', anchor='middle'), filter='url(#dsh)'))
+    return ''.join(s), BASE
+
+
+def select2(solved=(1,), opened=(2, 3)):
+    rnd = random.Random(3)
+    s = [R(0, 0, 1920, 1080, 'url(#sky)')]
+    s += [C(rnd.uniform(0, 1920), rnd.uniform(10, 330), rnd.uniform(1, 2.4), '#FFFFFF', opacity='%.2f' % rnd.uniform(.3, .8)) for _ in range(70)]
+    for bx, bw, bh in ((-20, 300, 420), (250, 230, 330), (1400, 250, 380), (1630, 320, 470)):
+        s.append(R(bx, 940 - bh, bw, bh, '#243146'))
+        for wy_ in range(int(940 - bh + 30), 910, 46):
+            for wx_ in range(int(bx + 20), int(bx + bw - 30), 44):
+                if rnd.random() < .22:
+                    s.append(R(wx_, wy_, 22, 26, '#F2C66A', opacity='.75'))
+    s.append(R(0, 940, 1920, 140, '#26241F'))
+    bx0, bx1, top, rx = 560, 1360, 190, 950
+    b = [R(bx0 - 24, top - 36, bx1 - bx0 + 48, 44, '#5E6468', stroke=O, stroke_width=5), R(bx0, top, bx1 - bx0, 940 - top, '#AEB4B7', stroke=O, stroke_width=6),
+         Ln(bx0 + 130, top - 36, bx0 + 130, top - 150, O, 6), Ln(bx0 + 100, top - 120, bx0 + 160, top - 120, O, 5), Ln(bx0 + 110, top - 95, bx0 + 150, top - 95, O, 5)]
+    b += [Ln(bx0, top + k * 150, bx1, top + k * 150, '#80878B', 4) for k in range(1, 5)]
+    b += [R(bx0, 940, bx1 - bx0, 120, '#3B3632', stroke=O, stroke_width=5), T(bx0 + 30, 1012, 'подвал · главный вентиль', 30, '#C9C0AE'),
+          R(rx, top - 10, 20, 1060 - top, 'url(#ironV)', stroke=O, stroke_width=3), R(rx + 4, 940 - ((max(solved) + 1) // 2 if solved else 0) * 150, 12, 120 + ((max(solved) + 1) // 2 if solved else 0) * 150, Q['water'])]
+    fx = {1: (bath2, 'mint'), 2: (toilet2, 'blue'), 3: (sink2, 'mustard'), 4: (gen2.washer2, 'mint'), 5: (gen2.dryer2, 'blue'), 6: (gen2.heater2, 'mustard')}
+    for apt in range(1, 11):
+        fl, left = (apt + 1) // 2, apt % 2 == 1
+        y0, x0, w, h = 940 - fl * 150 + 10, (bx0 + 20 if left else rx + 40), 350, 130
+        if apt in solved:
+            b.append(R(x0, y0, w, h, 'url(#warm)', stroke=O, stroke_width=4))
+        elif apt in opened:
+            b.append(R(x0, y0, w, h, '#33414F', stroke='#C99A2E', stroke_width=7))
+        else:
+            b.append(R(x0, y0, w, h, '#1B2026', stroke=O, stroke_width=4))
+            for k in (-1, 1):
+                b.append(R(x0 + 30, y0 + 50 + k * 22, w - 60, 22, '#6B4A2E', rx=4, stroke=O, stroke_width=2,
+                           transform='rotate(%d %s %s)' % (k * 4, n(x0 + w / 2), n(y0 + 61 + k * 22))))
+        if apt in fx:
+            fn, tl = fx[apt]
+            b.append(R(x0 + 4, y0 + 88, w - 8, 38, TILE[tl][0], opacity='.9' if apt in solved else '.35'))
+            b.append(fn(x0 + w - 90, y0 + 66, 96, apt in solved))
+            if apt == 1:
+                b.append(headL((x0 + 150, y0 + 70), 'right', 70, True, False))
+                b.append(R(x0 + 190, y0 + 16, 92, 34, 'rgba(255,255,255,0.8)', rx=8, stroke=O, stroke_width=2) + T(x0 + 236, y0 + 41, 'акт', 24, INK, weight='bold', anchor='middle'))
+        b.append(R(x0 + 12, y0 + 12, 64, 46, '#1F4E97', rx=8, stroke=O, stroke_width=2) + T(x0 + 44, y0 + 46, str(apt), 32, '#FFFFFF', weight='bold', anchor='middle'))
+    s.append(G(''.join(b), filter='url(#dsh)'))
+    s.append(plate(40, 50, 440, 150, T(70, 122, 'ПОДЪЕЗД 1', 60, Q['cream'], weight='bold', letter_spacing='4') + T(70, 170, 'выберите квартиру', 34, '#C9D3DC')))
+    leg = ''
+    for i, (sw, txt) in enumerate((('url(#warm)', 'горит — акт подписан'), ('#33414F', 'рамка — можно брать'), ('#1B2026', 'доски — пока закрыто'))):
+        leg += R(1440, 330 + i * 80, 64, 46, sw, stroke='#C99A2E' if i == 1 else O, stroke_width=4) + T(1524, 364 + i * 80, txt, 32, Q['cream'])
+    leg += T(1440, 604, 'открыты две нерешённые', 30, '#C9D3DC') + T(1440, 640, 'квартиры сразу', 30, '#C9D3DC')
+    s.append(plate(1410, 290, 480, 380, leg))
+    return ''.join(s), BASE
+
+
+# ---------------------------------------------------------------- паспорт изделия
+
+def pan_moves(px, py):
+    cc, s = 56, []
+    for yy, m, lab in ((py + 152, 4, '+1  растянуться'), (py + 286, 2, '−1  сжаться')):
+        s.append(hero([(px + 70 + i * cc, yy) for i in range(3)], cc, 2, 5, ring=False))
+        s.append(gen.arrow(px + 250, yy, px + 300, yy))
+        s.append(hero([(px + 340 + i * cc, yy) for i in range(m)], cc, 2, 5, ring=False))
+        s.append(T(px + 340, yy - 46, lab, 26, INK, weight='bold'))
+    return ''.join(s)
+
+
+def pan_thread(px, py):
+    cc, s = 64, []
+    for i, (a, b, ok) in enumerate((('N', 'V', True), ('N', 'N', False), ('V', 'V', False))):
+        y, x = py + 128 + i * 80, px + 230
+        s.append(R(x - .5 * cc, y - .2 * cc, .52 * cc, .4 * cc, 'url(#ironH)', stroke=O, stroke_width=2))
+        s.append(R(x + 1.15 * cc - .02 * cc, y - .2 * cc, .52 * cc, .4 * cc, 'url(#ironH)', stroke=O, stroke_width=2))
+        s.append(port2(x, y, cc, 'right', a) + port2(x + 1.15 * cc, y, cc, 'left', b))
+        s.append(T(px + 40, y + 12, {'N': 'Н', 'V': 'В'}[a] + ' + ' + {'N': 'Н', 'V': 'В'}[b], 34, INK, weight='bold'))
+        s.append(gen.mark(px + 470, y, ok))
+    return ''.join(s)
+
+
+def pan_support(px, py):
+    cc, s = 58, []
+    s.append(R(px + 30, py + 250, 70, 70, 'url(#tpM)', rx=14, stroke=O, stroke_width=4) + R(px + 230, py + 250, 70, 70, 'url(#tpM)', rx=14, stroke=O, stroke_width=4))
+    s.append(hero([(px + 108, py + 172), (px + 166, py + 172), (px + 224, py + 172)], cc, 2, 5, ring=False))
+    s.append(gen.arrow(px + 166, py + 210, px + 166, py + 300, '#C0392B') + gen.mark(px + 60, py + 112, False, .8))
+    s.append(R(px + 330, py + 72, 150, 26, 'url(#tpM)', rx=8, stroke=O, stroke_width=3))
+    s.append(stub2(px + 405, py + 128, cc, 'down', 'V', 'up'))
+    s.append(hero([(px + 405, py + 186), (px + 405, py + 244), (px + 405, py + 302)], cc, 2, 5, ring=False, screwed=(True, False)))
+    s.append(gen.mark(px + 490, py + 200, True, .8))
+    return ''.join(s)
+
+
+def pan_drain(px, py):
+    cc, s = 70, []
+    s.append(R(px + 90, py + 255, 150, 64, 'url(#tpM)', rx=12, stroke=O, stroke_width=4) + R(px + 310, py + 255, 150, 64, 'url(#tpM)', rx=12, stroke=O, stroke_width=4))
+    s.append(drain2(px + 275, py + 290, 70, bottom=py + 330))
+    s.append(hero([(px + 275, py + 118), (px + 275, py + 188)], cc, 2, 5, ring=False))
+    s.append(gen.arrow(px + 340, py + 130, px + 340, py + 225, '#C0392B') + T(px + 372, py + 196, '«смыло»', 40, INK, font=HAND) + gen.mark(px + 120, py + 150, False, .9))
+    return ''.join(s)
+
+
+def pan_soap(px, py):
+    cc, s = 64, []
+    y1, y2 = py + 150, py + 280
+    s.append(hero([(px + 250, y1), (px + 186, y1), (px + 122, y1)], cc, 2, 5, active='heel', ring=False))
+    s.append(porcelain2(px + 318, y1, cc) + gen.arrow(px + 362, y1, px + 420, y1) + gen.mark(px + 474, y1, True, .8))
+    s.append(hero([(px + 122, y2), (px + 186, y2), (px + 250, y2)], cc, 2, 5, ring=False))
+    s.append(porcelain2(px + 318, y2, cc) + gen.mark(px + 474, y2, False, .8))
+    s += [C(px + bx, y2 + by, br, '#FFFFFF', stroke=O, stroke_width=2) for bx, by, br in ((290, -34, 9), (300, -16, 6), (282, 6, 7))]
+    s.append(T(px + 30, y1 - 44, 'ноги', 28, INK, weight='bold') + T(px + 30, y2 - 44, 'голова', 28, INK, weight='bold'))
+    return ''.join(s)
+
+
+def pan_goal(px, py):
+    cc, s, y = 64, [], py + 210
+    s.append(source2(px + 64, y, cc, {'right': 'V'}, py + 110, py + 300))
+    s.append(hero([(px + 128, y), (px + 192, y), (px + 256, y), (px + 320, y)], cc, 2, 5, ring=False, wet=True, screwed=(True, True)))
+    s.append(bath2(px + 384, y, cc, True) + port2(px + 384, y - .02 * cc, cc, 'left', 'N', True))
+    s.append(gen.mark(px + 486, py + 110, True) + T(px + 30, py + 330, 'стояк → Лапидус → прибор, ни капли мимо', 26, INK))
+    return ''.join(s)
+
+
+def pan_crane(px, py):
+    """Кв. 6: голова поднимает деталь снизу; лежащее на Лапидусе с ним не едет и падает там, где он его оставил."""
+    cc, s = 46, []
+    nip = {'up': 'N', 'down': 'N'}
+    fl = py + 312
+    s.append(R(px + 24, fl, 236, 22, 'url(#tpY)', rx=6, stroke=O, stroke_width=3) + R(px + 286, fl, 236, 22, 'url(#tpY)', rx=6, stroke=O, stroke_width=3))
+    # слева: голова снизу толкает деталь вверх
+    s.append(hero([(px + 70, fl - 23), (px + 70, fl - 69)], cc, 2, 5, ring=False))
+    s.append(fitting2(px + 70, fl - 115, cc, nip))
+    s.append(gen.arrow(px + 104, fl - 69, px + 156, fl - 69))
+    s.append(hero([(px + 200, fl - 23), (px + 200, fl - 69), (px + 200, fl - 115)], cc, 2, 5, ring=False))
+    s.append(fitting2(px + 200, fl - 161, cc, nip))
+    s.append(gen.arrow(px + 240, fl - 130, px + 240, fl - 188, '#2F8F4E') + gen.mark(px + 236, fl - 228, True, .7))
+    # справа: деталь на спине остаётся, Лапидус уезжает — деталь падает на месте
+    y1 = fl - 170
+    s.append(hero([(px + 318, y1), (px + 364, y1), (px + 410, y1)], cc, 2, 5, ring=False))
+    s.append(fitting2(px + 364, y1 - 46, cc, nip))
+    s.append(gen.arrow(px + 330, y1 + 44, px + 330, fl - 58, '#8A8578', 4))
+    s.append(hero([(px + 410, fl - 23), (px + 456, fl - 23), (px + 502, fl - 23)], cc, 2, 5, ring=False))
+    s.append(fitting2(px + 364, fl - 23, cc, nip))
+    s.append(Ln(px + 364, y1 - 18, px + 364, fl - 52, '#C0392B', 4, stroke_dasharray='10 8') + gen.arrow(px + 364, fl - 80, px + 364, fl - 50, '#C0392B', 5))
+    return ''.join(s)
+
+
+def card6():
+    """Карточка нового правила перед кв. 6 — в стиле панелей «Паспорта изделия», седьмая."""
+    px, py = 10, 10
+    s = [G(R(px, py, 540, 356, '#FBF8F0', rx=10, stroke=INK, stroke_width=2.5) + C(px + 38, py + 40, 24, INK)
+           + T(px + 38, py + 51, '7', 30, '#FBF8F0', weight='bold', anchor='middle') + T(px + 76, py + 52, 'Поднимает, но не носит', 32, INK, weight='bold'), filter='url(#dsh)'),
+         pan_crane(px, py)]
+    return ''.join(s), BASE
+
+
+def passport2():
+    s = [R(0, 0, 1920, 1080, '#2A3035'), G(R(70, 40, 1780, 1000, '#F1ECDF', rx=10) + R(70, 40, 1780, 1000, '#000000', filter='url(#grain)', opacity='.12'), filter='url(#dsh)')]
+    s += [T(130, 128, 'ПАСПОРТ ИЗДЕЛИЯ', 62, INK, weight='bold', letter_spacing='4'),
+          T(130, 182, 'Гофра самоходная «Лапидус». Длина 2–5 клеток. Совместимость с фаянсом: ногами.', 34, INK),
+          T(130, 224, 'Гарантия на героя не распространяется.', 34, INK)]
+    for i, (title, fn) in enumerate((('Ход концом: тянется и сжимается', pan_moves), ('Н входит в В — лицом к лицу', pan_thread),
+                                     ('Без опоры падает, резьба держит', pan_support), ('Слив смывает', pan_drain),
+                                     ('Фаянс толкают только ноги', pan_soap), ('Цель: вода до прибора', pan_goal))):
+        px, py = 130 + (i % 3) * 570, 262 + (i // 3) * 386
+        s += [R(px, py, 540, 356, '#FBF8F0', rx=10, stroke=INK, stroke_width=2.5), C(px + 38, py + 40, 24, INK),
+              T(px + 38, py + 51, str(i + 1), 30, '#FBF8F0', weight='bold', anchor='middle'), T(px + 76, py + 52, title, 32, INK, weight='bold'), fn(px, py)]
+    return ''.join(s), BASE
+
+
+# ---------------------------------------------------------------- немые сцены
+
+def resident(x, y):
+    """Жилец кв. 2: майка, треники с вытянутыми коленками, газета. x, y — таз."""
+    s = []
+    s.append(Pa(dd('M', x - 46, y, 'L', x - 58, y + 170, 'L', x - 14, y + 170, 'L', x - 2, y + 50, 'L', x + 10, y + 170, 'L', x + 54, y + 170, 'L', x + 46, y, 'Z'),
+                '#3D5A8E', stroke=O, stroke_width=6, stroke_linejoin='round'))
+    s += [E(x - 36, y + 92, 22, 26, '#4A69A2', stroke=O, stroke_width=4), E(x + 32, y + 92, 22, 26, '#4A69A2', stroke=O, stroke_width=4)]
+    s.append(Pa(dd('M', x - 50, y + 4, 'Q', x - 58, y - 90, x - 36, y - 150, 'L', x + 36, y - 150, 'Q', x + 58, y - 90, x + 50, y + 4, 'Z'), '#F6F4EF', stroke=O, stroke_width=6))
+    s.append(Pa(dd('M', x - 22, y - 150, 'Q', x, y - 118, x + 22, y - 150), stroke=O, stroke_width=5))
+    for sx in (-1, 1):
+        s.append(Pa(dd('M', x + sx * 44, y - 140, 'Q', x + sx * 78, y - 70, x + sx * 52, y - 10), stroke=O, stroke_width=26, stroke_linecap='round'))
+        s.append(Pa(dd('M', x + sx * 44, y - 140, 'Q', x + sx * 78, y - 70, x + sx * 52, y - 10), stroke='#F0BD99', stroke_width=16, stroke_linecap='round'))
+    s.append(R(x + 40, y - 70, 90, 110, '#E8E2CF', stroke=O, stroke_width=4, transform='rotate(12 %d %d)' % (x + 85, y - 15)))
+    s += [Ln(x + 55, y - 45 + k * 18, x + 115, y - 33 + k * 18, '#9A9480', 3) for k in range(4)]
+    s += [E(x, y - 196, 46, 52, 'url(#skinG)', stroke=O, stroke_width=5), E(x - 4, y - 172, 30, 20, '#4E6078', opacity='.22')]
+    s.append(Pa(dd('M', x - 42, y - 214, 'Q', x - 30, y - 262, x + 4, y - 250, 'Q', x + 40, y - 262, x + 44, y - 214, 'Q', x + 20, y - 236, x - 42, y - 214, 'Z'), '#6B4B32', stroke=O, stroke_width=4))
+    for sx in (-1, 1):
+        s += [C(x + sx * 18, y - 200, 14, '#FFFFFF', stroke=O, stroke_width=4), C(x + sx * 18, y - 198, 5, O)]
+    s += [Ln(x - 4, y - 200, x + 4, y - 200, O, 4), Pa(dd('M', x - 14, y - 170, 'Q', x, y - 176, x + 14, y - 170), stroke=O, stroke_width=4, stroke_linecap='round')]
+    return ''.join(s)
+
+
+def scenes2():
+    s = [R(0, 0, 1920, 1080, '#171B1E'), T(960, 92, 'Немые сцены после победы · ключевые кадры', 48, Q['cream'], weight='bold', anchor='middle')]
+    clips = ''
+    titles = ('Кв. 1 · ванна наполнилась, селезень уплывает за кадр', 'Кв. 2 · три недели ждал воду: встал — и сел обратно', 'Кв. 3 · гора посуды: отмыта одна тарелка')
+    for i in range(3):
+        x0, y0, w, h = 60 + i * 610, 160, 580, 640
+        clips += '<clipPath id="cp%d"><rect x="%d" y="%d" width="%d" height="%d" rx="16"/></clipPath>' % (i, x0, y0, w, h)
+        cx, cy = x0 + w / 2, y0 + h / 2
+        b = [R(x0, y0, w, h, 'url(#%s)' % ('tpM', 'tpB', 'tpY')[i]), R(x0, y0 + h - 80, w, 80, '#6B5B4B'), R(x0, y0, w, h, 'url(#vg2)')]
+        if i == 0:
+            b.append(G(bath2(cx - 60, cy + 120, 420, True), filter='url(#dsh)'))
+            b.append(Pa(dd('M', cx - 300, cy + 40, 'q', -40, 90, -14, 220), stroke=Q['water'], stroke_width=18, stroke_linecap='round'))
+            b.append(gen.duck(x0 + w - 30, cy - 20, 1.4))
+            b += [Ln(x0 + w - 160 - k * 30, cy - 36 + k * 18, x0 + w - 122 - k * 30, cy - 36 + k * 18, '#FFFFFF', 6, opacity='.8') for k in range(3)]
+        elif i == 1:
+            b.append(G(R(cx + 150, cy - 250, 116, 136, '#FFFFFF', stroke=O, stroke_width=4) + T(cx + 208, cy - 166, '21', 58, '#C73E2E', weight='bold', anchor='middle')
+                       + Ln(cx + 164, cy - 232, cx + 252, cy - 132, INK, 5) + Ln(cx + 252, cy - 232, cx + 164, cy - 132, INK, 5), filter='url(#dsh)'))
+            b.append(G(toilet2(cx - 40, cy + 170, 330, False), filter='url(#dsh)'))
+            b.append(G(resident(cx + 30, cy + 70), filter='url(#dsh)'))
+            b.append(gen.arrow(cx + 170, cy + 40, cx + 170, cy - 60, Q['cream'], 9) + gen.arrow(cx + 214, cy - 60, cx + 214, cy + 40, Q['cream'], 9))
+        else:
+            b.append(G(sink2(cx - 20, cy + 190, 340, True), filter='url(#dsh)'))
+            for k in range(9):
+                b.append(E(cx - 80 + (k % 2) * 10, cy + 70 - k * 28, 110, 20, 'url(#enam)', stroke=O, stroke_width=4))
+            b.append(G(E(cx + 170, cy - 60, 80, 80, 'url(#enam)', stroke=O, stroke_width=5) + E(cx + 170, cy - 60, 48, 48, 'none', stroke='#D5DBE3', stroke_width=4), filter='url(#dsh)'))
+            for sx, sy, sr in ((230, -140, 18), (110, -120, 11), (230, 20, 12)):
+                b.append(Pg([(cx + sx, cy + sy - sr), (cx + sx + sr * .3, cy + sy - sr * .3), (cx + sx + sr, cy + sy), (cx + sx + sr * .3, cy + sy + sr * .3),
+                             (cx + sx, cy + sy + sr), (cx + sx - sr * .3, cy + sy + sr * .3), (cx + sx - sr, cy + sy), (cx + sx - sr * .3, cy + sy - sr * .3)], '#FFFFFF'))
+        s.append(G(''.join(b), clip_path='url(#cp%d)' % i))
+        s.append(R(x0, y0, w, h, 'none', rx=16, stroke='#C99A2E', stroke_width=4))
+        s += [T(cx, y0 + h + 60 + k * 44, ln, 34, Q['cream'], anchor='middle') for k, ln in enumerate(wrap(titles[i], 30))]
+    return ''.join(s), BASE + clips
+
+
+def scenes45():
+    """Немые сцены 4 и 5 (§10): те же панели 580×640, что в scenes2(), на местах 1 и 2."""
+    s = [R(0, 0, 1920, 1080, '#171B1E')]
+    clips = ''
+    for i, (apt, pat) in enumerate(((4, 'tpM'), (5, 'tpB'))):
+        x0, y0, w, h = 60 + i * 610, 160, 580, 640
+        clips += '<clipPath id="cq%d"><rect x="%d" y="%d" width="%d" height="%d" rx="16"/></clipPath>' % (i, x0, y0, w, h)
+        cx, cy = x0 + w / 2, y0 + h / 2
+        fl = y0 + h - 80
+        b = [R(x0, y0, w, h, 'url(#%s)' % pat), R(x0, fl, w, 80, '#6B5B4B'), R(x0, y0, w, h, 'url(#vg2)')]
+        if apt == 4:
+            # стиральная машина на отжиме уходит из кадра: половина уже за краем, шланг натянут струной
+            mx, my = x0 + w - 40, fl - 150
+            b.append(Pa(dd('M', x0 - 10, fl - 120, 'L', mx - 150, fl - 128), stroke=O, stroke_width=22, stroke_linecap='round'))
+            b.append(Pa(dd('M', x0 - 10, fl - 120, 'L', mx - 150, fl - 128), stroke='#DCE2E8', stroke_width=13, stroke_linecap='round'))
+            b += [Ln(mx - 330 + k * 14, fl - 250 + k * 64, mx - 190 + k * 10, fl - 250 + k * 64, '#FFFFFF', 7, opacity='.75') for k in range(4)]
+            for k in range(2):
+                b.append(Ln(x0 + 60, fl + 18 + k * 30, mx - 120, fl + 18 + k * 30, '#3A3129', 9, stroke_dasharray='34 22'))
+            b.append(E(x0 + 150, fl + 4, 90, 16, 'url(#waterG)', stroke=O, stroke_width=3, opacity='.9'))
+            b += [C(x0 + 120 + dx, fl - 30 + dy, r, Q['water'], stroke=O, stroke_width=2) for dx, dy, r in ((0, 0, 9), (40, -22, 7), (78, 4, 6))]
+            b.append(G(gen2.washer2(mx, my, 330, True), transform='rotate(9 %s %s)' % (n(mx), n(my)), filter='url(#dsh)'))
+            b += [Pa(dd('M', mx - 180, my - 150 + k * 90, 'q', -22, 14, 0, 28, 't', 0, 28), stroke='#FFFFFF', stroke_width=6, stroke_linecap='round', opacity='.8') for k in range(3)]
+        else:
+            # полотенцесушитель высушил один носок; от второго осталась пустая прищепка и облачко
+            b.append(G(gen2.dryer2(cx - 40, cy - 10, 400, True, socks=1), filter='url(#dsh)'))
+            px, py = cx + 60, cy + 110
+            b.append(R(px - 10, py - 34, 20, 44, '#C49A5E', rx=5, stroke=O, stroke_width=4))
+            b.append(Ln(px, py - 30, px, py + 6, '#7A5A34', 3))
+            ghost = dd('M', px - 28, py + 14, 'L', px - 28, py + 120, 'Q', px - 28, py + 158, px + 20, py + 158, 'L', px + 58, py + 158,
+                       'Q', px + 82, py + 158, px + 82, py + 132, 'Q', px + 82, py + 108, px + 44, py + 104, 'L', px + 28, py + 104, 'L', px + 28, py + 14, 'Z')
+            b.append(Pa(ghost, 'none', stroke='#F4EEDC', stroke_width=5, stroke_dasharray='16 12', stroke_linejoin='round', opacity='.8'))
+            for dx, dy, r in ((104, 40, 26), (132, 18, 20), (150, 52, 17), (118, 74, 14)):
+                b.append(C(px + dx, py + dy, r, '#F4F7FA', stroke=O, stroke_width=3, opacity='.92'))
+            for dx, dy, sr in ((170, -10, 14), (86, -40, 10), (178, 92, 9)):
+                sx_, sy_ = px + dx, py + dy
+                b.append(Pg([(sx_, sy_ - sr), (sx_ + sr * .3, sy_ - sr * .3), (sx_ + sr, sy_), (sx_ + sr * .3, sy_ + sr * .3),
+                             (sx_, sy_ + sr), (sx_ - sr * .3, sy_ + sr * .3), (sx_ - sr, sy_), (sx_ - sr * .3, sy_ - sr * .3)], '#FFFFFF'))
+        s.append(G(''.join(b), clip_path='url(#cq%d)' % i))
+        s.append(R(x0, y0, w, h, 'none', rx=16, stroke='#C99A2E', stroke_width=4))
+    return ''.join(s), BASE + clips
+
+
+def ushanka(x, y, sc=1.0, tilt=0):
+    """Шапка-ушанка: мех, отвороты, завязки. x, y — центр макушки головы."""
+    f, fd, fl = '#6B4B32', '#4A3322', '#8E6A4C'
+    u = []
+    u.append(Pa(dd('M', x - 58 * sc, y + 18 * sc, 'Q', x - 62 * sc, y - 52 * sc, x, y - 58 * sc, 'Q', x + 62 * sc, y - 52 * sc, x + 58 * sc, y + 18 * sc, 'Z'),
+                f, stroke=O, stroke_width=5, stroke_linejoin='round'))
+    for k in range(7):
+        a = math.pi * (0.15 + 0.7 * k / 6)
+        u.append(Ln(x - math.cos(a) * 40 * sc, y - 12 * sc - math.sin(a) * 34 * sc, x - math.cos(a) * 52 * sc, y - 14 * sc - math.sin(a) * 44 * sc, fl, 4, opacity='.8'))
+    for sx in (-1, 1):
+        u.append(Pa(dd('M', x + sx * 46 * sc, y + 4 * sc, 'Q', x + sx * 72 * sc, y + 30 * sc, x + sx * 60 * sc, y + 84 * sc, 'Q', x + sx * 44 * sc, y + 92 * sc, x + sx * 36 * sc, y + 70 * sc,
+                        'Q', x + sx * 34 * sc, y + 34 * sc, x + sx * 46 * sc, y + 4 * sc, 'Z'), fd, stroke=O, stroke_width=4, stroke_linejoin='round'))
+        u.append(Ln(x + sx * 50 * sc, y + 86 * sc, x + sx * 44 * sc, y + 118 * sc, '#2B2118', 3))
+    u.append(Pa(dd('M', x - 60 * sc, y + 2 * sc, 'Q', x, y - 22 * sc, x + 60 * sc, y + 2 * sc, 'L', x + 56 * sc, y + 24 * sc, 'Q', x, y + 6 * sc, x - 56 * sc, y + 24 * sc, 'Z'),
+                fl, stroke=O, stroke_width=4, stroke_linejoin='round'))
+    body = ''.join(u)
+    return G(body, transform='rotate(%s %s %s)' % (n(tilt), n(x), n(y))) if tilt else body
+
+
+def resident6(x, y):
+    """Жилец кв. 6: свитер, треники, тапки; снимает ушанку, под ней вторая. x, y — таз."""
+    s = []
+    s.append(Pa(dd('M', x - 46, y, 'L', x - 56, y + 160, 'L', x - 12, y + 160, 'L', x - 2, y + 48, 'L', x + 10, y + 160, 'L', x + 54, y + 160, 'L', x + 46, y, 'Z'),
+                '#3D5A8E', stroke=O, stroke_width=6, stroke_linejoin='round'))
+    s += [E(x - 36, y + 90, 22, 26, '#4A69A2', stroke=O, stroke_width=4), E(x + 32, y + 90, 22, 26, '#4A69A2', stroke=O, stroke_width=4)]
+    s += [E(x - 38, y + 168, 34, 14, '#7A3B2E', stroke=O, stroke_width=4), E(x + 36, y + 168, 34, 14, '#7A3B2E', stroke=O, stroke_width=4)]
+    s.append(Pa(dd('M', x - 54, y + 6, 'Q', x - 62, y - 92, x - 38, y - 152, 'L', x + 38, y - 152, 'Q', x + 62, y - 92, x + 54, y + 6, 'Z'), '#8C3B32', stroke=O, stroke_width=6))
+    s += [Ln(x - 56, y - 40 + k * 16, x + 56, y - 40 + k * 16, '#F4EEDC', 6, opacity='.85') for k in range(2)]
+    s.append(Pa(dd('M', x - 24, y - 152, 'Q', x, y - 128, x + 24, y - 152), stroke=O, stroke_width=5))
+    # левая рука вниз, правая поднята — держит снятую ушанку
+    s.append(Pa(dd('M', x - 44, y - 140, 'Q', x - 78, y - 70, x - 54, y - 12), stroke=O, stroke_width=28, stroke_linecap='round'))
+    s.append(Pa(dd('M', x - 44, y - 140, 'Q', x - 78, y - 70, x - 54, y - 12), stroke='#8C3B32', stroke_width=18, stroke_linecap='round'))
+    s.append(C(x - 54, y - 8, 12, '#F0BD99', stroke=O, stroke_width=4))
+    s.append(Pa(dd('M', x + 44, y - 140, 'Q', x + 92, y - 200, x + 80, y - 276), stroke=O, stroke_width=28, stroke_linecap='round'))
+    s.append(Pa(dd('M', x + 44, y - 140, 'Q', x + 92, y - 200, x + 80, y - 276), stroke='#8C3B32', stroke_width=18, stroke_linecap='round'))
+    s.append(C(x + 80, y - 282, 13, '#F0BD99', stroke=O, stroke_width=4))
+    # голова
+    s += [E(x, y - 196, 46, 52, 'url(#skinG)', stroke=O, stroke_width=5), E(x - 4, y - 172, 30, 20, '#4E6078', opacity='.22')]
+    for sx in (-1, 1):
+        s += [C(x + sx * 18, y - 196, 13, '#FFFFFF', stroke=O, stroke_width=4), C(x + sx * 16, y - 194, 5, O)]
+        s.append(Ln(x + sx * 30, y - 214, x + sx * 8, y - 211, O, 4))
+    s += [Ln(x - 4, y - 188, x + 4, y - 188, O, 4), Ln(x - 14, y - 166, x + 14, y - 166, O, 4)]
+    s += [E(x - 30, y - 176, 9, 6, '#E88C7A', opacity='.6'), E(x + 30, y - 176, 9, 6, '#E88C7A', opacity='.6')]
+    # на голове — вторая ушанка, в руке — первая
+    s.append(ushanka(x, y - 226, 0.92))
+    s.append(ushanka(x + 86, y - 318, 0.9, tilt=-12))
+    return ''.join(s)
+
+
+def scenes6():
+    """Немая сцена 6 (§10): загорается газовая колонка; жилец снимает ушанку — под ней вторая. Панель на месте 1."""
+    s = [R(0, 0, 1920, 1080, '#171B1E')]
+    x0, y0, w, h = 60, 160, 580, 640
+    clips = '<clipPath id="cq6"><rect x="%d" y="%d" width="%d" height="%d" rx="16"/></clipPath>' % (x0, y0, w, h)
+    fl = y0 + h - 80
+    b = [R(x0, y0, w, h, 'url(#tpY)'), R(x0, fl, w, 80, '#6B5B4B'), R(x0, y0, w, h, 'url(#vg2)')]
+    hx, hy = x0 + 150, y0 + 250
+    b.append(R(hx - 16, hy + 40, 32, fl - hy - 40, 'url(#cylGd)', stroke=O, stroke_width=4))
+    b.append(G(gen2.heater2(hx, hy, 300, True, big=True), filter='url(#dsh)'))
+    b.append(E(hx, hy - 60, 170, 170, 'url(#lamp)'))
+    for k, (dx, dy, r) in enumerate(((210, -150, 18), (250, -60, 13), (190, 30, 11))):
+        sx_, sy_ = hx + dx, hy + dy
+        b.append(G(''.join(Ln(sx_ - math.cos(a) * r, sy_ - math.sin(a) * r, sx_ + math.cos(a) * r, sy_ + math.sin(a) * r, '#FFFFFF', 4)
+                           for a in (0, math.pi / 3, 2 * math.pi / 3)), opacity='%.2f' % (.55 - k * .15)))
+    b += [Pa(dd('M', hx + 150 + k * 26, hy - 20 - k * 30, 'q', -18, -22, 0, -44, 't', 0, -44), stroke='#FFFFFF', stroke_width=6, stroke_linecap='round', opacity='.55') for k in range(2)]
+    b.append(G(resident6(x0 + 372, fl - 172), filter='url(#dsh)'))
+    s.append(G(''.join(b), clip_path='url(#cq6)'))
+    s.append(R(x0, y0, w, h, 'none', rx=16, stroke='#C99A2E', stroke_width=4))
+    return ''.join(s), BASE + clips
+
+
+# ---------------------------------------------------------------- лист элементов
+
+def gallery2():
+    s = [R(0, 0, 1920, 1640, '#1E2428'), T(60, 86, 'Элементы поля и героя — утверждённый стиль', 54, Q['cream'], weight='bold'),
+         T(60, 130, 'Закреплённое темнее и на хомуте, подвижная латунь ярче. Н — штуцер с витками, В — шестигранное гнездо. У каждой детали мягкая тень.', 29, '#AEB9C0')]
+
+    def tile(col, row, label, fn, span=1):
+        x0, y0, w, th = 60 + col * 226, 164 + row * 318, span * 226 - 16, 294
+        s.append(R(x0, y0, w, th, '#2A3136', rx=14))
+        s.append(R(x0 + 10, y0 + 10, w - 20, 76, Q['wash']) + R(x0 + 10, y0 + 86, w - 20, th - 164, 'url(#panelG)') + R(x0 + 10, y0 + 82, w - 20, 8, Q['stripe']))
+        s.append(G(fn(x0 + w / 2, y0 + 128), filter='url(#dsh)'))
+        s.extend(T(x0 + w / 2, y0 + th - 44 + k * 30, ln, 27, Q['cream'], anchor='middle') for k, ln in enumerate(wrap(label, 17 * span)))
+
+    def wall(pid):
+        return lambda x, y: R(x - 80, y - 58, 160, 116, 'url(#%s)' % pid, rx=34, stroke=O, stroke_width=9, filter='url(#wob)')
+    rows = [
+        [('Кладка · кв. 1', wall('tpM')), ('Кладка · кв. 2', wall('tpB')), ('Кладка · кв. 3', wall('tpY')),
+         ('Слив', lambda x, y: drain2(x, y, 104, bottom=y + 90)), ('Стояк · выход В', lambda x, y: source2(x, y, 104, {'right': 'V'}, y - 95, y + 95)),
+         ('Глухой отвод · Н', lambda x, y: stub2(x, y, 104, 'right', 'N', 'left')), ('Глухой отвод · В', lambda x, y: stub2(x, y, 104, 'down', 'V', 'up')),
+         ('Фаянс', lambda x, y: porcelain2(x, y, 104))],
+        [('Ванна · сухая', lambda x, y: bath2(x - 10, y, 96) + port2(x - 10, y, 96, 'left', 'N', True)), ('Ванна · с водой', lambda x, y: bath2(x - 10, y, 96, True) + port2(x - 10, y, 96, 'left', 'N', True)),
+         ('Унитаз · сухой', lambda x, y: toilet2(x + 8, y + 8, 92) + port2(x + 8, y + 6, 92, 'left', 'N', True)), ('Унитаз · с водой', lambda x, y: toilet2(x + 8, y + 8, 92, True) + port2(x + 8, y + 6, 92, 'left', 'N', True)),
+         ('Мойка · сухая', lambda x, y: sink2(x + 4, y + 6, 94) + port2(x + 4, y + 4, 94, 'left', 'N', True)), ('Мойка · с водой', lambda x, y: sink2(x + 4, y + 6, 94, True) + port2(x + 4, y + 4, 94, 'left', 'N', True)),
+         ('Протечка без напора: капает', lambda x, y: stub2(x, y - 22, 90, 'down', 'V', 'up') + gen.drop(x, y + 50, 13) + gen.drop(x, y + 88, 9)),
+         ('Струя под напором (кв. 7–10)', lambda x, y: stub2(x, y + 54, 90, 'up', 'V', 'down') + gen.jet(x, y + 6, 118, 90))],
+        [('Муфта (кв. 4+)', lambda x, y: fitting2(x, y, 104, {'left': 'V', 'right': 'N'})), ('Угольник', lambda x, y: fitting2(x, y, 104, {'left': 'V', 'down': 'N'})),
+         ('Тройник', lambda x, y: fitting2(x, y, 104, {'left': 'V', 'right': 'N', 'down': 'N'})), ('Заглушка', lambda x, y: fitting2(x, y, 104, {'left': 'V'})),
+         ('Ноги вкручены: пух ленты', lambda x, y: port2(x + 52, y, 104, 'left', 'V', True) + heelL((x - 40, y), 'right', 104, True, True)),
+         ('Голова вцепилась в резьбу', lambda x, y: port2(x + 50, y, 104, 'left', 'N', True) + headL((x - 44, y), 'right', 104, True, True)),
+         ('Кнопки: отмена, заново', lambda x, y: button2('undo', x - 56, y) + button2('restart', x + 56, y)),
+         ('Кнопки: подсказка, меню', lambda x, y: button2('hint', x - 56, y) + button2('menu', x + 56, y))]]
+    for r, items in enumerate(rows):
+        for col, (lab, fn) in enumerate(items):
+            tile(col, r, lab, fn)
+    r3 = [('Голова ходит, ноги спят: пальцы поджаты', lambda x, y: hero([(x - 96, y), (x, y), (x + 96, y)], 96, 2, 4)),
+          ('Сжат до 2: рёбра гуще. Ходят ноги', lambda x, y: hero([(x + 48, y), (x - 48, y)], 96, 2, 4, active='heel')),
+          ('Растянут до 4 с изгибом: рёбра реже', lambda x, y: hero([(x - 126, y + 36), (x - 42, y + 36), (x + 42, y + 36), (x + 42, y - 48)], 84, 2, 4)),
+          ('Вода идёт насквозь: стояк → Лапидус → ванна', lambda x, y: source2(x - 168, y, 84, {'right': 'V'}, y - 80, y + 80)
+           + hero([(x - 84, y), (x, y), (x + 84, y)], 84, 2, 4, ring=False, wet=True, screwed=(True, True)) + bath2(x + 168, y, 84, True) + port2(x + 168, y, 84, 'left', 'N', True))]
+    for col, (lab, fn) in enumerate(r3):
+        tile(col * 2, 3, lab, fn, span=2)
+    s.append(T(60, 1620, 'Все макеты — стартовые позиции и примеры состояний; решений уровней здесь нет.', 28, '#8E9AA3'))
+    return ''.join(s), BASE
+
+
+JOBS = [('01_gallery', gallery2, 1640), ('02_level1', lambda: level(0), 1080), ('03_level2', lambda: level(1), 1080),
+        ('04_level3', lambda: level(2, 3, overlay=toast2('Голова по мылу скользит')), 1080), ('05_menu', menu2, 1080), ('06_select', select2, 1080),
+        ('07_request', request2, 1080), ('08_hint', hint2, 1080), ('09_act', act2, 1080), ('10_passport', passport2, 1080),
+        ('11_washed', washed2, 1080), ('12_scenes', scenes2, 1080)]
+
+if __name__ == '__main__':
+    for name, fn, h in JOBS:
+        try:
+            body, extra = fn()
+            render(name, body, extra, 1920, h)
+            print('ok', name)
+        except Exception:
+            print('FAIL', name)
+            traceback.print_exc()
