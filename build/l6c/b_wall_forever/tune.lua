@@ -19,14 +19,18 @@ for mask = 0, 2 ^ #qs - 1 do
     local r = g[c[2]]
     g[c[2]] = r:sub(1, c[1] - 1) .. (bit == 1 and "#" or ".") .. r:sub(c[1] + 1)
   end
+  for oi, OB in ipairs(T.objectSets or { T.objects }) do
   for si, s in ipairs(T.starts) do
-    local objs = copyObjs(T.objects)
+    local objs = copyObjs(OB)
     objs[#objs + 1] = { kind = "lapidus", cells = s.cells, head = s.head }
     local def = { id = 6, flat = 6, name = "t", length = T.length, pressure = 0, grid = g, objects = objs,
       visibleLoss = T.visibleLoss }
     local okc = true
     for _, c in ipairs(s.cells) do if g[c[2]]:sub(c[1], c[1]) ~= "." then okc = false end end
-    for _, o in ipairs(T.objects) do if g[o.at[2]]:sub(o.at[1], o.at[1]) ~= "." then okc = false end end
+    for _, o in ipairs(OB) do if g[o.at[2]]:sub(o.at[1], o.at[1]) ~= "." then okc = false end end
+    local occ = {}
+    for _, o in ipairs(OB) do local k = o.at[1] .. "," .. o.at[2]; if occ[k] then okc = false end; occ[k] = true end
+    for _, c in ipairs(s.cells) do if occ[c[1] .. "," .. c[2]] then okc = false end end
     if okc then
       total = total + 1
       local ok, m = pcall(Q.metrics, def, 400000)
@@ -34,15 +38,18 @@ for mask = 0, 2 ^ #qs - 1 do
         local score = m.hidpct / 10 - math.log10(math.max(m.smart, 0.001)) * 3 + math.min(m.deep, 12) / 4
           - math.max(0, m.walk - 6) * 0.7 + math.min(m.trapSteps, 8) * 0.8 - math.max(0, m.width - 3) * 2
           - (m.opt < 14 and (14 - m.opt) * 0.5 or 0)
-        results[#results + 1] = { score = score, m = m, grid = g, si = si }
+        if (not T.minHid or m.hidpct >= T.minHid) and (not T.maxWalk or m.walk <= T.maxWalk) then
+          results[#results + 1] = { score = score, m = m, grid = g, si = si, oi = oi }
+        end
       end
     end
+  end
   end
 end
 table.sort(results, function(a, b) return a.score > b.score end)
 print(string.format("вариантов %d, решаемых с 1 выигрышем %d", total, #results))
 for i = 1, math.min(maxOut, #results) do
   local r = results[i]
-  print(string.format("#%d score %.1f start %d  %s", i, r.score, r.si, Q.line(r.m)))
+  print(string.format("#%d score %.1f objs %d start %d  %s", i, r.score, r.oi or 1, r.si, Q.line(r.m)))
   for _, row in ipairs(r.grid) do io.write("   ", row, "\n") end
 end
