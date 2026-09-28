@@ -17,16 +17,23 @@ local function ladderFirst(lvl, st, ns)
   if fixedAt(ns, srcCatch) and not fixedAt(st, srcCatch) and not fixedAt(ns, stubCatch) then return false end
   return true
 end
--- 2) «ступенька не держит»: по ступеньке на отводе нельзя подняться в дальний колодец
---    (запрещено занимать клетки дальнего колодца выше нижнего яруса, пока там не было Лапидуса без ступеньки —
---    без ступеньки туда и так не забраться)
+-- 2) «по ступеньке не подняться к уступу»: Лапидусу нельзя занимать клетки колодца над отводом выше ряда под уступом
+--    (без ступеньки туда и так не забраться — фильтр отнимает только роль ступеньки)
 local function noClimb(lvl, st, ns)
   local _, stubCatch, stubCol = cells(lvl)
-  local topRow = math.floor((stubCatch - 1) / lvl.W) + 1 - 2 -- ряд над двухэтажным нижним ярусом
+  local ledge = (lvl.def.lift and lvl.def.lift.B) or 3
   for _, c in ipairs(ns.body) do
     local x, y = (c - 1) % lvl.W + 1, math.floor((c - 1) / lvl.W) + 1
-    if x == stubCol and y <= topRow then return false end
+    if x == stubCol and y <= ledge + 1 then return false end
   end
+  return true
+end
+-- 2б) «на ступеньку не встать»: запрещено состояние, где Лапидус стоит на прикрученной к отводу детали
+local function noStand(lvl, st, ns)
+  local _, stubCatch = cells(lvl)
+  if not fixedAt(ns, stubCatch) then return true end
+  local above = lvl.nb[stubCatch][1]
+  for _, c in ipairs(ns.body) do if c == above then return false end end
   return true
 end
 -- 3) «ниппель — только из ближнего колодца»: ниппель нельзя толкать к гнезду колонки со стороны дальнего колодца
@@ -45,6 +52,7 @@ local function nearOnly(lvl, st, ns)
 end
 return {
   { name = "сначала лестница, потом стояк", filter = ladderFirst },
-  { name = "по ступеньке не подняться", filter = noClimb },
+  { name = "по ступеньке не подняться к уступу", filter = noClimb },
+  { name = "на ступеньку не встать", filter = noStand },
   { name = "ниппель только из ближнего колодца", filter = nearOnly },
 }
