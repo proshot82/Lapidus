@@ -3,3 +3,5 @@ __pycache__/
 vendor/*.zip
 vendor/*.apk
 vendor/*.jar
+build/gfx_svg/
+build/shot*.png
