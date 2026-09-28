@@ -5,8 +5,9 @@
 -- стороны, а отвод оставить той, что лежит за ним. Ниппель — колонке; если столкнуть его в правый колодец,
 -- он прикрутится к ступеньке (ложная «вторая ступенька»).
 return {
-  visibleLoss = dofile("build/l6c/c_stub_ladder/vis.lua"),
-  lift = { B = 3 },
+  visibleLoss = dofile("build/l6c/c_stub_ladder/vis_m.lua"),
+  lift = { B = 3 }, slide = { A = true, C = true },
+  ablations = dofile("build/l6c/c_stub_ladder/abl_m.lua"),
   id = 6, flat = 6, name = "Намертво", length = { 3, 4 }, pressure = 0, tile = "mustard",
   grid = {
     "##########",
