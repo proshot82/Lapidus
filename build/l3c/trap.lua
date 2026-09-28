@@ -8,8 +8,8 @@ local def = dofile(arg[1])
 local lvl = R.compile(def)
 local ruleName = (arg[2] or "rule=own"):match("rule=(%w+)")
 local rule
-if ruleName == "own" then rule = def.lost else
-  rule = dofile("build/l3c/vis.lua").make(def.step, false, ({ narrow = {}, d = { d = true }, e = { e = true }, wide = { d = true, e = true } })[ruleName])
+if ruleName == "own" then rule = def.lost or (def.washOk and def.visibleLoss) else
+  rule = dofile("build/l3c/vis.lua").make(def.step or { { 7, 7 } }, false, ({ narrow = {}, d = { d = true }, e = { e = true }, wide = { d = true, e = true } })[ruleName])
 end
 local G = SV.explore(lvl, 3000000)
 if not G or not G.firstWin then print("нерешаем или ошибка") return end

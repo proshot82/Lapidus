@@ -32,10 +32,11 @@ local rule
 if ruleName then
   local V = dofile("build/l3c/vis.lua")
   local parts = ({ narrow = {}, d = { d = true }, e = { e = true }, wide = { d = true, e = true } })[ruleName]
-  rule = V.make(assert(def.step, "нет def.step"), false, parts)
+  rule = V.make(def.step or { { 7, 7 } }, false, parts)
   visFile = "rule=" .. ruleName
 elseif visFile then rule = dofile(visFile)
-elseif mode ~= "std" and def.lost then rule = def.lost end
+elseif mode ~= "std" and def.lost then rule = def.lost
+elseif mode ~= "std" and def.washOk and def.visibleLoss then rule = def.visibleLoss end
 local function lost(st)
   if rule then return rule(lvl, st) and true or false end
   for q, p in ipairs(lvl.pieces) do if p.movable and st.pos[q] == 0 then return true end end

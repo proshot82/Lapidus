@@ -11,7 +11,7 @@ local SV = require("solver.solve")
 local def = dofile(arg[1])
 local lvl = R.compile(def)
 local rn = (arg[2] or "rule=own"):match("rule=(%w+)")
-local rule = (rn == "own") and def.lost or dofile("build/l3c/vis.lua").make(def.step, false,
+local rule = (rn == "own") and (def.lost or (def.washOk and def.visibleLoss)) or dofile("build/l3c/vis.lua").make(def.step or { { 7, 7 } }, false,
   ({ narrow = {}, d = { d = true }, e = { e = true }, wide = { d = true, e = true } })[rn])
 local G = SV.explore(lvl, 3000000)
 local good = SV.goodSet(G)

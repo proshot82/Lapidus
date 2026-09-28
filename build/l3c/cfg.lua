@@ -5,7 +5,7 @@ local R = require("core.rules")
 local SV = require("solver.solve")
 local def = dofile(arg[1])
 local rn = arg[2] and arg[2]:match("rule=(%w+)")
-if rn then def.visibleLoss = dofile("build/l3c/vis.lua").make(def.step, false, ({ narrow = {}, d = { d = true }, e = { e = true }, wide = { d = true, e = true } })[rn]) end
+if rn then def.visibleLoss = dofile("build/l3c/vis.lua").make(def.step or { { 7, 7 } }, false, ({ narrow = {}, d = { d = true }, e = { e = true }, wide = { d = true, e = true } })[rn]) end
 local lvl = R.compile(def)
 local G = SV.explore(lvl, 3000000)
 local good = SV.goodSet(G)

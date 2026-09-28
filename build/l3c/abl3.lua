@@ -49,4 +49,21 @@ function M.noLeft(lvl, st, ns)
   end
   return true
 end
+-- контроль «в угол нельзя»: мыло нельзя загнать в угол у стены (4,7) — запрещает ловушку, не приём.
+function M.noCorner(lvl, st, ns)
+  local c = (7 - 1) * lvl.W + 4
+  for q, p in ipairs(lvl.pieces) do if p.porcelain and ns.pos[q] == c then return false end end
+  return true
+end
+-- контроль «мыло не на голове»: мыло не может лежать прямо на голове Лапидуса.
+function M.noHeadRest(lvl, st, ns)
+  local h = ns.body[#ns.body]
+  local up = lvl.nb[h][1]
+  for q, p in ipairs(lvl.pieces) do if p.porcelain and ns.pos[q] == up then return false end end
+  return true
+end
+-- контроль «ноги не в карман»: ноги не заходят в клетку (2,6).
+function M.noPocketFeet(lvl, st, ns)
+  return ns.body[1] ~= (6 - 1) * lvl.W + 2
+end
 return M
