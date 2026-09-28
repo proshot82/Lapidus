@@ -33,7 +33,7 @@ local function kind(a, b)
       local x = (c - 1) % W + 1
       local below, left, right = lvl.nb[c][3], lvl.nb[c][4], lvl.nb[c][2]
       local isStep = false
-      for _, sp in ipairs(def.step or {}) do if c == (sp[2] - 1) * W + sp[1] then isStep = true end end
+      for _, sp in ipairs(def.step or { { 7, 7 } }) do if c == (sp[2] - 1) * W + sp[1] then isStep = true end end
       if not isStep and lvl.cell[below] == 1 and (lvl.cell[left] == 1 or lvl.cell[right] == 1) then
         -- угол: снизу стена и сбоку стена; толкнуть наружу нечем (с другой стороны стена)
         return "E2"
