@@ -59,17 +59,21 @@ local function hiddenDepth(from, vis)
   end
   return #qq, maxd
 end
-local traps = {
-  { "тройник поднят лифтом раньше заглушки (ошибка подсказки №1, ложный план)", function(st) return risen(st.pos[k.tee]) and not inCol(st.pos[k.plug]) end },
-  { "  то же, но Лапидус не над тройником в шахте (обычная ошибка: тройник первым, Лапидус внизу)", function(st)
-      if not (risen(st.pos[k.tee]) and not inCol(st.pos[k.plug])) then return false end
-      for _, c in ipairs(st.body) do if inCol(c) and c < st.pos[k.tee] then return false end end
-      return true end },
-  { "ниппель в фонтане, а тройник ещё не в лифте", function(st) return st.fixed[k.nip] and not inCol(st.pos[k.tee]) end },
-  { "переходник поднят лифтом раньше тройника", function(st) return k.adp and risen(st.pos[k.adp]) and not inCol(st.pos[k.tee]) end },
-  { "ниппель в фонтане, а переходник ещё не в лифте", function(st) return k.adp and st.fixed[k.nip] and not inCol(st.pos[k.adp]) end },
-  { "тройник перенесён направо через столб", function(st) local c = st.pos[k.tee]; return c ~= 0 and not st.fixed[k.tee] and (R.xy(lvl, c)) > sx end },
-}
+local NAME = { plug = "заглушка", tee = "тройник", adp = "переходник", nip = "ниппель" }
+local order = def.stack or { "plug", "tee", "adp" }
+local traps = {}
+local function bodyAbove(st, c) for _, b in ipairs(st.body) do if inCol(b) and b < c then return true end end return false end
+for i = 1, #order do for j = i + 1, #order do
+  local a, b = order[i], order[j]
+  local label = string.format("%s поднят(а) лифтом раньше, чем %s в лифте", NAME[b], NAME[a])
+  if a == "plug" and b == "tee" then label = label .. " (ошибка подсказки №1, ложный план)" end
+  traps[#traps + 1] = { label, function(st) return risen(st.pos[k[b]]) and not inCol(st.pos[k[a]]) end }
+  traps[#traps + 1] = { "  то же, но Лапидус не над деталью в шахте", function(st)
+      return risen(st.pos[k[b]]) and not inCol(st.pos[k[a]]) and not bodyAbove(st, st.pos[k[b]]) end }
+end end
+local last = order[#order]
+traps[#traps + 1] = { "ниппель в фонтане, а " .. NAME[last] .. " ещё не в лифте", function(st) return st.fixed[k.nip] and not inCol(st.pos[k[last]]) end }
+traps[#traps + 1] = { "тройник перенесён направо через столб", function(st) local c = st.pos[k.tee]; return c ~= 0 and not st.fixed[k.tee] and (R.xy(lvl, c)) > sx end }
 print("2) ловушки:")
 for _, t in ipairs(traps) do
   local n, live, vm, vw, best, bestD = 0, 0, 0, 0, nil, 1e9
