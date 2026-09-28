@@ -61,6 +61,16 @@ function M.joined(lvl, st, a, b)
   return false
 end
 
+-- деталь upper свинчена прямо на lower сверху (соседние клетки, резьбы лицом к лицу, одна сборка или обе закреплены)
+function M.screwedOn(lvl, st, upper, lower)
+  local cu, cl = st.pos[upper], st.pos[lower]
+  if cu == 0 or cl == 0 or lvl.nb[cl][R.UP] ~= cu then return false end
+  local pu, pl = lvl.pieces[upper].ports[R.DOWN], lvl.pieces[lower].ports[R.UP]
+  if not (pu and pl and R.match(pu, pl)) then return false end
+  if st.fixed[upper] and st.fixed[lower] then return true end
+  return (not st.fixed[upper]) and (not st.fixed[lower]) and st.asm[upper] == st.asm[lower]
+end
+
 -- сторона Лапидуса относительно столба: L (весь левее), R (весь правее), C (задевает столб)
 function M.lapSide(lvl, st, sx)
   local l, r = false, false

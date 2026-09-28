@@ -87,25 +87,65 @@ for _, m in ipairs(modes) do
   print(string.format("%-11s живых помечено %d | живых %d, видимых %d, скрытых %d | СКРЫТЫХ %.1f %% | обезьяна %.3f %% (за %d ходов: выигрыш %.4f %%, живы %.1f %%, в тупиках %.1f %%) | ГЛУБИНА %d у пути [%s]",
     m, r.bad, r.live, r.vis, r.hid, 100 * r.hid / math.max(1, r.hid + r.live), r.smart, 5 * opt, 100 * r.ok, 100 * r.liveP, 100 * r.deadP, r.maxDeep, r.dl))
 end
+-- как далеко от кратчайшего пути ближайшие скрытые тупики (в ходах) и какие ветки из них
+local dist, qd, hd = {}, {}, 1
+for _, s0 in ipairs(path) do dist[s0] = 0; qd[#qd + 1] = s0 end
+while hd <= #qd do
+  local u = qd[hd]; hd = hd + 1
+  if G.flag[u] == 0 then
+    for e = G.eStart.p[u - 1], G.eStart.p[u] - 1 do local v = G.edges.p[e]; if dist[v] == nil then dist[v] = dist[u] + 1; qd[#qd + 1] = v end end
+  end
+end
+for _, m in ipairs(modes) do
+  local hidden = res[m].hidden
+  local byD = {}
+  for i in pairs(hidden) do local d = dist[i]; if d then byD[d] = byD[d] or {}; table.insert(byD[d], i) end end
+  local t = {}
+  for d = 1, 12 do
+    if byD[d] then
+      local best = 0
+      for _, j in ipairs(byD[d]) do
+        local dd, q, h, maxd = { [j] = 0 }, { j }, 1, 0
+        while h <= #q do
+          local u = q[h]; h = h + 1
+          for e = G.eStart.p[u - 1], G.eStart.p[u] - 1 do
+            local v = G.edges.p[e]
+            if hidden[v] and dd[v] == nil then dd[v] = dd[u] + 1; if dd[v] > maxd then maxd = dd[v] end; q[#q + 1] = v end
+          end
+        end
+        if maxd > best then best = maxd end
+      end
+      t[#t + 1] = string.format("%d:%d/%d", d, #byD[d], best)
+    end
+  end
+  print(string.format("%-11s скрытые по расстоянию от кратчайшего пути (ходов:состояний/макс. глубина ветки): %s", m, table.concat(t, " ")))
+end
 -- перепись скрытых тупиков по классам (общими словами), для разметок «wide(автор)» и «honest»
 local tq, pq, aq, nq = k.tee, k.plug, k.adp, k.nip
 local function inCol(c) return c ~= 0 and (R.xy(lvl, c)) == sx end
 local function classOf(st)
+  if not aq then -- вариант без переходника
+    if st.fixed[nq] then return "ниппель в основании раньше, чем вся стопка в столбе" end
+    if st.fixed[tq] then return "тройник у мойки" end
+    if L.screwedOn(lvl, st, pq, tq) then return "заглушка свинчена на тройник вне столба" end
+    if (R.xy(lvl, st.pos[tq])) > sx then return "тройник перенесён на правую сторону" end
+    return "прочее"
+  end
   local tc, pc, ac = st.pos[tq], st.pos[pq], st.pos[aq]
   local side = L.lapSide(lvl, st, sx)
   if st.fixed[nq] then return "ниппель в основании раньше, чем вся стопка в столбе" end
   if st.fixed[tq] then
-    if L.joined(lvl, st, tq, aq) and ac == lvl.nb[tc][R.DOWN] then return "переходник прикручен под тройником у мойки" end
+    if L.screwedOn(lvl, st, tq, aq) then return "переходник прикручен под тройником у мойки" end
     if not inCol(ac) then return "тройник с заглушкой у мойки, переходник забыт в очереди" end
     return "тройник у мойки, прочее"
   end
-  if L.joined(lvl, st, tq, aq) and ac == lvl.nb[tc][R.DOWN] then return "тройник свинчен сверху на переходник" end
-  if L.joined(lvl, st, pq, tq) then
+  if L.screwedOn(lvl, st, tq, aq) then return "тройник свинчен сверху на переходник" end
+  if L.screwedOn(lvl, st, pq, tq) then
     if inCol(tc) then return "тройник с заглушкой в столбе, переходник забыт в очереди" end
     return "заглушка свинчена прямо на тройник (переходнику не встать между ними)"
   end
   if (R.xy(lvl, tc)) > sx then return "тройник перенесён на правую сторону" end
-  if L.joined(lvl, st, pq, aq) and not inCol(pc) then
+  if L.screwedOn(lvl, st, pq, aq) and not inCol(pc) then
     return "заглушка с переходником на правой стороне, тройник " .. (inCol(tc) and "в столбе" or "на старте")
   end
   if side == "L" then return "Лапидус заперт слева, пока стопка ещё не собрана" end

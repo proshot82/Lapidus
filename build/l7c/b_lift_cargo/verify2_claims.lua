@@ -83,6 +83,18 @@ for _, t in ipairs(traps) do
     end
   end
   print(string.format("   состояний %d, живых %d", n, live))
+  -- как в verify.lua автора: ближайшее к пути состояние ошибки (в т. ч. живое) и скрытое, достижимое из него
+  local near
+  for i = 1, G.n do
+    local st = S[i]
+    if st and G.flag[i] == 0 and t[2](st) and dist[i] and (not near or dist[i] < dist[near]) then near = i end
+  end
+  if near then
+    local parts = {}
+    for _, m in ipairs(modes) do local sz, dp = hiddenBranch(near, vis[m]); parts[#parts + 1] = string.format("%s %d сост./глуб. %d", m, sz - 1, dp) end
+    print(string.format("   ближайшее состояние ошибки — в %d ход(а) от пути (у шага %d), %s; скрытое, достижимое из него: %s",
+      dist[near], fromStep[near] or -1, good[near] == 1 and "ещё живое" or "мёртвое", table.concat(parts, "; ")))
+  end
   for _, m in ipairs(modes) do
     local line = string.format("   %-11s видимых %d, скрытых %d", m, cnt[m] or 0, n - live - (cnt[m] or 0))
     local b = best[m]
