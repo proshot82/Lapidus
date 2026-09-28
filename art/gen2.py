@@ -183,7 +183,7 @@ def port2(cx, cy, c, dr, th, fixed=False):
     return orient(''.join(s), dr, cx, cy)
 
 
-def source2(cx, cy, c, ports, top=-20, bot=1100):
+def source2(cx, cy, c, ports, top=-20, bot=1100, pressure=0):
     o, s = Q['ol'], []
     s.append(R(cx - .24 * c, top, .48 * c, bot - top, 'url(#ironV)', stroke=o, stroke_width=c * .045))
     rnd = random.Random(int(cx))
@@ -207,6 +207,33 @@ def source2(cx, cy, c, ports, top=-20, bot=1100):
         s.append(Ln(wx, wy, wx + math.cos(a) * wr, wy + math.sin(a) * wr, o, c * .07))
         s.append(Ln(wx, wy, wx + math.cos(a) * wr, wy + math.sin(a) * wr, Q['red'], c * .04))
     s.append(C(wx, wy, .06 * c, 'url(#cylG)', stroke=o, stroke_width=c * .03))
+    if pressure > 0:
+        s.append(gauge2(cx, cy, c, pressure, -1 if ports.get('right') else 1))
+    return ''.join(s)
+
+
+def gauge2(cx, cy, c, pressure, side=1, vmax=3):
+    """Манометр на стояке (§4): латунный корпус, шкала 0–vmax, красная зона у максимума, стрелка на напоре уровня."""
+    o, s = Q['ol'], []
+    gx, gy, r = cx + side * .66 * c, cy - .24 * c, .25 * c
+    s.append(R(min(cx + side * .20 * c, gx - side * .20 * c), gy - .05 * c, abs(gx - side * .20 * c - cx - side * .20 * c), .10 * c,
+               'url(#ironH)', stroke=o, stroke_width=c * .03))
+    s.append(C(gx, gy, r, 'url(#cylGd)', stroke=o, stroke_width=c * .045))
+    s.append(C(gx, gy, r * .78, '#FBF8F0', stroke=o, stroke_width=c * .02))
+
+    def pt(v, rr):
+        a = math.radians(225 - 270 * v / vmax)
+        return gx + rr * math.cos(a), gy - rr * math.sin(a)
+    x1, y1 = pt(vmax * .72, r * .66)
+    x2, y2 = pt(vmax, r * .66)
+    s.append(Pa(dd('M', x1, y1, 'A', r * .66, r * .66, 0, 0, 1, x2, y2), fill='none', stroke=Q['red'], stroke_width=c * .045))
+    for k in range(vmax + 1):
+        ax, ay = pt(k, r * .74)
+        bx, by = pt(k, r * .56)
+        s.append(Ln(ax, ay, bx, by, o, c * .025))
+    nx, ny = pt(min(pressure, vmax), r * .62)
+    s.append(Ln(gx, gy, nx, ny, o, c * .05) + Ln(gx, gy, nx, ny, Q['red'], c * .028))
+    s.append(C(gx, gy, .045 * c, 'url(#cylG)', stroke=o, stroke_width=c * .02))
     return ''.join(s)
 
 
@@ -701,7 +728,7 @@ def frame(lv, moves=0, active='head', no_lap=False, hud=True, skip=()):
         cx, cy = ox + (x - .5) * c, oy + (y - .5) * c
         ports = ob.get('ports', {})
         if k == 'source':
-            s.append(G(source2(cx, cy, c, ports, ext(x, y, -1), ext(x, y, 1)), filter='url(#dsh)'))
+            s.append(G(source2(cx, cy, c, ports, ext(x, y, -1), ext(x, y, 1), lv.get('pressure', 0) or 0), filter='url(#dsh)'))
         elif k == 'fixture':
             pd, th = list(ports.items())[0]
             body = {'bath': bath2, 'toilet': toilet2, 'sink': sink2, 'washer': washer2, 'dryer': dryer2, 'heater': heater2}.get(ob.get('what'), bath2)(cx, cy, c)

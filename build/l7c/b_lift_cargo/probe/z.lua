@@ -7,8 +7,9 @@ local grid = {}
 for row in (os.getenv("GRID") or "###########/#####.#####/#####.#####/#####..####/##.....####/##........#/##..#.....#/#####.#####/###########"):gmatch("[^/]+") do grid[#grid+1] = row end
 return {
   visibleLoss = V.make(os.getenv("VIS") or "mine"),
-  id = 7, flat = 7, name = "Дали напор", length = { tonumber(os.getenv("LMIN") or 2), tonumber(os.getenv("LMAX") or 5) }, pressure = 3,
+  id = 7, flat = 7, name = "Дали напор", length = { tonumber(os.getenv("LMIN") or 2), tonumber(os.getenv("LMAX") or 5) }, pressure = tonumber(os.getenv("PRESS") or 3),
   grid = grid,
+  stack = { "plug", "adp", "tee" },
   objects = {
     { kind = "source", at = { 6, 8 }, ports = { up = "V" } },
     { kind = "fitting", what = "tee", tag = "tee", at = xy(os.getenv("TEE") or "5,6"), ports = { up = "N", right = "N", down = "V" } },

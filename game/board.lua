@@ -235,9 +235,26 @@ function Board:drawWater(status, jets, pressure, t)
       local sx, sy = self:center(j.cell)
       sx, sy = sx + dx * cs * 0.5, sy + dy * cs * 0.5
       local len = #j.cells * cs
-      setc(COL.water, 0.9); lg.setLineWidth(cs * 0.26); lg.line(sx, sy, sx + dx * len, sy + dy * len)
-      lg.setColor(1, 1, 1, 0.9)
-      for q = 0, 2 do lg.circle("fill", sx + dx * len + (q - 1) * cs * 0.1, sy + dy * len - cs * 0.05, cs * 0.12) end
+      local ex, ey = sx + dx * len, sy + dy * len
+      local px, py = -dy, dx -- поперёк струи
+      -- тело струи: колышется по ширине, светлый блик вдоль оси, капли бегут от стояка к шапке
+      local wob = 1 + 0.08 * math.sin(t * 9)
+      setc(COL.water, 0.88); lg.setLineWidth(cs * 0.26 * wob); lg.line(sx, sy, ex, ey)
+      lg.setColor(1, 1, 1, 0.45); lg.setLineWidth(cs * 0.06)
+      lg.line(sx + px * cs * 0.05, sy + py * cs * 0.05, ex + px * cs * 0.05, ey + py * cs * 0.05)
+      for q = 0, 3 do
+        local f = (t * 2.2 + q / 4) % 1
+        local side = (q % 2 == 0) and 1 or -1
+        lg.setColor(1, 1, 1, 0.8 * (1 - f))
+        lg.circle("fill", sx + dx * len * f + px * side * cs * 0.07, sy + dy * len * f + py * side * cs * 0.07, cs * 0.035)
+      end
+      -- пенная шапка на конце струи
+      for q = 0, 4 do
+        local a = q / 5 * math.pi * 2 + t * 1.3
+        local pr = cs * (0.10 + 0.025 * math.sin(t * 7 + q * 1.7))
+        lg.setColor(1, 1, 1, 0.92)
+        lg.circle("fill", ex + math.cos(a) * cs * 0.09 + dx * cs * 0.04, ey + math.sin(a) * cs * 0.06 + dy * cs * 0.04, pr)
+      end
     end
   else
     local drop = img("drop")

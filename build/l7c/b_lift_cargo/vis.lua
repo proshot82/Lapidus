@@ -6,9 +6,9 @@
 --      упирается в стену или закреплённое, либо за ней нет места, откуда толкать (клетка сзади твёрдая или это
 --      карман, куда Лапидусу не попасть в обход самой детали); поднять с пола нечем;
 --   B. фонтана больше нет (вверх из столба ничего не бьёт, Лапидус не в счёт), а тройник ещё не у раковины;
---   C. заглушка и тройник обе в столбе, и заглушка ниже тройника (из стопки её не вынуть);
---      то же для переходника: переходник и тройник оба в столбе, и переходник выше тройника.
+--   C. заглушка и тройник обе в столбе, и заглушка ниже тройника (крышка должна лечь сверху, из стопки её не вынуть).
 --  wide (скептик, «при сомнении — шире»), сверх mine:
+--   C′. любые две детали стопки стоят в столбе в порядке, обратном задуманному (def.stack сверху вниз);
 --   D. тройник закреплён не у раковины (ушёл в надставку и т. п.);
 --   E. тройник закреплён у раковины, а заглушки на нём нет и она не над ним в столбе;
 --   F. Лапидус целиком в шахте выше всех боковых выходов, не прикручен, и даже упёршись в потолок шахты не
@@ -102,8 +102,16 @@ function M.make(mode)
     if pq and tq and st.pos[pq] ~= 0 and st.pos[tq] ~= 0 and inCol(st.pos[pq]) and inCol(st.pos[tq]) then
       if st.pos[pq] > st.pos[tq] then return true end
     end
-    if aq and tq and st.pos[aq] ~= 0 and st.pos[tq] ~= 0 and inCol(st.pos[aq]) and inCol(st.pos[tq]) then
-      if st.pos[aq] < st.pos[tq] then return true end
+    -- C′ (только широкий): любые две детали стопки в столбе стоят в порядке, обратном задуманному (def.stack сверху вниз)
+    if wide and lvl.def.stack then
+      local order = lvl.def.stack
+      for i = 1, #order do for j = i + 1, #order do
+        local qi, qj
+        for q, p in ipairs(P) do if p.tag == order[i] then qi = q elseif p.tag == order[j] then qj = q end end
+        if qi and qj and st.pos[qi] ~= 0 and st.pos[qj] ~= 0 and inCol(st.pos[qi]) and inCol(st.pos[qj]) and st.pos[qi] > st.pos[qj] then
+          return true
+        end
+      end end
     end
     if wide then
       if tq and st.fixed[tq] and not tAtFix then return true end                     -- D
