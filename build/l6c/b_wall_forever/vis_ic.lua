@@ -1,10 +1,16 @@
 -- честный видимый проигрыш «колонна-проход» (стояк в потолке над (sx, sy+1), лунка колонки под нижним ходом в x=hx):
 -- • муфта внизу (на нижнем ходу не на Лапидусе, в лунке) — к потолку её не поднять;
--- • деталь прижата к стене с той стороны, откуда её надо толкать к цели (как ящик в углу);
+-- • деталь прижата к стене (или к глухой нише в одну клетку) с той стороны, откуда её надо толкать к цели;
 -- • ниппель в чужой яме или лёг в лунку не свинтившись.
 return function(sx, sy, hx, lowY)
   return function(lvl, st)
     local function wallAt(c) return c == 0 or lvl.cell[c] == 1 end
+    -- «тупиковая ниша»: клетка, откуда надо толкать, открыта, но окружена стенами со всех сторон, кроме самой детали
+    local function blockedFrom(from, c)
+      if wallAt(from) then return true end
+      for d = 1, 4 do local t = lvl.nb[from][d]; if t ~= c and not wallAt(t) then return false end end
+      return true
+    end
     for q, p in ipairs(lvl.pieces) do
       if p.movable and st.pos[q] ~= 0 and not (st.fixed[q] and ((p.tag == "upc" and st.pos[q] == (sy) * lvl.W + sx) or p.tag == "pn")) then
         local c = st.pos[q]
@@ -17,13 +23,13 @@ return function(sx, sy, hx, lowY)
           if y >= lowY and not onLap then return true end            -- внизу: не поднять
           if y < lowY and x ~= sx then                               -- наверху: толкать к гнезду стояка
             local from = lvl.nb[c][(x < sx) and 4 or 2]
-            if wallAt(from) then return true end
+            if blockedFrom(from, c) then return true end
           end
         elseif p.tag == "pn" and not st.fixed[q] then
           if y > lowY then return true end                           -- в яме, не свинтился
           if y == lowY and not onLap and x ~= hx then
             local from = lvl.nb[c][(x < hx) and 4 or 2]
-            if wallAt(from) then return true end
+            if blockedFrom(from, c) then return true end
           end
           if y < lowY and x ~= sx and not onLap then
             local from = lvl.nb[c][(x < sx) and 4 or 2]

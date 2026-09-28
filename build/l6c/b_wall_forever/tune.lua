@@ -46,7 +46,11 @@ for mask = 0, 2 ^ #qs - 1 do
   end
   end
 end
-table.sort(results, function(a, b) return a.score > b.score end)
+if T.sortHid then
+  table.sort(results, function(a, b) if math.abs(a.m.hidpct - b.m.hidpct) > 0.5 then return a.m.hidpct > b.m.hidpct end return a.score > b.score end)
+else
+  table.sort(results, function(a, b) return a.score > b.score end)
+end
 print(string.format("вариантов %d, решаемых с 1 выигрышем %d", total, #results))
 for i = 1, math.min(maxOut, #results) do
   local r = results[i]
