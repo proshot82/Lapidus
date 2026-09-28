@@ -14,7 +14,7 @@ for i = 1, G.n do
     local b = {}
     for k, c in ipairs(st.body) do local x, y = R.xy(lvl, c); b[#b+1] = x .. "," .. y end
     local key = table.concat(t, " ")
-    if not seen[key] then seen[key] = true; print(string.format("глубина %d: %s | Лапидус (ноги→голова) %s", G.depth[i], key, table.concat(b, " "))) end
+    if os.getenv("ALL") or not seen[key] then seen[key] = true; print(string.format("глубина %d: %s | Лапидус (ноги→голова) %s", G.depth[i], key, table.concat(b, " "))) end
   end
 end
 SV.freeGraph(G)

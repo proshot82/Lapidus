@@ -10,8 +10,8 @@
 --  wide (скептик, «при сомнении — шире»), сверх mine:
 --   D. тройник закреплён не у раковины (ушёл в надставку и т. п.);
 --   E. тройник закреплён у раковины, а заглушки на нём нет и она не над ним в столбе;
---   F. Лапидус целиком в шахте выше последнего ряда, где из столба есть боковой выход, и не прикручен
---      (вниз его не пустит фонтан);
+--   F. Лапидус целиком в шахте выше всех боковых выходов, не прикручен, и даже упёршись в потолок шахты не
+--      дотянется до выхода (вниз его не пустит фонтан);
 --   G. ниппель поднят фонтаном (свободен и стоит в столбе выше основания) — вниз он уже не вернётся.
 local R = require("core.rules")
 local M = {}
@@ -97,28 +97,35 @@ function M.make(mode)
         local pc = st.pos[pq]
         if not (pc ~= 0 and (pc == above or (inCol(pc) and pc < st.pos[tq]))) then return true end
       end
-      -- F: Лапидус целиком в шахте выше последнего ряда с боковым выходом и не прикручен
+      -- F: Лапидус целиком в шахте выше всех боковых выходов, не прикручен, и даже упёршись в потолок шахты
+      --    не дотянется вниз до выхода (длина от потолка до верхнего выхода больше его максимальной длины)
       local piece = R.occupancy(st)
       local anch = R.endScrew(lvl, st, piece, "head") or R.endScrew(lvl, st, piece, "heel")
-      if not anch then
-        local allCol, maxRow = true, 0
+      if not anch and jetUp then
+        local allCol, minRow, maxRow = true, 1e9, 0
         for _, c in ipairs(st.body) do
           local x, y = R.xy(lvl, c)
           if x ~= sx then allCol = false end
           if y > maxRow then maxRow = y end
+          if y < minRow then minRow = y end
         end
-        -- самый верхний ряд с выходом, который ниже его нижней клетки → не выйти
-        local topExit = 1e9
-        for y = 1, lvl.H do
+        local topExit = nil
+        for y = 1, sy - 1 do
           local c = R.idx(lvl, sx, y)
-          if lvl.cell[c] ~= R.WALL and y < sy then
+          if lvl.cell[c] ~= R.WALL then
             local l, r = lvl.nb[c][R.LEFT], lvl.nb[c][R.RIGHT]
-            if (l ~= 0 and lvl.cell[l] ~= R.WALL and not fixedAt[l] and pieceAt[l] == nil) or (r ~= 0 and lvl.cell[r] ~= R.WALL and not fixedAt[r] and pieceAt[r] == nil) then
-              if y < topExit then topExit = y end
-            end
+            local function open(n) return n ~= 0 and lvl.cell[n] ~= R.WALL and not fixedAt[n] and pieceAt[n] == nil end
+            if open(l) or open(r) then topExit = topExit or y end
           end
         end
-        if allCol and maxRow < topExit and jetUp then return true end
+        if allCol and topExit and maxRow < topExit then
+          local ceil = minRow
+          while true do
+            local u = R.idx(lvl, sx, ceil - 1)
+            if ceil - 1 >= 1 and lvl.cell[u] ~= R.WALL and pieceAt[u] == nil then ceil = ceil - 1 else break end
+          end
+          if topExit - ceil + 1 > lvl.Lmax then return true end
+        end
       end
       -- G: ниппель поднят фонтаном
       if nq and st.pos[nq] ~= 0 and not st.fixed[nq] and inCol(st.pos[nq]) then
