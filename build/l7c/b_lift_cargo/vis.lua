@@ -5,7 +5,8 @@
 --   A. деталь лежит на полу там, откуда её не втолкнуть ни в одну клетку струи: путь к столбу по её ряду
 --      упирается в стену или закреплённое, либо за ней нет места, откуда толкать (поднять с пола нечем);
 --   B. фонтана больше нет (вверх из столба ничего не бьёт, Лапидус не в счёт), а тройник ещё не у раковины;
---   C. заглушка и тройник обе в столбе, и заглушка ниже тройника (из стопки её не вынуть).
+--   C. заглушка и тройник обе в столбе, и заглушка ниже тройника (из стопки её не вынуть);
+--      то же для переходника: переходник и тройник оба в столбе, и переходник выше тройника.
 --  wide (скептик, «при сомнении — шире»), сверх mine:
 --   D. тройник закреплён не у раковины (ушёл в надставку и т. п.);
 --   E. тройник закреплён у раковины, а заглушки на нём нет и она не над ним в столбе;
@@ -20,10 +21,10 @@ function M.make(mode)
   return function(lvl, st)
     local W = lvl.W
     local P = lvl.pieces
-    local src, fix, tq, pq, nq
+    local src, fix, tq, pq, nq, aq
     for q, p in ipairs(P) do
       if p.source then src = q elseif p.fixture then fix = q end
-      if p.tag == "tee" then tq = q elseif p.tag == "plug" then pq = q elseif p.tag == "nip" then nq = q end
+      if p.tag == "tee" then tq = q elseif p.tag == "plug" then pq = q elseif p.tag == "nip" then nq = q elseif p.tag == "adp" then aq = q end
     end
     local sx, sy = R.xy(lvl, P[src].start)
     local fixedAt, pieceAt = {}, {}
@@ -85,6 +86,9 @@ function M.make(mode)
     -- C: заглушка ниже тройника в столбе
     if pq and tq and st.pos[pq] ~= 0 and st.pos[tq] ~= 0 and inCol(st.pos[pq]) and inCol(st.pos[tq]) then
       if st.pos[pq] > st.pos[tq] then return true end
+    end
+    if aq and tq and st.pos[aq] ~= 0 and st.pos[tq] ~= 0 and inCol(st.pos[aq]) and inCol(st.pos[tq]) then
+      if st.pos[aq] < st.pos[tq] then return true end
     end
     if wide then
       if tq and st.fixed[tq] and not tAtFix then return true end                     -- D

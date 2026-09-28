@@ -23,6 +23,7 @@ function M.eval(def, opts)
   end
   local states, live, vis, hid, washed, nwin = {}, 0, 0, 0, 0, 0
   local hidden = {}
+  local lostFlag = {}
   local winCfg = {}
   local function cfgKey(st)
     local t = {}
@@ -33,7 +34,8 @@ function M.eval(def, opts)
     if G.flag[i] == 1 then nwin = nwin + 1; winCfg[cfgKey(R.decode(lvl, G.keys[i]))] = true end
     if G.flag[i] == 2 then washed = washed + 1 else
       local st = R.decode(lvl, G.keys[i]); states[i] = st
-      if good[i] == 1 then live = live + 1 elseif lost(st) then vis = vis + 1 else hid = hid + 1; hidden[i] = true end
+      local lf = lost(st); lostFlag[i] = lf
+      if good[i] == 1 then live = live + 1 elseif lf then vis = vis + 1 else hid = hid + 1; hidden[i] = true end
     end
   end
   local nWinCfg = 0; for _ in pairs(winCfg) do nWinCfg = nWinCfg + 1 end
@@ -46,7 +48,7 @@ function M.eval(def, opts)
       local cand = {}
       for e = G.eStart.p[i - 1], G.eStart.p[i] - 1 do
         local j = G.edges.p[e]
-        if G.flag[j] == 1 then cand[#cand + 1] = j elseif G.flag[j] ~= 2 and not lost(states[j]) then cand[#cand + 1] = j end
+        if G.flag[j] == 1 then cand[#cand + 1] = j elseif G.flag[j] ~= 2 and not lostFlag[j] then cand[#cand + 1] = j end
       end
       if #cand == 0 then np[i] = (np[i] or 0) + pr else
         local share = pr / #cand
