@@ -74,7 +74,10 @@ def build(name, spec):
     shaft = {(src['at'][0], src['at'][1] - 1), (src['at'][0], src['at'][1] - 2)}
     def free(x, y):
         return grid[y - 1][x - 1] == '.' and (x, y) not in occupied and (x, y) not in shaft
-    if free(cx, cy - 1):
+    if spec.get('prepair'):
+        (px, py), (qx, qy) = spec['prepair']
+        mut = 'o.tag == "cpl" then o.at = { %d, %d } elseif o.tag == "nip" then o.at = { %d, %d }' % (px, py, qx, qy)
+    elif free(cx, cy - 1):
         mut = 'o.tag == "nip" then o.at = { %d, %d }' % (cx, cy - 1)
     elif free(nx, ny + 1):
         mut = 'o.tag == "cpl" then o.at = { %d, %d }' % (nx, ny + 1)

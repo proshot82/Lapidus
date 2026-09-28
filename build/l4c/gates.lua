@@ -10,7 +10,7 @@ local SV = require("solver.solve")
 local def = dofile(arg[1])
 local mode = arg[2] or "main"
 local vis = def.visibleLoss
-if mode == "wide" then vis = dofile("build/l4c/vis_wide.lua") end
+if mode == "wide" then vis = dofile("build/l4c/vis_wide.lua") elseif mode == "v3" then vis = dofile("build/l4c/vis_v3.lua") elseif mode == "seal" then vis = dofile("build/l4c/vis_seal.lua") end
 local lvl = R.compile(def)
 local G = SV.explore(lvl, 3000000)
 if not G or not G.firstWin then print("НЕРЕШАЕМ") return end
@@ -206,7 +206,7 @@ if best then
     mode, tostring(entryStep), entryDepth, entrySize, preN, preHid))
 end
 SV.freeGraph(G); require("ffi").C.free(good)
-if mode == "wide" then return end
+if mode ~= "main" then return end
 -- абляции уровня и контрольные фильтры (должны оставаться решаемыми)
 local abl = SV.ablations(def, { cap = 3000000 })
 local ab = {}
