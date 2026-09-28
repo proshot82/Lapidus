@@ -1,4 +1,4 @@
--- p5 (кв. 6 «Намертво», направление D «Он сам себе кран»). Решения здесь нет.
+-- p1 (кв. 6 «Намертво», направление D «Он сам себе кран»). Решения здесь нет.
 
 return {
   visibleLoss = dofile("build/l6c/d_crane/visP.lua"),
@@ -19,6 +19,6 @@ return {
     { kind = "fitting", what = "nipple", tag = "B", at = { 4, 5 }, ports = { up = "N", down = "N" } },
     { kind = "fitting", what = "elbow", tag = "C", at = { 6, 5 }, ports = { right = "V", up = "V" } },
     { kind = "source", at = { 7, 8 }, ports = { left = "N" } },
-    { kind = "lapidus", cells = { { 2, 6 }, { 3, 6 }, { 4, 6 }, { 5, 6 }, { 6, 6 } }, head = 5 },
+    { kind = "lapidus", cells = { { 7, 6 }, { 6, 6 }, { 5, 6 }, { 4, 6 }, { 3, 6 } }, head = 5 },
   },
 }
