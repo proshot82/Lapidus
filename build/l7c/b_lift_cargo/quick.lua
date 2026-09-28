@@ -28,5 +28,5 @@ for i = 1, n do if dw[i] and G.depth[i] + dw[i] == opt then w[G.depth[i]] = (w[G
 local maxw = 0
 for d = 0, opt do if (w[d] or 0) > maxw then maxw = w[d] end end
 SV.freeGraph(G)
-print(string.format("%s: ходов %d | сост. %d | скрытых %.0f/%.0f %% | обезьяна %.2f %% | глубина %d/%d | прогулка %d | вынужд. %d | ширина %d | выигрышных состояний %d | событий %d",
+print(string.format("%s: ходов %d | сост. %d | скрытых %.1f/%.1f %% | обезьяна %.2f %% | глубина %d/%d | прогулка %d | вынужд. %d | ширина %d | выигрышных состояний %d | событий %d",
   arg[2] or arg[1], rm.opt, rm.states, rm.hiddenPct, rw.hiddenPct, rm.smart, rm.deep, rw.deep, rm.walk, rm.forced, maxw, nwin, rm.events))

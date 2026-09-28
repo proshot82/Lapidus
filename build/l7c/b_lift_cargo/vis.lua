@@ -3,7 +3,8 @@
 -- Решений не содержит. Правила (одной фразой каждое):
 --  mine:
 --   A. деталь лежит на полу там, откуда её не втолкнуть ни в одну клетку струи: путь к столбу по её ряду
---      упирается в стену или закреплённое, либо за ней нет места, откуда толкать (поднять с пола нечем);
+--      упирается в стену или закреплённое, либо за ней нет места, откуда толкать (клетка сзади твёрдая или это
+--      карман, куда Лапидусу не попасть в обход самой детали); поднять с пола нечем;
 --   B. фонтана больше нет (вверх из столба ничего не бьёт, Лапидус не в счёт), а тройник ещё не у раковины;
 --   C. заглушка и тройник обе в столбе, и заглушка ниже тройника (из стопки её не вынуть);
 --      то же для переходника: переходник и тройник оба в столбе, и переходник выше тройника.
@@ -56,6 +57,20 @@ function M.make(mode)
       local d = (x < sx) and R.RIGHT or R.LEFT
       local back = lvl.nb[c][R.OPP[d]]
       if solid(back) or lvl.cell[back] == R.PIT then return false end
+      -- в клетку толкающего конца надо суметь попасть: заливка от неё в обход самой детали должна дойти до Лапидуса
+      -- (карман любой глубины, запечатанный деталью, — видимый проигрыш)
+      local seen, qq, hh, reach = { [back] = true, [c] = true }, { back }, 1, false
+      local bodySet = {}
+      for _, bc in ipairs(st.body) do bodySet[bc] = true end
+      while hh <= #qq and not reach do
+        local u = qq[hh]; hh = hh + 1
+        if bodySet[u] then reach = true end
+        for dd = 1, 4 do
+          local v = lvl.nb[u][dd]
+          if v ~= 0 and not seen[v] and not solid(v) and lvl.cell[v] ~= R.PIT then seen[v] = true; qq[#qq + 1] = v end
+        end
+      end
+      if not reach then return false end
       local t = c
       while true do
         t = lvl.nb[t][d]

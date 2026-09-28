@@ -21,7 +21,8 @@ local function xy(lvl, c) return (c - 1) % lvl.W + 1, math.floor((c - 1) / lvl.W
 
 -- Видимый проигрыш (одной фразой каждое правило):
 --  A. деталь лежит на полу там, откуда её не втолкнуть ни в одну клетку струи: путь к столбу по её ряду упирается
---     в стену или закреплённое, либо за ней нет места, откуда толкать (с пола деталь поднять нечем);
+--     в стену или закреплённое, либо за ней нет места, откуда толкать (твёрдо или карман, куда Лапидусу не попасть
+--     в обход самой детали); с пола деталь поднять нечем;
 --  B. фонтана больше нет (из столба вверх ничего не бьёт, Лапидус не в счёт), а тройник ещё не у мойки;
 --  C. в столбе стопка в заведомо неверном порядке: заглушка ниже тройника или переходник выше тройника
 --     (стопка в шахте однополосная, поменять местами нельзя).
@@ -46,6 +47,19 @@ local function visibleLoss(lvl, st)
     local d = (x < sx) and RIGHT or LEFT
     local back = lvl.nb[c][OPP[d]]
     if solid(back) or lvl.cell[back] == 2 then return false end
+    -- в клетку толкающего конца надо суметь попасть: заливка от неё в обход самой детали должна дойти до Лапидуса
+    local seen, qq, hh, reach = { [back] = true, [c] = true }, { back }, 1, false
+    local bodySet = {}
+    for _, bc in ipairs(st.body) do bodySet[bc] = true end
+    while hh <= #qq and not reach do
+      local u = qq[hh]; hh = hh + 1
+      if bodySet[u] then reach = true end
+      for dd = 1, 4 do
+        local v = lvl.nb[u][dd]
+        if v ~= 0 and not seen[v] and not solid(v) and lvl.cell[v] ~= 2 then seen[v] = true; qq[#qq + 1] = v end
+      end
+    end
+    if not reach then return false end
     local t = c
     while true do
       t = lvl.nb[t][d]
