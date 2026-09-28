@@ -287,7 +287,17 @@ function Play:drawRequest()
   local F = self.app.font
   lg.setColor(0, 0, 0, 0.55); lg.rectangle("fill", 0, 0, 1920, 1080)
   lg.setFont(F.b); setc(CREAM); lg.printf("З А Я В К А", 0, 212, 1920, "center")
-  lg.push(); lg.translate(960, 520); lg.rotate(-0.035)
+  -- вкладыш к паспорту: карточка нового правила (texts.card) справа от записки, записка сдвигается влево
+  local card = self.def.texts and self.def.texts.card and Board.img(self.def.texts.card)
+  if card then
+    local z = 1.1
+    lg.push(); lg.translate(1330, 540); lg.rotate(0.03)
+    lg.setColor(0, 0, 0, 0.3); lg.rectangle("fill", -card:getWidth() * z / 2 + 10, -card:getHeight() * z / 2 + 14, card:getWidth() * z, card:getHeight() * z, 14)
+    lg.setColor(1, 1, 1); lg.draw(card, 0, 0, 0, z, z, card:getWidth() / 2, card:getHeight() / 2)
+    lg.pop()
+    lg.setFont(F.s); setc(GOLD); lg.printf("вкладыш к паспорту изделия", 1330 - 340, 540 - card:getHeight() * z / 2 - 58, 680, "center")
+  end
+  lg.push(); lg.translate(card and 600 or 960, 520); lg.rotate(-0.035)
   local note = Board.img("note")
   lg.setColor(1, 1, 1); if note then lg.draw(note, -370, -235) end
   lg.setFont(F.handL); setc(BLUE)
