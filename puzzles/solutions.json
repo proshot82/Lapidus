@@ -94,11 +94,6 @@
   "04": {
     "moves": [
       "heel:left",
-      "heel:up",
-      "head:up",
-      "heel:up",
-      "heel:up",
-      "heel:left",
       "heel:left",
       "heel:down",
       "heel:down",
@@ -109,16 +104,11 @@
       "head:right",
       "heel:right",
       "heel:right",
+      "heel:right",
       "heel:up",
-      "heel:up",
-      "heel:up",
-      "heel:right",
-      "heel:right",
-      "heel:down",
-      "heel:down",
-      "heel:right",
-      "heel:right",
-      "heel:right"
+      "heel:left",
+      "head:right",
+      "head:up"
     ],
     "name": "Резьба"
   },

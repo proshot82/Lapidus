@@ -8,7 +8,8 @@
 
 > **28.09.2026 — кв. 6 пересобрана:** ядро «муфтой вперёд» (build/l6c/README.md) принято Lao и стоит в levels/06.lua,
 > проходит все ворота. Пункты 1–2 раздела «ДАЛЬШЕ» закрыты (карточка «7 · Поднимает, но не носит» — на экране заявки кв. 6,
-> поле texts.card); дальше кв. 4, 3. Быстрый экспорт арта квартиры: `python3 art/export_lvl.py N`.
+> поле texts.card). П. 3 закрыт: кв. 4 пересобрана (build/l4c/REPORT.md, 16 ходов, прогулка 5, скрытых 68 %).
+> Дальше кв. 3 (идёт), кв. 7 (идёт поиск ядра). Быстрый экспорт арта квартиры: `python3 art/export_lvl.py N`.
 
 ## Как продолжить
 1. `mkdir -p /home/claude/lapidus && cd /home/claude && unzip -q /mnt/user-data/uploads/lapidus_checkpoint_phase6a.zip`
