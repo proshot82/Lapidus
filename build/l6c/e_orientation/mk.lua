@@ -12,6 +12,6 @@ return function(o)
   objs[#objs + 1] = { kind = "lapidus", cells = o.lap, head = o.head or #o.lap }
   return {
     id = 6, flat = 6, name = "Намертво", length = o.len or { 3, 5 }, pressure = 0, tile = "mustard",
-    grid = o.grid, objects = objs, visibleLoss = o.vis, ablations = o.abl, note = o.note,
+    grid = o.grid, objects = objs, visibleLoss = o.vis, ablations = o.abl, note = o.note, texts = o.texts,
   }
 end
