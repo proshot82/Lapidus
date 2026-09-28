@@ -4,7 +4,7 @@
    python3 art/export_lvl.py 6 [4 3 ...]
 Для каждой квартиры: фон lvlNN (сразу в JPEG, как в ресурсах) и недостающие спрайты её деталей fit_*
 (существующие не трогает; --force — перерисовать и их);
-для кв. 6 ещё карточка нового правила card06 (экран заявки). Функции рисования — те же, что в art/export.py."""
+для кв. 6 и 7 ещё карточки новых правил card06 и card07 (экран заявки). Функции рисования — те же, что в art/export.py."""
 import os, subprocess, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import gen, gen2, screens2
@@ -45,6 +45,7 @@ for lv in screens2.L:
             out('fit_' + sig, G(gen2.fitting2(CR, CR, CR, ob['ports']), filter='url(#dsh)'), 2 * CR, 2 * CR)
     body, extra, _ = frame(lv, no_lap=True, hud=False, skip=('fixture', 'porcelain', 'fitting'))
     out('lvl%02d' % lv['id'], body, 1920, 1080, extra, base=False, jpeg=True)
-if 6 in IDS:
-    body, extra = screens2.card6()
-    out('card06', body, 564, 380, extra)
+for cid, fn in ((6, screens2.card6), (7, screens2.card7)):  # карточки новых правил на экране заявки
+    if cid in IDS:
+        body, extra = fn()
+        out('card%02d' % cid, body, 564, 380, extra)

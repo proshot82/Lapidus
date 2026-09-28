@@ -308,6 +308,63 @@ def card6():
     return ''.join(s), BASE
 
 
+def jet2(x1, y1, x2, y2, c):
+    """Струя на карточке: вода вдоль оси, блик и пенная шапка на конце."""
+    a = math.atan2(y2 - y1, x2 - x1)
+    px, py = -math.sin(a), math.cos(a)
+    s = [Ln(x1, y1, x2, y2, O, c * .34), Ln(x1, y1, x2, y2, Q['water'], c * .26),
+         Ln(x1 + px * c * .05, y1 + py * c * .05, x2 + px * c * .05, y2 + py * c * .05, '#FFFFFF', c * .05, opacity='.55')]
+    for k in range(5):
+        t = k / 5 * math.pi * 2
+        s.append(C(x2 + math.cos(t) * c * .10, y2 + math.sin(t) * c * .07, c * .10, '#FFFFFF', stroke=O, stroke_width=1.5))
+    for k in range(5):
+        t = k / 5 * math.pi * 2
+        s.append(C(x2 + math.cos(t) * c * .10, y2 + math.sin(t) * c * .07, c * .085, '#FFFFFF'))
+    return ''.join(s)
+
+
+def pan_pressure(px, py):
+    """Кв. 7: манометр — длина струи; струя вверх держит (лифт); струя толкает; резьба сильнее струи."""
+    cc, s = 42, []
+    fl = py + 312
+    for x0, w in ((px + 24, 146), (px + 196, 150), (px + 372, 146)):
+        s.append(R(x0, fl, w, 22, 'url(#tpM)', rx=6, stroke=O, stroke_width=3))
+    for x0 in (px + 183, px + 359):
+        s.append(Ln(x0, py + 92, x0, fl - 8, '#B9AF98', 2.5, stroke_dasharray='6 8'))
+    # 1) стояк с манометром (напор 2): столб в две клетки, деталь стоит над верхушкой — лифт
+    sx, sy = px + 70, fl - .5 * cc
+    s.append(source2(sx, sy, cc, {'up': 'N'}, sy - .5 * cc, fl + 20, 2))
+    s.append(jet2(sx, sy - .45 * cc, sx, sy - 2.45 * cc, cc))
+    s.append(fitting2(sx, sy - 3 * cc, cc, {'up': 'N', 'down': 'N'}))
+    s.append(gen.arrow(sx - 44, sy - 1.3 * cc, sx - 44, sy - 3.2 * cc, '#2F8F4E', 5))
+    # 2) струя вбок толкает деталь до своего конца
+    bx, by = px + 216, fl - 2.5 * cc
+    s.append(source2(bx, by, cc, {'right': 'N'}, by - .5 * cc, fl + 20, 2))
+    s.append(jet2(bx + .45 * cc, by, bx + 2.3 * cc, by, cc))
+    s.append(fitting2(bx + 2.9 * cc, by, cc, {'left': 'V', 'right': 'V'}))
+    s.append(gen.arrow(bx + 2.5 * cc, by - .85 * cc, bx + 3.5 * cc, by - .85 * cc, INK, 5))
+    # 3) резьба сильнее струи: деталь, вошедшая в первую клетку струи, прикручивается и глушит течь
+    tx, ty = px + 470, fl - .5 * cc
+    s.append(source2(tx, ty, cc, {'up': 'N'}, ty - .5 * cc, fl + 20, 0))
+    s.append(fitting2(tx, ty - cc, cc, {'down': 'V'}))
+    s.append(R(tx - 2.75 * cc, ty - .5 * cc, 2.2 * cc, 16, 'url(#tpM)', rx=5, stroke=O, stroke_width=3))
+    s.append(hero([(tx - 2.2 * cc, ty - cc), (tx - 1.1 * cc, ty - cc)], cc, 2, 5, ring=False))
+    s.append(gen.arrow(tx - 1.2 * cc, ty - 2.1 * cc, tx - .35 * cc, ty - 2.1 * cc, INK, 5))
+    s.append(Ln(tx, ty - 1.55 * cc, tx, ty - 3.3 * cc, Q['water'], cc * .22, opacity='.35', stroke_dasharray='8 7'))
+    s.append(gen.mark(tx, ty - 2.45 * cc, False, .55))
+    s.append(gen.mark(tx + 34, ty - 1.9 * cc, True, .6))
+    return ''.join(s)
+
+
+def card7():
+    """Карточка правила напора перед кв. 7 — восьмая, в стиле панелей «Паспорта изделия»."""
+    px, py = 10, 10
+    s = [G(R(px, py, 540, 356, '#FBF8F0', rx=10, stroke=INK, stroke_width=2.5) + C(px + 38, py + 40, 24, INK)
+           + T(px + 38, py + 51, '8', 30, '#FBF8F0', weight='bold', anchor='middle') + T(px + 76, py + 52, 'Струя толкает и держит', 32, INK, weight='bold'), filter='url(#dsh)'),
+         pan_pressure(px, py)]
+    return ''.join(s), BASE
+
+
 def passport2():
     s = [R(0, 0, 1920, 1080, '#2A3035'), G(R(70, 40, 1780, 1000, '#F1ECDF', rx=10) + R(70, 40, 1780, 1000, '#000000', filter='url(#grain)', opacity='.12'), filter='url(#dsh)')]
     s += [T(130, 128, 'ПАСПОРТ ИЗДЕЛИЯ', 62, INK, weight='bold', letter_spacing='4'),
