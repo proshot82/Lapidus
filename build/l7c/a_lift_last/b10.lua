@@ -1,7 +1,8 @@
--- b10 (напор 3): b9, антресоль длиннее влево
+-- b10 (напор 3): муфта пляшет на фонтане с начала; на антресоли переходник и угольник (антресоль длиннее)
 local __R = require("core.rules")
 -- Видимый проигрыш (узкий, честный): нужная деталь (переходник, угольник) зажата так, что её уже не сдвинуть
--- ни в одну сторону (с каждой стороны либо упор, либо толкать некому — стена или закреплённое), и она не в струе;
+-- ни в одну сторону (стоит на твёрдом; с каждой стороны либо упор, либо толкать некому — стена или закреплённое),
+-- и она не в струе;
 -- либо нужная деталь закреплена не на своём месте (угольник — только в основании фонтана, переходник — только у ванны).
 local function visibleLoss(lvl, st)
   local W = lvl.W
@@ -19,7 +20,7 @@ local function visibleLoss(lvl, st)
       if st.fixed[q] then
         if p.tag == "elb" and c ~= first then return true end
         if p.tag == "adp" then local ok = false; for _, b in ipairs(lvl.pieces) do if b.fixture and (lvl.nb[b.start][2] == c or lvl.nb[b.start][4] == c) then ok = true end end; if not ok then return true end end
-      elseif not jet[c] then
+      elseif not jet[c] and solid(lvl.nb[c][3]) then
         local boxed = true
         for d = 1, 4 do
           local fwd, back = lvl.nb[c][d], lvl.nb[c][({ 3, 4, 1, 2 })[d]]

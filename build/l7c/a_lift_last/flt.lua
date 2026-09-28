@@ -12,6 +12,8 @@ F.nohose = function(lvl, st, ns)
   return true
 end
 for _, ab in ipairs(def.ablations or {}) do if ab.filter then F[ab.name] = ab.filter end end
+local okA, A = pcall(dofile, "build/l7c/a_lift_last/abl10.lua")
+if okA then for k, v in pairs(A) do F[k] = F[k] or v end end
 local names = {}
 for i = 2, #arg do names[#names + 1] = arg[i] end
 local function combined(lvl, st, ns)
