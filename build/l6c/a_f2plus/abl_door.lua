@@ -17,7 +17,7 @@ local function noPass(lvl, st, ns)
   if row(lvl, a) <= row(lvl, sock) and col(lvl, b) == col(lvl, sock) and row(lvl, b) > row(lvl, sock) then return false end
   return true
 end
--- 2) развернуться под колонкой нельзя: Лапидусу запрещено занимать клетку гнезда
+-- 2) (справочно, не роль ключевого приёма) развернуться под колонкой нельзя: Лапидусу запрещено занимать клетку гнезда
 local function noTurn(lvl, st, ns)
   local sock = find(lvl)
   for _, c in ipairs(ns.body) do if c == sock then return false end end
@@ -33,6 +33,5 @@ return {
   { name = "без муфты", remove = "cpl" },
   { name = "без ниппеля", remove = "nip" },
   { name = "муфта не проходит сквозь гнездо", filter = noPass },
-  { name = "в гнезде не развернуться", filter = noTurn },
   { name = "ногами дверь не закрыть", filter = noHeelClose },
 }
