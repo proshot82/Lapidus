@@ -26,7 +26,7 @@ return {
     open(os.path.join(HERE, name + ".lua"), "w", encoding="utf-8").write(txt)
     return os.path.join(REL, name + ".lua")
 
-def build(name, amap, objs, lap, length=(3, 5), comment="", abl=None, vis="vis0.lua", extra=""):
+def build(name, amap, objs, lap, length=(3, 5), comment="", abl=None, vis="vis0.lua", extra="", cells=None):
     """amap: строки с символами объектов; objs: {символ: 'lua-объект с {x},{y}'}; lap: строка ячеек Лапидуса
     через символы: 'h' — голова, 'f' — ноги, 'o' — тело (порядок восстанавливается по соседству)."""
     rows = []
@@ -45,9 +45,12 @@ def build(name, amap, objs, lap, length=(3, 5), comment="", abl=None, vis="vis0.
                     found.setdefault(ch, []).append((x, y))
         rows.append("".join(out))
     lo = []
-    for ch, cells in found.items():
-        for (x, y) in cells:
+    for ch, pcs in found.items():
+        for (x, y) in pcs:
             lo.append(objs[ch].replace("{x}", str(x)).replace("{y}", str(y)))
+    if cells:
+        lapstr = "{ " + ", ".join("{ %d, %d }" % c for c in cells) + " }, head = %d" % len(cells)
+        return make(name, rows, lo, lapstr, length=length, comment=comment, abl=abl, vis=vis, extra=extra)
     # восстановить порядок тела от ног к голове
     start = [c for c, v in lapcells.items() if v == "f"][0]
     order = [start]
