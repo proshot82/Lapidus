@@ -1,14 +1,15 @@
--- честный «видимый проигрыш» для раскладок с гнездом колонки над коридором (кв. 6, направление A):
+-- честный «видимый проигрыш» для раскладок с гнездом колонки над коридором (кв. 6, направление A), ред. 2:
 -- ниппель лежит на полу, уступе или закреплённой детали НИЖЕ ряда гнезда — поднять его нечем
 -- (поднять можно только то, что лежит на Лапидусе; карточка «Поднимает, но не носит»);
--- муфта уткнулась в стену с той стороны, откуда её надо толкать к стояку (встать там нельзя).
+-- муфта лежит в ряду стояка, упёршись в стену с той стороны, откуда её надо толкать к стояку, или ниже ряда стояка.
+-- (ред. 1 помечала и муфту в колодце у стены — это живые состояния, ошибка исправлена 28.09.)
 return function(lvl, st)
-  local sock, srcRow, srcX, srcDir
+  local sock, srcRow, srcDir
   for q, p in ipairs(lvl.pieces) do
     if p.fixture then sock = p.start end
     if p.source then
       for d = 1, 4 do if p.ports[d] then srcDir = d end end
-      srcX, srcRow = (p.start - 1) % lvl.W + 1, math.floor((p.start - 1) / lvl.W) + 1
+      srcRow = math.floor((p.start - 1) / lvl.W) + 1
     end
   end
   local sockRow = math.floor((sock - 1) / lvl.W) + 2 -- ряд клетки под колонкой (порт вниз)
@@ -20,15 +21,13 @@ return function(lvl, st)
       for k = 1, #st.pos do if st.pos[k] == b and st.fixed[k] then onHard = true end end
       if onHard and row > sockRow then return true end
     end
-    if p.tag == "cpl" and st.pos[q] ~= 0 and not st.fixed[q] and srcDir == 2 then
-      -- стояк слева, порт вправо: муфту толкают влево, стоя справа от неё
-      local r = lvl.nb[st.pos[q]][2]
-      if r == 0 or lvl.cell[r] == 1 then return true end
+    if p.tag == "cpl" and st.pos[q] ~= 0 and not st.fixed[q] and (srcDir == 2 or srcDir == 4) then
       local row = math.floor((st.pos[q] - 1) / lvl.W) + 1
-      if row ~= srcRow then
-        -- муфта не в ряду стояка и лежит на твёрдом — опустить её можно, поднять нельзя
-        local b = lvl.nb[st.pos[q]][3]
-        if row > srcRow and b ~= 0 and lvl.cell[b] == 1 then return true end
+      if row > srcRow then return true end
+      if row == srcRow then
+        local away = (srcDir == 2) and 2 or 4 -- стояк слева (порт вправо): толкать надо, стоя справа
+        local r = lvl.nb[st.pos[q]][away]
+        if r == 0 or lvl.cell[r] == 1 then return true end
       end
     end
   end

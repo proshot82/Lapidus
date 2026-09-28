@@ -5,6 +5,8 @@ name, note = sys.argv[1], sys.argv[2]
 path = 'build/l6c/a_f2plus/%s.lua' % name
 out = subprocess.run(['luajit', 'build/l6b/check.lua', path], capture_output=True, text=True).stdout.strip()
 lines = [l for l in out.split('\n') if l]
+vc = subprocess.run(['luajit', 'build/l6c/a_f2plus/vischeck.lua', path], capture_output=True, text=True).stdout.strip()
+lines.append(vc)
 txt = ' / '.join(lines)
 fail = []
 def num(pat, cast=float):
@@ -28,7 +30,8 @@ else:
     if wins != 1: fail.append('7-выигрышных')
     if 'РЕШАЕМ' in out.replace('НЕРЕШАЕМ', ''): fail.append('8-абляция')
     if not (15 <= moves <= 40) or ev < 2: fail.append('10-коридор')
-print(out)
+    if 'НЕЧЕСТНО' in vc: fail.append('vis-нечестен')
+print(out); print(vc)
 print('ПРОВАЛ: ' + (', '.join(fail) if fail else 'нет (8 и 9 — вручную)'))
 with open('build/l6c/a_f2plus/LOG.md', 'a', encoding='utf-8') as f:
     f.write('| %s | %s | %s | %s |\n' % (name, note, txt.replace('|', '/'), ', '.join(fail) if fail else '—'))
