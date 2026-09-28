@@ -42,15 +42,17 @@ for c in cells.get('o', []): lap[c] = 'o'
 for c in cells.get('H', []): lap[c] = 'H'
 assert len(cells.get('f', [])) == 1 and len(cells.get('H', [])) == 1
 start = cells['f'][0]
-chain = [start]
-seen = {start}
-while True:
-    x, y = chain[-1]
-    nxt = [c for c in [(x+1,y),(x-1,y),(x,y+1),(x,y-1)] if c in lap and c not in seen]
-    if lap[chain[-1]] == 'H': break
-    assert len(nxt) == 1 or (len(nxt) > 1 and any(lap[c]=='H' for c in nxt) and len(chain) == len(lap)-1), ('ambiguous body', chain, nxt)
-    if len(nxt) > 1: nxt = [c for c in nxt if lap[c] == 'H']
-    chain.append(nxt[0]); seen.add(nxt[0])
+def dfs(path, seen):
+    if len(path) == len(lap):
+        return path if lap[path[-1]] == 'H' else None
+    x, y = path[-1]
+    for c in [(x+1,y),(x-1,y),(x,y+1),(x,y-1)]:
+        if c in lap and c not in seen and (lap[c] != 'H' or len(path) == len(lap) - 1) and lap[c] != 'f':
+            r = dfs(path + [c], seen | {c})
+            if r: return r
+    return None
+chain = dfs([start], {start})
+assert chain, 'тело не читается'
 assert len(chain) == len(lap)
 objs = []
 KIND = {}
