@@ -86,25 +86,42 @@
       {
         "name": "без фаянса",
         "solvable": false
+      },
+      {
+        "name": "подставку не выбить",
+        "solvable": false
+      },
+      {
+        "name": "мыло на мыло не ляжет",
+        "solvable": false
+      },
+      {
+        "name": "мост запрещён",
+        "solvable": false
+      },
+      {
+        "name": "подъёмник запрещён",
+        "solvable": false
       }
     ],
     "corridor": "ok",
-    "deadPct": 80.3,
-    "falseBranches": 9,
+    "deadPct": 82.6,
+    "falseBranches": 6,
     "grid": "11×8",
     "id": 3,
     "length": [
       2,
       5
     ],
-    "minMoves": 43,
+    "minMoves": 32,
     "monkey": 0,
     "name": "Мыло",
+    "note": "подставка (28.09, build/l3c/r2): 32 хода; одно мыло по замыслу уходит в слив — проигрыш задаёт def.visibleLoss (washOk); «ага» доказана абляциями «подставку не выбить», «мыло на мыло не ляжет», «мост запрещён», «подъёмник запрещён»; финальный подъём к трубам — 11 ходов без событий (структурно: ступенька в одно мыло при длине 5)",
     "pressure": 0,
     "shortest": 6,
     "shortestWidth": 3,
     "solvable": true,
-    "states": 9040,
+    "states": 4017,
     "target": {
       "dead": 35,
       "fb": 2,

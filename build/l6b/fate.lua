@@ -10,7 +10,10 @@ local good = SV.goodSet(G)
 local states = {}
 local function st(i) states[i] = states[i] or R.decode(lvl, G.keys[i]); return states[i] end
 local function lost(s)
-  for q, p in ipairs(lvl.pieces) do if p.movable and s.pos[q] == 0 then return true end end
+  -- def.washOk: смытая деталь сама по себе не проигрыш (в кв. 3 одно мыло уходит в слив по замыслу) — решает def.visibleLoss
+  if not def.washOk then
+    for q, p in ipairs(lvl.pieces) do if p.movable and s.pos[q] == 0 then return true end end
+  end
   return def.visibleLoss and def.visibleLoss(lvl, s) or false
 end
 local function cfg(s)

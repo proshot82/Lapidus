@@ -16,7 +16,10 @@ if not G then print("CAP") return end
 local good = SV.goodSet(G)
 if not G.firstWin then print(string.format("НЕРЕШАЕМ (состояний %d)", G.n)) return end
 local function lost(st)
-  for q, p in ipairs(lvl.pieces) do if p.movable and st.pos[q] == 0 then return true end end
+  -- def.washOk: смытая деталь сама по себе не проигрыш (в кв. 3 одно мыло уходит в слив по замыслу) — решает def.visibleLoss
+  if not def.washOk then
+    for q, p in ipairs(lvl.pieces) do if p.movable and st.pos[q] == 0 then return true end end
+  end
   return def.visibleLoss and def.visibleLoss(lvl, st) or false
 end
 local states, live, vis, hid, washed, nwin = {}, 0, 0, 0, 0, 0
