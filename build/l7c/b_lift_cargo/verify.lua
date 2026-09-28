@@ -19,6 +19,13 @@ local function inCol(c) return c ~= 0 and (R.xy(lvl, c)) == sx end
 local _, sy0 = R.xy(lvl, lvl.pieces[k.src].start)
 -- «поднята лифтом»: в столбе выше верхней клетки струи от стояка (над основанием фонтана)
 local function risen(c) if c == 0 or not inCol(c) then return false end local _, y = R.xy(lvl, c); return y < sy0 - lvl.R end
+-- «в шахте»: клетка столба, у которой слева и справа стены (выше комнат)
+local function inShaft(c)
+  if c == 0 or not inCol(c) then return false end
+  local fixCell = lvl.pieces[k.fix].start
+  local function closed(n) return n == 0 or lvl.cell[n] == R.WALL or n == fixCell end
+  return closed(lvl.nb[c][R.LEFT]) and closed(lvl.nb[c][R.RIGHT])
+end
 local function lostBy(f, st)
   for q, p in ipairs(lvl.pieces) do if p.movable and st.pos[q] == 0 then return true end end
   return f(lvl, st)
@@ -68,6 +75,7 @@ for i = 1, #order do for j = i + 1, #order do
   local label = string.format("%s поднят(а) лифтом раньше, чем %s в лифте", NAME[b], NAME[a])
   if a == "plug" and b == "tee" then label = label .. " (ошибка подсказки №1, ложный план)" end
   traps[#traps + 1] = { label, function(st) return risen(st.pos[k[b]]) and not inCol(st.pos[k[a]]) end }
+  traps[#traps + 1] = { "  то же, и " .. NAME[b] .. " уже в шахте (выше комнат)", function(st) return inShaft(st.pos[k[b]]) and not inCol(st.pos[k[a]]) end }
   traps[#traps + 1] = { "  то же, но Лапидус не над деталью в шахте", function(st)
       return risen(st.pos[k[b]]) and not inCol(st.pos[k[a]]) and not bodyAbove(st, st.pos[k[b]]) end }
 end end
@@ -127,12 +135,18 @@ local controls = {
         if cy >= sy - 1 then return false end
       end
       return true end },
-  { "Лапидус не заходит в столб, пока ниппель не вставлен", function(l, st, ns)
+  { "стопку в шахту не поднимать собой до ниппеля (детали в шахте только от струи)", function(l, st, ns)
       if ns.fixed[k.nip] then return true end
-      for _, c in ipairs(ns.body) do
-        local cx, cy = R.xy(l, c)
-        local _, sy = R.xy(l, l.pieces[k.src].start)
-        if cx == sx and cy >= sy - 2 then return false end
+      -- запрещено: деталь в шахте, а струя (без Лапидуса) её туда поднять не могла — выше клетки над верхушкой струи
+      local _, sy = R.xy(l, l.pieces[k.src].start)
+      for qq, p in ipairs(l.pieces) do
+        local c = ns.pos[qq]
+        if p.movable and c ~= 0 and not ns.fixed[qq] and inCol(c) then
+          local _, cy = R.xy(l, c)
+          local nIn = 0
+          for q2, p2 in ipairs(l.pieces) do local c2 = ns.pos[q2]; if p2.movable and c2 ~= 0 and inCol(c2) and c2 > c then nIn = nIn + 1 end end
+          if cy < sy - l.R - 1 - nIn then return false end
+        end
       end
       return true end },
 }
@@ -141,6 +155,6 @@ for _, c in ipairs(controls) do
   local ok, mv = solvable(strip(def), c[2])
   print(string.format("   %s: %s%s", c[1], ok and "решаем" or "НЕРЕШАЕМ", mv and (" (" .. mv .. " ходов)") or ""))
 end
-local d4 = strip(def); d4.length = { d4.length[1], 4 }
+local d4 = strip(def); d4.length = { 2, 5 }
 local ok4, mv4 = solvable(d4)
-print(string.format("   длина Лапидуса до 4: %s%s", ok4 and "решаем" or "НЕРЕШАЕМ", mv4 and (" (" .. mv4 .. " ходов)") or ""))
+print(string.format("   длина Лапидуса 2–5: %s%s", ok4 and "решаем" or "НЕРЕШАЕМ", mv4 and (" (" .. mv4 .. " ходов)") or ""))
