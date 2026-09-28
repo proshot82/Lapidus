@@ -9,7 +9,7 @@ def level(name, dist, chim, pocket, left, right, cells, Lr=(3,5), up=2, srcside=
     nx = 1 + left + 1          # столбец колонки
     kx = nx + dist             # столбец муфты
     W = kx + right + 2
-    cy = max(up + 3, chim + 3)  # ряд коридора
+    cy = max(up + 3, chim + 2)  # ряд коридора
     H = cy + pocket + 2
     g = [['#'] * W for _ in range(H)]
     def o(x, y): g[y-1][x-1] = '.'
