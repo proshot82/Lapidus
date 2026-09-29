@@ -10,12 +10,14 @@
 package.path = "./?.lua;" .. package.path
 local R = require("core.rules")
 local SV = require("solver.solve")
+local V = require("tools.vislib")
 for _, a in ipairs(arg) do
   local id = tonumber(a)
   local def = dofile(string.format("levels/%02d.lua", id))
   local lvl = R.compile(def)
   local G = SV.explore(lvl, 3000000)
   local good = SV.goodSet(G)
+  local VL = V.compute(lvl, G, def, good) -- общая линейка: новичок — ворота, знаток — для сведения
   local states = {}
   local function lost(st)
     -- def.washOk: смытая деталь сама по себе не проигрыш (в кв. 3 одно мыло уходит в слив по замыслу) — решает def.visibleLoss
@@ -29,7 +31,7 @@ for _, a in ipairs(arg) do
   for i = 1, G.n do
     if G.flag[i] == 2 then washed = washed + 1 else
       local st = R.decode(lvl, G.keys[i]); states[i] = st
-      if good[i] == 1 then live = live + 1 elseif lost(st) then vis = vis + 1 else hid = hid + 1; hidden[i] = true end
+      if good[i] == 1 then live = live + 1 elseif VL.newbie[i] then vis = vis + 1 else hid = hid + 1; hidden[i] = true end
     end
   end
   local opt = G.depth[G.firstWin]
@@ -41,7 +43,7 @@ for _, a in ipairs(arg) do
       local cand = {}
       for e = G.eStart.p[i - 1], G.eStart.p[i] - 1 do
         local j = G.edges.p[e]
-        if G.flag[j] == 1 then cand[#cand + 1] = j elseif G.flag[j] ~= 2 and not lost(states[j]) then cand[#cand + 1] = j end
+        if G.flag[j] == 1 then cand[#cand + 1] = j elseif G.flag[j] ~= 2 and not VL.newbie[j] then cand[#cand + 1] = j end
       end
       if #cand == 0 then np[i] = (np[i] or 0) + pr else
         local share = pr / #cand
@@ -115,5 +117,7 @@ for _, a in ipairs(arg) do
     id, def.name, opt, G.n, live, vis, hid, washed))
   print(string.format("   скрытых тупиков %.0f %%; умная обезьяна %.2f %% за 1000 ходов; компонент скрытых тупиков %d; самая глубокая ветка у пути ≈ %d ходов (первый вход после хода %s); узких мест %d%s",
     100 * hid / math.max(1, hid + live), smart, nc, maxDeep, tostring(firstEntry), #bott, #bott > 0 and (" (ходы " .. table.concat(bott, ",") .. ")") or ""))
+  local EX = V.measure(G, good, VL.expert)
+  print(string.format("   знаток (для сведения): скрытых %.0f %%; умная обезьяна %.2f %%; глубина у пути ≈ %d", EX.hiddenPct, EX.smart, EX.maxDeep))
   SV.freeGraph(G); require("ffi").C.free(good)
 end

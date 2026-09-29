@@ -6,6 +6,7 @@ package.path = "./?.lua;" .. package.path
 local R = require("core.rules")
 local SV = require("solver.solve")
 local ST = require("solver.strict")
+local V = require("tools.vislib")
 local def = dofile(arg[1])
 local lvl = R.compile(def)
 local errs, warns = R.validate(lvl)
@@ -15,6 +16,8 @@ local G = SV.explore(lvl, 3000000)
 if not G then print("CAP") return end
 local good = SV.goodSet(G)
 if not G.firstWin then print(string.format("НЕРЕШАЕМ (состояний %d)", G.n)) return end
+-- общая линейка (tools/vislib.lua): мерка новичка — ворота, мерка знатока — для сведения
+local VL = V.compute(lvl, G, def, good)
 local function lost(st)
   -- def.washOk: смытая деталь сама по себе не проигрыш (в кв. 3 одно мыло уходит в слив по замыслу) — решает def.visibleLoss
   if not def.washOk then
@@ -28,7 +31,7 @@ for i = 1, G.n do
   if G.flag[i] == 1 then nwin = nwin + 1 end
   if G.flag[i] == 2 then washed = washed + 1 else
     local st = R.decode(lvl, G.keys[i]); states[i] = st
-    if good[i] == 1 then live = live + 1 elseif lost(st) then vis = vis + 1 else hid = hid + 1; hidden[i] = true end
+    if good[i] == 1 then live = live + 1 elseif VL.newbie[i] then vis = vis + 1 else hid = hid + 1; hidden[i] = true end
   end
 end
 local opt = G.depth[G.firstWin]
@@ -40,7 +43,7 @@ for _ = 1, T do
     local cand = {}
     for e = G.eStart.p[i - 1], G.eStart.p[i] - 1 do
       local j = G.edges.p[e]
-      if G.flag[j] == 1 then cand[#cand + 1] = j elseif G.flag[j] ~= 2 and not lost(states[j]) then cand[#cand + 1] = j end
+      if G.flag[j] == 1 then cand[#cand + 1] = j elseif G.flag[j] ~= 2 and not VL.newbie[j] then cand[#cand + 1] = j end
     end
     if #cand == 0 then np[i] = (np[i] or 0) + pr else
       local share = pr / #cand
@@ -89,6 +92,8 @@ print(string.format("ходов %d | состояний %d (живых %d, ви�
 print(string.format("СКРЫТЫХ %.0f %% (≥40) | УМНАЯ ОБЕЗЬЯНА %.2f %% (≤0.2) | ГЛУБИНА %d (≥8) у пути [%s]",
   100 * hid / math.max(1, hid + live), smart, maxDeep, table.concat(dl, " ")))
 if sx then print(string.format("строго: наобум %.3f %% (≤1) | кратчайших %d, ширина %d (≤3)", sx.monkey, sx.shortest, sx.maxWidth)) end
+local EX = V.measure(G, good, VL.expert)
+print(string.format("знаток (для сведения): скрытых %.0f %% | обезьяна %.2f %% | глубина %d у пути [%s]", EX.hiddenPct, EX.smart, EX.maxDeep, EX.deepList))
 print(string.format("событий %d, прогулка max %d; безопасных по шагам: %s", events, maxStreak, table.concat(safeSeq, "")))
 local abl = SV.ablations(def, { cap = 3000000 })
 local ab = {}
