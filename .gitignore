@@ -6,3 +6,4 @@ vendor/*.jar
 build/gfx_svg/
 build/shot*.png
 build/web/
+build/ui/

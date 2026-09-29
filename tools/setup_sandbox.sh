@@ -14,6 +14,9 @@ if [ ${#need[@]} -gt 0 ]; then
   SUDO=""; [ "$(id -u)" -ne 0 ] && command -v sudo >/dev/null && SUDO="sudo"
   $SUDO apt-get update -qq && $SUDO env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq "${need[@]}"
 fi
+# шрифты игры — в систему: без них rsvg подставляет широкий DejaVu и текст в арте вылезает за рамки
+mkdir -p "$HOME/.local/share/fonts" && cp assets/fonts/*.ttf "$HOME/.local/share/fonts/" && fc-cache -f >/dev/null 2>&1 || true
+fc-list | grep -q "PT Sans Narrow" || echo "ВНИМАНИЕ: шрифт PT Sans Narrow не виден rsvg — арт не пересобирать"
 love --version | head -1
 if [ "$1" = "--vendor" ]; then
   mkdir -p vendor && cd vendor

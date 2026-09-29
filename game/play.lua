@@ -48,6 +48,8 @@ function Play:start(index)
   if self.app.autoplay then self:callMaster(true) end
   local demo = self.app.demo
   if demo == "hotline" then self.request = false; self:openHotline()
+  elseif demo == "hotline2" then self.request = false; self:hotlineTier(2)
+  elseif demo == "master" then self.request = false; self:say(((self.def.texts or {}).hints or {})[3] or "Мастер выехал.", 60)
   elseif demo == "act" then self.request = false; self.won, self.winPhase, self.moves = true, "act", 21
   elseif demo == "scene" then self.request = false; self.won, self.winPhase = true, "scene"
   elseif demo == "washed" then self.request = false; self.state = R.clone(self.state); self.state.dead = true
@@ -285,7 +287,7 @@ end
 
 function Play:drawRequest()
   local F = self.app.font
-  lg.setColor(0, 0, 0, 0.55); lg.rectangle("fill", 0, 0, 1920, 1080)
+  lg.setColor(0, 0, 0, 0.72); lg.rectangle("fill", 0, 0, 1920, 1080)
   lg.setFont(F.b); setc(CREAM); lg.printf("З А Я В К А", 0, 212, 1920, "center")
   -- вкладыш к паспорту: карточка нового правила (texts.card) справа от записки, записка сдвигается влево
   local card = self.def.texts and self.def.texts.card and Board.img(self.def.texts.card)
@@ -318,7 +320,7 @@ function Play:drawHotline()
   lg.setColor(0.82, 0.635, 0.22); lg.setLineWidth(18); lg.arc("line", "open", hx + 10, hy, 44, math.pi * 0.62, math.pi * 1.38)
   lg.rectangle("fill", hx - 44, hy - 62, 36, 26, 9); lg.rectangle("fill", hx - 44, hy + 36, 36, 26, 9)
   lg.setFont(F.b); setc(GOLD); lg.print("Горячая линия управляющей компании", x0 + 150, y0 + 30)
-  lg.setFont(F.xs); lg.setColor(0.62, 0.69, 0.72); lg.printf("ожидание: до окончания работ  ·  Esc — отбой", x0, y0 + 36, w - 36, "right")
+  lg.setFont(F.xs); lg.setColor(0.62, 0.69, 0.72); if not UI.isMobile() then lg.printf("Esc — отбой", x0, y0 + 36, w - 36, "right") end
   local text = (h.tier == 1) and (hints[1] or "Подумайте, каким концом начинать.") or (h.status or "")
   lg.setFont(F.m); setc(CREAM); lg.printf(text, x0 + 150, y0 + 96, w - 190)
   h.rects = {}
@@ -326,9 +328,9 @@ function Play:drawHotline()
     local bx, by = x0 + 150 + (i - 1) * 354, y0 + hh - 96
     h.rects[i] = { bx, by, 330, 64 }
     if i == h.tier then UI.brass(bx, by, 330, 64) else UI.plate(bx, by, 330, 64) end
-    lg.setFont(F.s)
+    lg.setFont(F.b)
     if i == h.tier then lg.setColor(0.169, 0.129, 0.094) else setc(CREAM) end
-    lg.printf(lab, bx, by + 32 - F.s:getHeight() / 2, 330, "center")
+    lg.printf(lab, bx, by + 32 - F.b:getHeight() / 2, 330, "center")
   end
 end
 
@@ -372,11 +374,13 @@ function Play:drawAct()
   }
   for i, r in ipairs(rows) do
     local y = -270 + (i - 1) * 66
-    lg.setFont(F.b); setc(INK); lg.print(r[1], -340, y - 34)
+    -- подпись и значение ужимаются целиком (без сплющивания), чтобы не залезать друг на друга и за край бланка
+    lg.setFont(F.b); setc(INK)
+    local ls = math.min(1, 206 / F.b:getWidth(r[1]))
+    lg.print(r[1], -340, y - 34 + (1 - ls) * 26, 0, ls, ls)
     lg.setFont(F.hand); setc(BLUE)
-    local tw = F.hand:getWidth(r[2])
-    local sx = (tw > 462) and (462 / tw) or 1 -- длинное название прибора ужимаем по ширине строки
-    lg.print(r[2], -120, y - 40, 0, sx, 1)
+    local sx = math.min(1, 458 / F.hand:getWidth(r[2]))
+    lg.print(r[2], -120, y - 40 + (1 - sx) * 30, 0, sx, sx)
     lg.setColor(0.6, 0.64, 0.72); lg.setLineWidth(1.5); lg.line(-124, y + 12, 340, y + 12)
   end
   setc(INK); lg.setLineWidth(3); lg.rectangle("line", -340, 160, 330, 150, 10)

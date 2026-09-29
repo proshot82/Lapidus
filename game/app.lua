@@ -9,7 +9,7 @@ function App.load(args)
   App.args = args or {}
   local UI, UIB, HAND = "assets/fonts/PT_Sans-Narrow-Web-Regular.ttf", "assets/fonts/PT_Sans-Narrow-Web-Bold.ttf", "assets/fonts/Neucha-Regular.ttf"
   local nf = love.graphics.newFont
-  App.font = { xs = nf(UI, 28), s = nf(UIB, 26), m = nf(UI, 36), b = nf(UIB, 38), l = nf(UIB, 66), num = nf(UIB, 80), digit = nf(UIB, 60),
+  App.font = { xs = nf(UI, 32), s = nf(UIB, 30), m = nf(UI, 36), b = nf(UIB, 38), l = nf(UIB, 66), num = nf(UIB, 80), digit = nf(UIB, 60),
                hand = nf(HAND, 42), handL = nf(HAND, 60), gradeF = nf(HAND, 84), menu = nf(UIB, 46) }
   App.save = require("game.save").load()
   App.levels = require("game.levels").load()

@@ -20,6 +20,9 @@ P = dict(ol='#2B2118', brass='#C99A2E', hi='#F6DB8A', sh='#7A5A14',
 TILE = {'mint': ('#B4D7C2', '#83AA94', '#E4F3EA'), 'blue': ('#B2C9E1', '#819DBF', '#E5EEF8'),
         'mustard': ('#DFC57F', '#B1934A', '#F4E9C3')}
 UI, HAND = 'PT Sans Narrow', 'Neucha'
+# без шрифтов игры в системе rsvg молча подставляет широкий DejaVu, и текст в арте вылезает за рамки
+if not all(f in subprocess.run(['fc-list'], capture_output=True, text=True).stdout for f in (UI, HAND)):
+    raise SystemExit('нет шрифтов %s / %s в системе: bash tools/setup_sandbox.sh' % (UI, HAND))
 DV = {'up': (0, -1), 'right': (1, 0), 'down': (0, 1), 'left': (-1, 0)}
 ANG = {'right': 0, 'down': 90, 'left': 180, 'up': -90}
 OPP = {'up': 'down', 'down': 'up', 'left': 'right', 'right': 'left'}

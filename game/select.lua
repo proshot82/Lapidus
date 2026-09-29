@@ -44,10 +44,6 @@ function Select:draw()
   lg.setColor(0.965, 0.859, 0.541, 0.6 + 0.4 * p); lg.setLineWidth(6 + 3 * p)
   lg.rectangle("line", x - 10, y - 10, w + 20, h + 20, 12)
   local def = App.levels[self.sel]
-  UI.plate(40, 320, 440, 250)
-  lg.setFont(F.b); UI.setc(UI.GOLD); lg.print(string.format("Квартира %d", self.sel), 70, 346)
-  lg.setFont(F.hand); UI.setc(UI.CREAM); lg.printf("«" .. def.name .. "»", 70, 396, 390)
-  lg.setFont(F.xs); lg.setColor(0.79, 0.83, 0.86)
   local st = self.state[self.sel]
   local line = "открыта — можно брать"
   if st == "solved" then
@@ -56,8 +52,21 @@ function Select:draw()
     local g = UI.grade(best, s and s.moves and #s.moves or nil)
     line = string.format("акт подписан: %s ходов%s", tostring(best or "—"), g and (", " .. g .. "-й разряд") or "")
   end
-  lg.printf(line, 70, 470, 390)
-  lg.printf("Enter или касание — войти, Esc — в подвал", 70, 516, 390)
+  -- строки идут друг под другом по фактической высоте переноса, табличка растёт под текст
+  local name = "«" .. def.name .. "»"
+  local lines = { line, UI.isMobile() and "касание — войти" or "Enter — войти, Esc — в подвал" }
+  local function hgt(font, t) return #select(2, font:getWrap(t, 390)) * font:getHeight() end
+  local total = 76 + hgt(F.hand, name) + 14
+  for _, t in ipairs(lines) do total = total + hgt(F.xs, t) + 8 end
+  UI.plate(40, 320, 440, math.max(250, total + 30))
+  lg.setFont(F.b); UI.setc(UI.GOLD); lg.print(string.format("Квартира %d", self.sel), 70, 346)
+  lg.setFont(F.hand); UI.setc(UI.CREAM); lg.printf(name, 70, 396, 390)
+  lg.setFont(F.xs); lg.setColor(0.79, 0.83, 0.86)
+  local ty = 396 + hgt(F.hand, name) + 14
+  for _, t in ipairs(lines) do
+    lg.printf(t, 70, ty, 390)
+    ty = ty + hgt(F.xs, t) + 8
+  end
 end
 
 function Select:enter(i)

@@ -27,7 +27,7 @@
 
 ## Окружение и команды
 - Программы (LÖVE 11.5, LuaJIT, rsvg, ImageMagick, ffmpeg, xvfb, zip): если `love` или `luajit` не находятся —
-  `bash tools/setup_sandbox.sh`. Текст для поля Setup script облачного окружения — tools/cloud_setup.sh.
+  `bash tools/setup_sandbox.sh` (он же ставит шрифты игры в систему — без них art/*.py откажется рисовать). Текст для поля Setup script облачного окружения — tools/cloud_setup.sh.
 - Тесты: `luajit tests/test_rules.lua && luajit tests/test_solver.lua`.
 - Отчёты: `luajit solver/run_all.lua 1 2 3 4 5 6` — ВСЕГДА со всеми номерами квартир (перезаписывает отчёты целиком);
   разбор: `luajit tools/review.lua 1 2 3 4 5 6`.
