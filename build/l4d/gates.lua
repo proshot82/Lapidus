@@ -116,6 +116,16 @@ local controls = {
       local x0, y0 = R.xy(l, s.pos[qc]); local x1, y1 = R.xy(l, ns.pos[qc])
       return not (y0 == 3 and y1 == 3 and x1 > x0) end },
 }
+for _, c in ipairs(def.controls or {}) do
+  local d2 = SV.deepcopy(def); d2.ablations = nil; d2.controls = nil; if c.mutate then c.mutate(d2) end
+  local ok, l2 = pcall(R.compile, d2)
+  local G2 = ok and #R.validate(l2) == 0 and SV.explore(l2, 3000000, c.filter)
+  if G2 and G2.firstWin then
+    local g2 = SV.goodSet(G2); local VL2 = V.compute(l2, G2, d2, g2); local M2 = V.measure(G2, g2, VL2.newbie)
+    print(string.format("%s: РЕШАЕМ за %d, скрытых %.0f %%, глубина %d, обезьяна %.2f %%", c.name, G2.depth[G2.firstWin], M2.hiddenPct, M2.maxDeep, M2.smart))
+    SV.freeGraph(G2); require("ffi").C.free(g2)
+  else print(c.name .. ": НЕРЕШАЕМ/невалиден") if G2 then SV.freeGraph(G2) end end
+end
 for _, c in ipairs(controls) do
   local G2 = SV.explore(lvl, 3000000, c[2])
   print(string.format("%s: %s", c[1], G2 and G2.firstWin and ("решаем за " .. G2.depth[G2.firstWin]) or "НЕРЕШАЕМ"))
