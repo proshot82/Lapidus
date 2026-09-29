@@ -1,3 +1,13 @@
+-- Квартира 5 «Лишний выход» — кандидат k1 (29.09.2026, build/l5c; ядро c1 «лестница, потом пробка»).
+-- Тройник лежит на уступе между выходом к стояку (колонна над стояком) и сушителем. Толкнуть его в колонну можно
+-- только со стороны сушителя — из закутка, куда ведёт лишь лаз сверху; наверх ведёт единственная ступенька —
+-- заглушка. Снизу (из колонны) тройник толкается легко — но в другую сторону, прямо на резьбу сушителя.
+-- Гнездо заглушки — ямка у тройника на стояке: упавшая туда заглушка уже не выйдет.
+-- Ложный план: «заглушку — сразу в гнездо у стояка» (тогда ступеньки больше нет) и «тройник — на сушитель»
+-- (правдоподобная неверная пара). Правильный порядок: сначала лестница, потом пробка.
+-- Видимый проигрыш — по мерке новичка (общая линейка tools/vislib.lua + правило уровня ниже).
+-- Решение здесь не пишется.
+
 -- Видимый проигрыш уровня (правило уровня; общая линейка tools/vislib.lua его дополняет) — по мерке НОВИЧКА:
 --  1) свободная деталь (тройник или заглушка), лежащая на твёрдом (стена или закреплённое), статически уже не может
 --     попасть на своё место: толкать можно только вбок, встав концом рядом (с местом для шеи); поднять лежащее нельзя;
@@ -111,4 +121,60 @@ local function visibleLoss(lvl, st)
   if not st.fixed[qp] and onSolid(st.pos[qp]) and not canReach(qp, st.pos[qp], P) then return true end
   return false
 end
-return visibleLoss
+
+
+-- Абляция РОЛИ приёма (фильтр ходов, как в levels/04.lua и levels/06.lua).
+-- «Ступенька запрещена»: стоя на незакреплённой заглушке, Лапидус не поднимается выше, чем достаёт с пола
+-- (ни одно звено не выше клетки «заглушка − 4»), — заглушка не служит лестницей. Остальное (ходить по ней,
+-- толкать её, лежать на ней) разрешено.
+local function tagOf(lvl, what) for q, p in ipairs(lvl.pieces) do if p.what == what then return q end end end
+local function noStep(lvl, st, ns)
+  local pq = tagOf(lvl, "plug")
+  local c = ns.pos[pq]
+  if c == 0 or ns.fixed[pq] then return true end
+  local above = lvl.nb[c][1]
+  local on = false
+  for _, b in ipairs(ns.body) do if b == above then on = true end end
+  if not on then return true end
+  local pr = math.floor((c - 1) / lvl.W) + 1
+  for _, b in ipairs(ns.body) do if math.floor((b - 1) / lvl.W) + 1 <= pr - 4 then return false end end
+  return true
+end
+
+return {
+  visibleLoss = visibleLoss,
+  id = 5, flat = 5, name = "Лишний выход",
+  length = { 2, 4 }, pressure = 0, tile = "blue",
+  target = { moves = { 15, 40 }, states = 300000, dead = 40, fb = 2 },
+  grid = {
+    "#########",
+    "#......##",
+    "#..###.##",
+    "#...##.##",
+    "#.......#",
+    "#....####",
+    "###...###",
+    "#########",
+  },
+  objects = {
+    { kind = "source", at = { 6, 7 }, ports = { left = "N" } },
+    { kind = "fixture", what = "dryer", at = { 8, 5 }, ports = { left = "N" } },
+    { kind = "fitting", what = "tee", tag = "tee", at = { 6, 5 }, ports = { up = "V", right = "V", left = "V" } },
+    { kind = "fitting", what = "plug", tag = "plug", at = { 3, 6 }, ports = { right = "N" } },
+    { kind = "lapidus", cells = { { 2, 4 }, { 2, 5 }, { 2, 6 } }, head = 1 },
+  },
+  ablations = {
+    { name = "без заглушки", remove = "plug" },
+    { name = "тройник заглушён заранее", remove = "plug",
+      mutate = function(d) for _, o in ipairs(d.objects) do if o.tag == "tee" then o.ports.left = nil end end end },
+    { name = "ступенька запрещена", filter = noStep },
+  },
+  texts = {
+    request = "Полотенцесушитель холодный, носки мокрые. Пропажу второго носка прошу считать отдельной заявкой.",
+    hints = {
+      "Заглушка — единственная ступенька наверх. Сначала лестница, потом пробка.",
+      "Ваш звонок очень важен для нас. Проверяем, не лишний ли у вас выход.",
+      "Мастер выехал. Стремянку он с собой не возит.",
+    },
+  },
+}

@@ -14,17 +14,21 @@ def vis_code():
     return body.rstrip() + '\n'
 
 ROLE = r'''
--- Абляции РОЛИ приёма (фильтры ходов, как в levels/04.lua и levels/06.lua).
+-- Абляция РОЛИ приёма (фильтр ходов, как в levels/04.lua и levels/06.lua).
+-- «Ступенька запрещена»: стоя на незакреплённой заглушке, Лапидус не поднимается выше, чем достаёт с пола
+-- (ни одно звено не выше клетки «заглушка − 4»), — заглушка не служит лестницей. Остальное (ходить по ней,
+-- толкать её, лежать на ней) разрешено.
 local function tagOf(lvl, what) for q, p in ipairs(lvl.pieces) do if p.what == what then return q end end end
--- «Ступенька запрещена»: нельзя сдвинуть тройник, пока Лапидус опирается на незакреплённую заглушку
--- (стоит на ней хоть одним звеном) — заглушка не служит лестницей.
 local function noStep(lvl, st, ns)
-  local tq, pq = tagOf(lvl, "tee"), tagOf(lvl, "plug")
-  if st.pos[tq] == ns.pos[tq] or st.fixed[tq] then return true end
-  local pc = st.pos[pq]
-  if pc == 0 or st.fixed[pq] then return true end
-  local above = lvl.nb[pc][1]
-  for _, c in ipairs(st.body) do if c == above then return false end end
+  local pq = tagOf(lvl, "plug")
+  local c = ns.pos[pq]
+  if c == 0 or ns.fixed[pq] then return true end
+  local above = lvl.nb[c][1]
+  local on = false
+  for _, b in ipairs(ns.body) do if b == above then on = true end end
+  if not on then return true end
+  local pr = math.floor((c - 1) / lvl.W) + 1
+  for _, b in ipairs(ns.body) do if math.floor((b - 1) / lvl.W) + 1 <= pr - 4 then return false end end
   return true
 end
 '''
