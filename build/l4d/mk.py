@@ -18,6 +18,162 @@ TEXTS = {
     ],
 }
 
+VIS2 = r'''
+-- Видимый проигрыш уровня (только добавляет к общей линейке tools/vislib.lua: смыто, замёрзла, карман).
+-- Разметка раунда 2 (после слепого скептика build/l4v/VERIFY.md). Видимо проиграно «с одного взгляда», если:
+--  1) вход в шахту закрыт закреплённой деталью, а деталь, которая должна стоять на стояке, на стояке не стоит
+--     (единственный вход в шахту закрыт навсегда);
+--  2) подвижная деталь намертво прикручена к глухому отводу вне финальной сети (вкладыш: «прикрученная — намертво»);
+--  3) вход прибора (машинки) навсегда занят прикрученной деталью: воде туда уже не попасть;
+--  4) одиночная деталь лежит там, откуда до входа в шахту ей не добраться, не прикрутившись по дороге к чужой резьбе.
+-- Не помечает (это «ага» уровня и мерка знатока): порядок свободных деталей на полу и подвижную свинченную пару.
+local VL_GEO = setmetatable({}, { __mode = "k" })
+local function vlGeom(lvl)
+  local g = VL_GEO[lvl]
+  if g then return g end
+  g = { solid = {}, staticPort = {} }
+  local S
+  for q, p in ipairs(lvl.pieces) do
+    if p.source then S = p.start end
+    if p.what == "coupling" then g.qc = q elseif p.what == "nipple" then g.qn = q end
+  end
+  g.B = lvl.nb[S][1]; g.T = lvl.nb[g.B][1]
+  local solid = g.solid
+  for i = 1, lvl.N do solid[i] = (lvl.cell[i] == 1) end
+  for q, p in ipairs(lvl.pieces) do
+    if not p.movable then
+      solid[p.start] = true
+      g.staticPort[p.start] = p.ports
+    end
+  end
+  local function isSolid(c) return c == 0 or solid[c] end
+  local function isPit(c) return c ~= 0 and lvl.cell[c] == 2 end
+  g.isSolid, g.isPit = isSolid, isPit
+  local OPP = { 3, 4, 1, 2 }
+  -- деталь q в клетке c прикрутилась бы к закреплённой резьбе (кроме входа в шахту)
+  local function catches(q, c)
+    if c == g.T then return false end
+    local ports = lvl.pieces[q].ports
+    for d = 1, 4 do
+      local th = ports[d]
+      local t = lvl.nb[c][d]
+      if th and t ~= 0 and g.staticPort[t] then
+        local o = g.staticPort[t][OPP[d]]
+        if o and o ~= th then return true end
+      end
+    end
+    return false
+  end
+  -- куда упадёт одиночная деталь q, отпущенная в клетке c (0 — смыло или прикрутилась не туда)
+  local function rest(q, c)
+    while true do
+      if catches(q, c) then return 0 end
+      local b = lvl.nb[c][3]
+      if isSolid(b) then return c end
+      if isPit(b) then return 0 end
+      c = b
+    end
+  end
+  local function pusherOK(t, set)
+    if isSolid(t) or isPit(t) then return false end
+    for d = 1, 4 do
+      local u = lvl.nb[t][d]
+      if u ~= 0 and not set[u] and not isSolid(u) and not isPit(u) then return true end
+    end
+    return false
+  end
+  g.pusherOK = pusherOK
+  local reach = {}
+  local function canReach(q, c0)
+    local key = q * 1000 + c0
+    if reach[key] ~= nil then return reach[key] end
+    local seen, qu, h = { [c0] = true }, { c0 }, 1
+    local ok = false
+    while h <= #qu and not ok do
+      local c = qu[h]; h = h + 1
+      for _, d in ipairs({ 2, 4 }) do
+        local c2 = lvl.nb[c][d]
+        local back = lvl.nb[c][d == 2 and 4 or 2]
+        if not isSolid(c2) and pusherOK(back, { [c] = true }) then
+          if c2 == g.T then ok = true break end
+          if not isPit(c2) then
+            local r = rest(q, c2)
+            if r ~= 0 and r == g.T then ok = true break end
+            if r ~= 0 and not seen[r] then seen[r] = true; qu[#qu + 1] = r end
+          end
+        end
+      end
+    end
+    reach[key] = ok
+    return ok
+  end
+  g.canReach = canReach
+  VL_GEO[lvl] = g
+  return g
+end
+
+local function visibleLoss(lvl, st)
+  local S, B, T
+  for q, p in ipairs(lvl.pieces) do if p.source then S = p.start end end
+  B = lvl.nb[S][1]; T = lvl.nb[B][1]
+  local atB, atT = nil, nil
+  for q, p in ipairs(lvl.pieces) do
+    if p.movable then
+      if st.pos[q] == 0 then return true end
+      if st.pos[q] == B and st.fixed[q] then atB = q end
+      if st.pos[q] == T and st.fixed[q] then atT = q end
+    end
+  end
+  -- 1) вход закрыт, а на стояке пусто
+  if atT and not atB then return true end
+  -- 4) одиночная свободная деталь лежит на твёрдом там, откуда её никакими толчками не довести до входа: по дороге она
+  --    прикрутится к чужой резьбе (вход прибора в полу, глухой отвод) или смоется (статическая карта, как углы сокобана)
+  local g = vlGeom(lvl)
+  local fixedAt = {}
+  for q = 1, #st.pos do if st.pos[q] ~= 0 and st.fixed[q] then fixedAt[st.pos[q]] = true end end
+  for q, p in ipairs(lvl.pieces) do
+    if p.movable and not st.fixed[q] then
+      local paired = false
+      for r, pr in ipairs(lvl.pieces) do if r ~= q and pr.movable and not st.fixed[r] and st.asm[r] == st.asm[q] then paired = true end end
+      local c = st.pos[q]
+      local b = lvl.nb[c][3]
+      if not paired and (g.isSolid(b) or fixedAt[b]) and not g.canReach(q, c) then return true end
+    end
+  end
+  for q, p in ipairs(lvl.pieces) do
+    if not p.movable then
+      for d = 1, 4 do
+        if p.ports[d] then
+          local t = lvl.nb[p.start][d]
+          for r = 1, #st.pos do
+            if lvl.pieces[r].movable and st.pos[r] == t and st.fixed[r] then
+              -- 2) на глухом отводе; 3) во входе прибора
+              if p.kind == "stub" or p.fixture then return true end
+            end
+          end
+        end
+      end
+    end
+  end
+  return false
+end
+
+-- Абляция РОЛИ приёма (фильтр ходов): «по одной нельзя» — запрещено состояние, где нижняя деталь уже закреплена на стояке,
+-- а верхняя ещё свободна (детали нельзя ронять по одной — только ставить вместе, собранной трубой).
+local function oneByOne(lvl, st, ns)
+  local S
+  for q, p in ipairs(lvl.pieces) do if p.source then S = p.start end end
+  local B = lvl.nb[S][1]
+  local fixedB, freeOther = false, false
+  for q, p in ipairs(lvl.pieces) do
+    if p.movable then
+      if ns.pos[q] == B and ns.fixed[q] then fixedB = true elseif ns.pos[q] ~= 0 and not ns.fixed[q] then freeOther = true end
+    end
+  end
+  return not (fixedB and freeOther)
+end
+'''
+
 VIS = r'''
 -- Видимый проигрыш уровня (только добавляет к общей линейке tools/vislib.lua: смыто, замёрзла, карман). Видимо
 -- проиграно «с одного взгляда», если:
@@ -199,17 +355,25 @@ def obj_lua(o):
 
 
 def build(name, spec):
+    vis = VIS2 if spec.get('vis2') else VIS
+    if spec.get('vis2') and not spec.get('static4'):
+        a = vis.index('  -- 4) одиночная свободная деталь')
+        b = vis.index('  for q, p in ipairs(lvl.pieces) do\n    if not p.movable then', a)
+        vis = vis[:a] + vis[b:]
+        vis = vis.replace("--  3) вход прибора (машинки) навсегда занят прикрученной деталью: воде туда уже не попасть;\n--  4) одиночная деталь лежит там, откуда до входа в шахту ей не добраться, не прикрутившись по дороге к чужой резьбе.\n",
+                          "--  3) вход прибора (машинки) навсегда занят прикрученной деталью: воде туда уже не попасть.\n")
     grid = spec['grid']
     objs = spec['objects']
     (px, py), (qx, qy) = spec['prepair']
-    mut = 'o.tag == "cpl" then o.at = { %d, %d } elseif o.tag == "nip" then o.at = { %d, %d }' % (px, py, qx, qy)
+    top = 'ang' if any(o.get('what') == 'angle' for o in objs) else 'nip'
+    mut = 'o.tag == "cpl" then o.at = { %d, %d } elseif o.tag == "%s" then o.at = { %d, %d }' % (px, py, top, qx, qy)
     length = spec.get('length', (2, 4))
     target = spec.get('target', '{ moves = { 15, 40 }, states = 300000, dead = 40, fb = 2 }')
     texts = spec.get('texts', TEXTS)
     out = []
     for l in spec['comment'].strip().split('\n'):
         out.append('-- ' + l.strip())
-    out.append(VIS.rstrip())
+    out.append(vis.rstrip())
     out.append('')
     out.append('return {')
     out.append('  visibleLoss = visibleLoss,')
@@ -231,7 +395,7 @@ def build(name, spec):
     out.append('  },')
     out.append('  ablations = {')
     out.append('    { name = "без муфты", remove = "cpl" },')
-    out.append('    { name = "без ниппеля", remove = "nip" },')
+    out.append('    { name = "без %s", remove = "%s" },' % (('угольника', 'ang') if any(o.get('what') == 'angle' for o in objs) else ('ниппеля', 'nip')))
     out.append('    { name = "сборка заранее", mutate = function(d) for _, o in ipairs(d.objects) do if %s end end end },' % mut)
     out.append('    { name = "по одной нельзя", filter = oneByOne },')
     for extra in spec.get('ablations', []):

@@ -7,7 +7,7 @@ local def = dofile(arg[1])
 local lvl = R.compile(def)
 local G = SV.explore(lvl, 3000000)
 local qn
-for q, p in ipairs(lvl.pieces) do if p.what == "nipple" then qn = q end end
+for q, p in ipairs(lvl.pieces) do if p.movable and p.what ~= "coupling" then qn = q end end
 local c = R.idx(lvl, tonumber(arg[2]), tonumber(arg[3])); local f = arg[4] == "F"
 local function cfg(st)
   local t = {}

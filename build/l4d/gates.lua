@@ -14,7 +14,7 @@ local good = SV.goodSet(G)
 local VL = V.compute(lvl, G, def, good)
 local qc, qn, S, hole
 for q, p in ipairs(lvl.pieces) do
-  if p.what == "coupling" then qc = q elseif p.what == "nipple" then qn = q end
+  if p.what == "coupling" then qc = q elseif p.movable then qn = q end
   if p.source then S = p.start end
 end
 local B = lvl.nb[S][1]; local T = lvl.nb[B][1]

@@ -10,7 +10,7 @@ local good = SV.goodSet(G)
 local a = {}
 for i = 2, #arg do a[#a+1] = arg[i] end
 local qc, qn
-for q, p in ipairs(lvl.pieces) do if p.what == "coupling" then qc = q elseif p.what == "nipple" then qn = q end end
+for q, p in ipairs(lvl.pieces) do if p.what == "coupling" then qc = q elseif p.movable then qn = q end end
 local function parse(k) local x, y = tonumber(a[k]), tonumber(a[k+1]); local f = a[k+2] == "F"; return R.idx(lvl, x, y), f, f and k+3 or k+2 end
 local c1, f1, k = parse(1); local c2, f2 = parse(k)
 local function cfg(st)

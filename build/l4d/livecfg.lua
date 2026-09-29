@@ -1,5 +1,5 @@
--- build/l4d/find.lua файл.lua класс — печатает конфигурации живых состояний, где муфта свободна не на полу (ряд не входа),
--- а ниппель на полу; и цепочку конфигураций к первому такому (только в терминал).
+-- build/l4d/livecfg.lua файл.lua — конфигурации живых состояний, где обе детали свободны на полу (ряд входа) и муфта
+-- ближе к шахте, чем вторая деталь; для самой ранней — цепочка конфигураций от старта. Только терминал.
 package.path = "./?.lua;" .. package.path
 local R = require("core.rules")
 local SV = require("solver.solve")
@@ -12,21 +12,22 @@ for q, p in ipairs(lvl.pieces) do if p.what == "coupling" then qc = q elseif p.m
 local T = lvl.nb[lvl.nb[S][1]][1]
 local W = lvl.W
 local function row(c) return math.floor((c - 1) / W) + 1 end
+local function col(c) return (c - 1) % W + 1 end
 local function cfg(st)
   local t = {}
   for q, p in ipairs(lvl.pieces) do if p.movable then local x, y = R.xy(lvl, st.pos[q]); t[#t+1] = string.format("%s(%d,%d)%s", p.tag, x, y, st.fixed[q] and "F" or "") end end
   local b = st.body; local hx, hy = R.xy(lvl, b[#b]); local fx, fy = R.xy(lvl, b[1])
   return table.concat(t, " ") .. string.format("  L:ноги(%d,%d)голова(%d,%d)", fx, fy, hx, hy)
 end
-local seen = {}
-local best, bestd = nil, 1e9
+local seen, best = {}, nil
 for i = 1, G.n do
   if G.flag[i] ~= 2 and good[i] == 1 then
     local st = R.decode(lvl, G.keys[i])
-    if not st.fixed[qc] and not st.fixed[qn] and st.asm[qc] ~= st.asm[qn] and row(st.pos[qc]) ~= row(T) and row(st.pos[qn]) == row(T) then
-      local k = cfg(st):gsub("  L:.*", "")
-      seen[k] = (seen[k] or 0) + 1
-      if G.depth[i] < bestd then bestd = G.depth[i]; best = i end
+    local pc, pn = st.pos[qc], st.pos[qn]
+    if not st.fixed[qc] and not st.fixed[qn] and st.asm[qc] ~= st.asm[qn] and row(pc) == row(T) and row(pn) == row(T)
+       and math.abs(col(T) - col(pc)) < math.abs(col(T) - col(pn)) then
+      local k = cfg(st):gsub("  L:.*", ""); seen[k] = (seen[k] or 0) + 1
+      if not best or G.depth[i] < G.depth[best] then best = i end
     end
   end
 end

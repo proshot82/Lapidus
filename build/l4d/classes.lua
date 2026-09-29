@@ -11,7 +11,7 @@ local good = SV.goodSet(G)
 local VL = V.compute(lvl, G, def, good)
 local qc, qn, S
 for q, p in ipairs(lvl.pieces) do
-  if p.what == "coupling" then qc = q elseif p.what == "nipple" then qn = q end
+  if p.what == "coupling" then qc = q elseif p.movable then qn = q end
   if p.source then S = p.start end
 end
 local B = lvl.nb[S][1]; local T = lvl.nb[B][1]
@@ -32,7 +32,7 @@ for i = 1, G.n do
     local k
     local pc, pn = st.pos[qc], st.pos[qn]
     if pc ~= 0 and pn ~= 0 and not st.fixed[qc] and not st.fixed[qn] and st.asm[qc] == st.asm[qn] then
-      k = "ПАРА свободна"
+      k = "ПАРА свободна (муфта снизу)"
     elseif pc ~= 0 and pn ~= 0 and not st.fixed[qc] and not st.fixed[qn] then
       local same = row(pc) == row(pn) and row(pc) == row(T)
       if same then
