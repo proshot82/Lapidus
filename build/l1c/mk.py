@@ -13,6 +13,12 @@ for a in sys.argv[3:]:
 W = len(grid[0])
 for r in grid:
     assert len(r) == W, 'ширина ряда: ' + r
+grid = [list(r) for r in grid]
+for key in ('S', 'F', 'T', 'T2', 'T3'):
+    if key in kv:
+        xy = kv[key].split(':')[0].split(',')
+        grid[int(xy[1]) - 1][int(xy[0]) - 1] = '.'
+grid = [''.join(r) for r in grid]
 
 
 def obj(spec):
