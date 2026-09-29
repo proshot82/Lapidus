@@ -12,7 +12,7 @@ local lvl = R.compile(def)
 local W = lvl.W
 local function xy(c) return (c - 1) % W + 1, math.floor((c - 1) / W) + 1 end
 local tag = {}
-for q, p in ipairs(lvl.pieces) do if p.tag then tag[p.tag] = q end; if p.what == "tee" then tag.tee = q end end
+for q, p in ipairs(lvl.pieces) do if p.tag then tag[p.tag] = q end; if p.what == "tee" then tag.tee = q end; if p.what == "elbow" then tag.e = tag.e or q end; if p.what == "plug" then tag.q = tag.q or q end end
 local tee = lvl.pieces[tag.tee].start
 local tx, ty = xy(tee)
 local filters = {}
