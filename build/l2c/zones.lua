@@ -72,13 +72,12 @@ local evCount = 0
 for k = 1, #path - 1 do
   local a, b = st[path[k]], st[path[k + 1]]
   local isEv = anchors(a) ~= anchors(b)
-  -- падение: тело сместилось вниз целиком сверх хода (грубо: разница клеток больше одной)
+  -- падение: после хода было устаканивание (как в build/l1c/an.lua — по трассе хода)
   if not isEv then
-    local same = 0
-    local set = {}
-    for _, c in ipairs(a.body) do set[c] = true end
-    for _, c in ipairs(b.body) do if set[c] then same = same + 1 end end
-    if same < math.min(#a.body, #b.body) - 1 then isEv = true end
+    local m = G.pmove[path[k + 1]]
+    local tr = {}
+    R.move(lvl, a, R.MOVES[m].which, R.MOVES[m].dir, tr)
+    for _, t in ipairs(tr) do if t.kind == "settle" then isEv = true end end
   end
   if isEv then evCount = evCount + 1; streak = 0 else streak = streak + 1; if streak > maxStreak then maxStreak = streak end end
   local safe = 0
