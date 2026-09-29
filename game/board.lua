@@ -283,18 +283,67 @@ function Board:drawWater(status, jets, pressure, t)
       end
     end
   else
-    local drop = img("drop")
-    for _, lk in ipairs(status.leaks or {}) do
+    -- без напора вода не бьёт, а льётся (§8): струйка по дуге вниз до пола и всплеск; вверх — низкий «ключ» с переливом.
+    -- Фонтан оставлен напору: он толкает и держит, и путать их нельзя.
+    for n, lk in ipairs(status.leaks or {}) do
       local dx, dy = DIRV[lk.dir][1], DIRV[lk.dir][2]
       local cx, cy = self:center(lk.cell)
       local ex, ey = cx + dx * cs * 0.55, cy + dy * cs * 0.55
-      for q = 0, 2 do
-        local f = (t * 1.6 + q / 3) % 1
-        lg.setColor(1, 1, 1, 1 - f)
-        if drop then lg.draw(drop, ex, ey + f * cs * 0.9, 0, self.k * 1.4, self.k * 1.4, 60, 70) end
+      if dy < 0 then
+        local wob = 0.03 * math.sin(t * 9 + n)
+        setc(COL.ol); lg.ellipse("fill", ex, ey - cs * 0.02, cs * 0.17, cs * (0.15 + wob))
+        setc(COL.water); lg.ellipse("fill", ex, ey - cs * 0.02, cs * 0.13, cs * (0.12 + wob))
+        lg.setColor(1, 1, 1, 0.85); lg.ellipse("fill", ex - cs * 0.04, ey - cs * 0.07, cs * 0.04, cs * 0.025)
+        for side = -1, 1, 2 do self:stream(ex + side * cs * 0.12, ey, side * 0.35, t, n + side) end
+      else
+        -- пол под струйкой: вода не заходит на плитку, капли разбиваются о него
+        local lvl, floorY = self.lvl, nil
+        local tc = lvl.nb[lk.cell][lk.dir]
+        if tc ~= 0 and dy == 0 then
+          local below = lvl.nb[tc][3]
+          if below == 0 or lvl.cell[below] == R.WALL then local _, ty = self:center(tc); floorY = ty + cs * 0.5 end
+        end
+        self:stream(ex, ey, dx * 0.9, t, n, floorY)
       end
     end
   end
 end
 
+-- Струйка без напора: короткий «носик» из выхода по дуге вниз (не дальше клетки), дальше капли гаснут на лету.
+-- Вода без напора ничего не толкает и клеток не занимает — поэтому и нарисована локально, а не до пола.
+function Board:stream(x, y, vx, t, seed, floorY)
+  local cs = self.cs
+  seed = seed or 0
+  local pts, wob = {}, 0.04 * math.sin(t * 11 + seed)
+  for i = 0, 14 do
+    local sp = i / 14 * 0.62
+    local py = y + cs * 1.6 * sp * sp
+    if floorY and py > floorY - cs * 0.04 then break end
+    pts[#pts + 1] = x + vx * cs * sp * (1 + wob)
+    pts[#pts + 1] = py
+  end
+  if #pts < 4 then return end
+  local tx, ty = pts[#pts - 1], pts[#pts]
+  setc(COL.ol, 0.85); lg.setLineWidth(cs * 0.16); lg.line(pts)
+  setc(COL.water); lg.setLineWidth(cs * 0.11); lg.line(pts)
+  local L = cumul(pts)
+  local total = L[#L]
+  local period = cs * 0.3
+  local ph = (t * cs * 1.8 + seed * 11) % period
+  setc(COL.waterLt, 0.95); lg.setLineWidth(cs * 0.035)
+  for s0 = ph - period, total, period do
+    local seg = subpath(pts, L, math.max(0, s0), math.min(total, s0 + cs * 0.1))
+    if #seg >= 4 then lg.line(seg) end
+  end
+  -- капли срываются с конца струйки и гаснут в пределах клетки
+  local vx1 = vx * 0.55
+  for k = 0, 3 do
+    local f = (t * 1.9 + k / 4 + seed * 0.29) % 1
+    local r = cs * (0.05 - 0.02 * f)
+    local px, py = tx + vx1 * cs * 0.25 * f, ty + cs * 0.75 * f * f + cs * 0.05
+    if floorY and py > floorY - r then py = floorY - r; px = tx + vx1 * cs * 0.25 * f + (k - 1.5) * cs * 0.12 * f end
+    setc(COL.ol, 0.8 * (1 - f)); lg.circle("fill", px, py, r + 2)
+    setc(COL.water, 1 - f); lg.circle("fill", px, py, r)
+  end
+end
 return Board
