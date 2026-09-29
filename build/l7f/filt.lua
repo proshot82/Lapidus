@@ -70,5 +70,27 @@ function F.nipStaysUp(lvl, st, ns)
   local q = find(lvl, "nipple"); local c = ns.pos[q]
   return c == 0 or ns.fixed[q] or row(lvl, c) < lvl.H - 1
 end
--- Контроль «Лапидус не заходит в колодец ванны и спуск снизу» — не нужен; см. REPORT.
+-- «Струя не поднимает тело Лапидуса целиком» (узко, по трассе устаканивания; формулировка скептика build/l7v_g):
+-- запрещён ход, при устаканивании которого всё тело сдвинулось на клетку вверх.
+local function trace(lvl, st, ns)
+  local k = R.key(ns)
+  for m = 1, 8 do
+    local mv = R.MOVES[m]; local tr = {}
+    local s2 = R.move(lvl, st, mv.which, mv.dir, tr)
+    if s2 and R.key(s2) == k then return tr end
+  end
+end
+function F.lapLifted(lvl, st, ns)
+  if ns.dead then return true end
+  local tr = trace(lvl, st, ns); if not tr then return true end
+  for i = 2, #tr do
+    if tr[i].kind == "settle" then
+      local a, b = tr[i-1].state.body, tr[i].state.body
+      local up = (#a == #b)
+      if up then for j = 1, #a do if b[j] ~= a[j] - lvl.W then up = false break end end end
+      if up then return false end
+    end
+  end
+  return true
+end
 return F
