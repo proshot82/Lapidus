@@ -1,6 +1,6 @@
--- build/l2c/abl.lua файл.lua — абляции уровня (из def.ablations: обязаны быть нерешаемы) и КОНТРОЛИ (обязаны быть
--- решаемы): контроль показывает, что фильтр/мутация бьёт именно по роли приёма, а не ломает уровень вообще.
--- Жёлоб определяется по файлу: def.chute = { x, y1, y2 } (клетки жёлоба под комнатой).
+-- build/l2c/abl.lua файл.lua X Y1 Y2 — абляции уровня (из def.ablations: обязаны быть нерешаемы) и КОНТРОЛИ (обязаны
+-- быть решаемы): контроль показывает, что фильтр/мутация бьёт именно по роли приёма, а не ломает уровень вообще.
+-- X, Y1..Y2 — клетки жёлоба под комнатой старта (k9: 8 4 6; k11: 10 4 6); «ниже комнаты» = все клетки на строках ≥ Y1.
 package.path = "./?.lua;" .. package.path
 local R = require("core.rules")
 local SV = require("solver.solve")
@@ -22,7 +22,7 @@ for _, ab in ipairs(def.ablations or {}) do
   print(string.format("абляция «%s»: %s", ab.name, run(d2, ab.filter)))
 end
 -- контроли
-local C = def.chute
+local C = { tonumber(arg[2] or 8), tonumber(arg[3] or 4), tonumber(arg[4] or 6) }
 local function cell(lvl, x, y) return (y - 1) * lvl.W + x end
 local function inChute(lvl, c) local x, y = R.xy(lvl, c); return x == C[1] and y >= C[2] and y <= C[3] end
 local function flipAll(d) for _, o in ipairs(d.objects) do if o.tag == "hook" then for k, v in pairs(o.ports) do o.ports[k] = (v == "N") and "V" or "N" end end end end
