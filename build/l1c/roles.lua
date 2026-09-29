@@ -31,7 +31,10 @@ local pocket = {}
 for x = 2, lvl.W - 1 do
   local c2, c3, c4, c5 = R.idx(lvl, x, 2), R.idx(lvl, x, 3), R.idx(lvl, x, 4), R.idx(lvl, x, 5)
   if lvl.cell[c2] == 0 and lvl.cell[c3] == 0 and lvl.cell[c4] == 0 and lvl.cell[c5] == 1 then pocket[#pocket + 1] = { x, 3 }; pocket[#pocket + 1] = { x, 4 } end
+  if lvl.cell[c2] == 0 and lvl.cell[c3] == 0 and lvl.cell[c4] == 1 then pocket[#pocket + 1] = { x, 3 } end
 end
+-- ERR=head — ошибка раскладки — спуск головой вперёд (крюк с резьбой Н); по умолчанию — ногами вперёд
+local ERR = os.getenv("ERR") or "heel"
 
 local out = {}
 -- 1) крюк замурован
@@ -62,13 +65,18 @@ if #pocket > 0 then
   for _, c in ipairs(pocket) do setCell(d, c[1], c[2], "#") end
   out[#out + 1] = { "роль: карман засыпан", solveWith(d) }
 end
--- 4) контроль: голова не может висеть на крюке (крюк держит только ноги — как и по резьбе), то есть фильтр,
---    запрещающий ГОЛОВЕ касаться клетки крюка-соседа... для V-крюка это пустое ограничение: должен быть РЕШАЕМ
+-- 4) контроль: конец, которому резьба крюка не подходит, не заходит к крюку (пустое по смыслу ограничение):
+--    должен быть РЕШАЕМ
 do
   local d = deepcopy(def); d.ablations = nil
   local anchor = R.idx(lvl, hx + (lvl.pieces[hookQ].ports[2] and 1 or (lvl.pieces[hookQ].ports[4] and -1 or 0)), hy)
-  local function noHeadAtAnchor(l, st, ns) return ns.body[#ns.body] ~= anchor end
-  out[#out + 1] = { "контроль: голова не заходит к крюку", solveWith(d, noHeadAtAnchor) }
+  if ERR == "head" then
+    local function noHeelAtAnchor(l, st, ns) return ns.body[1] ~= anchor end
+    out[#out + 1] = { "контроль: ноги не заходят к крюку", solveWith(d, noHeelAtAnchor) }
+  else
+    local function noHeadAtAnchor(l, st, ns) return ns.body[#ns.body] ~= anchor end
+    out[#out + 1] = { "контроль: голова не заходит к крюку", solveWith(d, noHeadAtAnchor) }
+  end
 end
 -- 5) контроль: запрещено спускаться в шахту ногами вперёд (сама ошибка подсказки №1) — решаемость не должна пострадать
 do
@@ -79,9 +87,10 @@ do
     local _, fyy = R.xy(l, b[1])
     local allLow = true
     for _, c in ipairs(b) do local _, y = R.xy(l, c); if y <= 2 then allLow = false end end
-    if allLow and fyy > hyy then return false end
+    if allLow and ((ERR ~= "head" and fyy > hyy) or (ERR == "head" and hyy > fyy)) then return false end
     return true
   end
-  out[#out + 1] = { "контроль: запрещено оказаться целиком в шахте ногами ниже головы", solveWith(d, noHeelFirst) }
+  out[#out + 1] = { ERR == "head" and "контроль: запрещено оказаться целиком в шахте головой ниже ног"
+    or "контроль: запрещено оказаться целиком в шахте ногами ниже головы", solveWith(d, noHeelFirst) }
 end
 for _, o in ipairs(out) do print(string.format("%-78s %s", o[1], o[2])) end

@@ -2,7 +2,9 @@
 -- спуститься в шахту, не повиснув ногами на крюке, — то есть оказаться целиком ниже коридора (ни одной клетки
 -- в ряду 2) ногами вперёд. Проверяет конкретными состояниями: сколько таких состояний, живых среди них (должно быть 0),
 -- видимых по мерке файла (должно быть 0), как рано ошибка достижима и на сколько ходов тянется скрытая ветка после неё.
--- Для сравнения — то же для спуска головой вперёд (правильный).
+-- Для сравнения — то же для спуска другим концом вперёд (правильный).
+-- ERR=head (переменная окружения) — если ошибка раскладки — спуск головой вперёд (крюк с резьбой Н, как в k2);
+-- по умолчанию ошибка — ногами вперёд (крюк с резьбой В, как в k1).
 package.path = "./?.lua;" .. package.path
 local R = require("core.rules")
 local SV = require("solver.solve")
@@ -13,12 +15,14 @@ local good = SV.goodSet(G)
 local vis = def.visibleLoss or function() return false end
 -- «ноги вперёд»: при спуске первой в шахту вошла пятка. Узнаём по первому состоянию «целиком ниже коридора»
 -- на каждом ребре «было в коридоре → стало целиком ниже»: какая из крайних клеток ниже.
--- карман станции (две открытые клетки под коридором с дном) в «спуск» не входит
+-- карман станции (одна или две открытые клетки под коридором с дном) в «спуск» не входит
 local pocketCell = {}
 for x = 2, lvl.W - 1 do
   local c2, c3, c4, c5 = R.idx(lvl, x, 2), R.idx(lvl, x, 3), R.idx(lvl, x, 4), R.idx(lvl, x, 5)
   if lvl.cell[c2] == 0 and lvl.cell[c3] == 0 and lvl.cell[c4] == 0 and lvl.cell[c5] == 1 then pocketCell[c3] = true; pocketCell[c4] = true end
+  if lvl.cell[c2] == 0 and lvl.cell[c3] == 0 and lvl.cell[c4] == 1 then pocketCell[c3] = true end
 end
+local ERR = os.getenv("ERR") or "heel"
 local function below(st)
   for _, c in ipairs(st.body) do local _, y = R.xy(lvl, c); if y <= 2 or pocketCell[c] then return false end end
   return true
@@ -82,5 +86,10 @@ local function report(name, seeds, md)
   print(string.format("%s: входов %d (самый ранний — после хода %s), дальше состояний %d: живых %d, видимых %d, скрытых %d; ветка тянется %d ходов",
     name, ne, tostring(md), n, live, visN, hid, maxd))
 end
-report("ошибка подсказки №1 (в шахту ногами вперёд)", entryHeel, minDepth.heel)
-report("для сравнения: в шахту головой вперёд", entryHead, minDepth.head)
+if ERR == "head" then
+  report("ошибка подсказки №1 (в шахту головой вперёд)", entryHead, minDepth.head)
+  report("для сравнения: в шахту ногами вперёд", entryHeel, minDepth.heel)
+else
+  report("ошибка подсказки №1 (в шахту ногами вперёд)", entryHeel, minDepth.heel)
+  report("для сравнения: в шахту головой вперёд", entryHead, minDepth.head)
+end
