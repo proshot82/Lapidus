@@ -1,0 +1,10 @@
+== nohose
+L7.lua [nohose]: решаем (состояний 17812, ходов 18)
+== qnorise
+L7.lua [qnorise]: решаем (состояний 10533, ходов 18)
+== noride
+L7.lua [noride]: НЕРЕШАЕМ (состояний 3)
+== nopress
+L7.lua [nopress]: решаем (состояний 18760, ходов 27)
+== onlyright
+L7.lua [onlyright]: НЕРЕШАЕМ (состояний 16501)
