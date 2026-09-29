@@ -149,7 +149,7 @@
         "solvable": false
       },
       {
-        "name": "сборка заранее",
+        "name": "без угольника",
         "solvable": false
       },
       {
@@ -157,24 +157,24 @@
         "solvable": false
       }
     ],
-    "corridor": "ok",
-    "deadPct": 78.8,
-    "falseBranches": 4,
-    "grid": "9×8",
+    "corridor": "мало ложных веток; широкий коридор решений (7)",
+    "deadPct": 79.6,
+    "falseBranches": 1,
+    "grid": "9×9",
     "id": 4,
     "length": [
       2,
       4
     ],
-    "minMoves": 16,
-    "monkey": 0.03,
+    "minMoves": 23,
+    "monkey": 0.1,
     "name": "Резьба",
     "note": "раскладка 28.09 (build/l4c, k35): 16 ходов, прогулка 5; по общей линейке 29.09 (tools/vislib.lua, с правилом «деталь запечатана») скрытых 26 % — ворота новичка (≥ 40 %) НЕ пройдены, уровень на переделку; «ага» доказана абляциями «сборка заранее» и «по одной нельзя»",
     "pressure": 0,
-    "shortest": 3,
-    "shortestWidth": 3,
+    "shortest": 66,
+    "shortestWidth": 7,
     "solvable": true,
-    "states": 6176,
+    "states": 9539,
     "target": {
       "dead": 40,
       "fb": 2,
