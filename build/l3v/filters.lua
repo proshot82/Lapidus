@@ -27,8 +27,9 @@ F[#F + 1] = { name = "К3 голова не ходит, пока мыло леж
   local isHead = (not old[ns.body[#ns.body]]) or (#ns.body < #st.body and ns.body[1] == st.body[1])
   return not isHead
 end }
-F[#F + 1] = { name = "К4 ноги не поднимаются в шахту выше ряда 5", ctrl = true, f = function(lvl, st, ns)
-  local x, y = xy(ns.body[1]); return not (x == 7 and y <= 5) end }
+F[#F + 1] = { name = "К4 подъём по шахте ногами вперёд запрещён", ctrl = true, f = function(lvl, st, ns)
+  local hx, hy = xy(ns.body[1]); local gx, gy = xy(ns.body[#ns.body])
+  return not (hx == 7 and hy >= 2 and hy <= 6 and hy < gy) end }
 -- дополнительные абляции (интересно, обязательны ли)
 F[#F + 1] = { name = "А1 мыло не лежит на голове", ctrl = false, f = function(lvl, st, ns)
   local head = ns.body[#ns.body]
