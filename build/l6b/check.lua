@@ -77,6 +77,19 @@ for k = 1, #path - 1 do
 end
 local dl = {}
 for k = 0, #path - 2 do if deepAt[k] then dl[#dl + 1] = k .. ":" .. deepAt[k] end end
+-- двери: рёбра из живых состояний в скрытые — по шагам кратчайшего пути и по всему графу (после скептиков кв. 4 и 7, 30.09:
+-- доля скрытых легко раздувается мёртвым пространством, а число независимых ошибок у пути — нет)
+local doorsAt, doorsAll, halves = {}, 0, { 0, 0 }
+for i = 1, G.n do
+  if good[i] == 1 then
+    for e = G.eStart.p[i - 1], G.eStart.p[i] - 1 do if hidden[G.edges.p[e]] then doorsAll = doorsAll + 1 end end
+  end
+end
+for k = 1, #path - 1 do
+  local s, c = path[k], 0
+  for e = G.eStart.p[s - 1], G.eStart.p[s] - 1 do if hidden[G.edges.p[e]] then c = c + 1 end end
+  if c > 0 then doorsAt[#doorsAt + 1] = (k - 1) .. ":" .. c; halves[(k - 1) < (#path - 1) / 2 and 1 or 2] = halves[(k - 1) < (#path - 1) / 2 and 1 or 2] + 1 end
+end
 -- безопасных ходов по шагам и прогулки
 local function objs(i) local st = R.decode(lvl, G.keys[i]); local t = {}; for q = 1, #st.pos do t[#t+1] = st.pos[q] .. (st.fixed[q] and "f" or "") end; return table.concat(t, ",") end
 local safeSeq, streak, maxStreak, events = {}, 0, 0, 0
@@ -95,6 +108,8 @@ if sx then print(string.format("строго: наобум %.3f %% (≤1) | кр
 local EX = V.measure(G, good, VL.expert)
 print(string.format("знаток (для сведения): скрытых %.0f %% | обезьяна %.2f %% | глубина %d у пути [%s]", EX.hiddenPct, EX.smart, EX.maxDeep, EX.deepList))
 print(string.format("событий %d, прогулка max %d; безопасных по шагам: %s", events, maxStreak, table.concat(safeSeq, "")))
+print(string.format("ДВЕРИ в скрытые с пути: %s (шагов с дверями: %d в первой половине, %d во второй; ≥1 в каждой) | всего рёбер живых→скрытых %d",
+  #doorsAt > 0 and table.concat(doorsAt, " ") or "нет", halves[1], halves[2], doorsAll))
 local abl = SV.ablations(def, { cap = 3000000 })
 local ab = {}
 for _, a in ipairs(abl) do ab[#ab + 1] = a.name .. "=" .. (a.solvable == false and "нерешаем" or "РЕШАЕМ") end
