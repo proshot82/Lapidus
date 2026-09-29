@@ -303,10 +303,11 @@ def pan_crane(px, py):
     return ''.join(s)
 
 
-def card(num, title, pan):
-    """Вкладыш нового правила на экране заявки (и страница паспорта): номер квартиры, где правило вводится, заголовок, немая панель."""
+def card(num, title, pan, h=356):
+    """Вкладыш нового правила на экране заявки (и страница паспорта): номер квартиры, где правило вводится, заголовок, немая панель.
+    h — высота панели (card07 выше: две полосы)."""
     px, py = 10, 10
-    s = [G(R(px, py, 540, 356, '#FBF8F0', rx=10, stroke=INK, stroke_width=2.5) + C(px + 38, py + 40, 24, INK)
+    s = [G(R(px, py, 540, h, '#FBF8F0', rx=10, stroke=INK, stroke_width=2.5) + C(px + 38, py + 40, 24, INK)
            + T(px + 38, py + 51, str(num), 30, '#FBF8F0', weight='bold', anchor='middle') + T(px + 76, py + 52, title, 32, INK, weight='bold'), filter='url(#dsh)'),
          pan(px, py)]
     return ''.join(s), BASE
@@ -364,8 +365,45 @@ def pan_pressure(px, py):
     return ''.join(s)
 
 
+def pan_lapjet(px, py):
+    """Нижняя полоса card07 «Лапидус в струе»: столб поднимает неприкрученного целиком, но потолок над любой клеткой тела
+    останавливает подъём; деталь под телом в столбе стоит; прикрученный Лапидус обрывает струю."""
+    cc, s = 34, []
+    fl, top = py + 204, py + 54
+    s.append(Ln(px + 24, py + 6, px + 516, py + 6, '#B9AF98', 2.5, stroke_dasharray='6 8'))
+    s.append(T(px + 30, py + 36, 'Лапидус в струе', 26, INK, weight='bold'))
+    for x0, w in ((px + 24, 150), (px + 200, 150), (px + 376, 140)):
+        s.append(R(x0, fl, w, 18, 'url(#tpM)', rx=6, stroke=O, stroke_width=3))
+    for x0 in (px + 187, px + 363):
+        s.append(Ln(x0, py + 46, x0, fl - 6, '#B9AF98', 2.5, stroke_dasharray='6 8'))
+    # 1) столб поднимает целиком — но под потолком стоит
+    sx, sy = px + 70, fl - .5 * cc
+    s.append(source2(sx, sy, cc, {'up': 'N'}, sy - .5 * cc, fl + 16, 3))
+    s.append(jet2(sx, sy - .45 * cc, sx, sy - 2.35 * cc, cc))
+    s.append(R(px + 30, top, 120, 12, 'url(#tpM)', rx=5, stroke=O, stroke_width=3))
+    s.append(hero([(sx - cc, sy - 3.0 * cc), (sx, sy - 3.0 * cc), (sx + cc, sy - 3.0 * cc)], cc, 2, 5, ring=False))
+    s.append(gen.arrow(sx + 2.3 * cc, sy - .9 * cc, sx + 2.3 * cc, sy - 2.2 * cc, '#2F8F4E', 4))
+    s.append(gen.mark(sx + 2.3 * cc, sy - 2.8 * cc, True, .5))
+    # 2) деталь под телом в столбе стоит
+    bx, by = px + 262, fl - .5 * cc
+    s.append(source2(bx, by, cc, {'up': 'N'}, by - .5 * cc, fl + 16, 3))
+    s.append(jet2(bx, by - .45 * cc, bx, by - 1.35 * cc, cc))
+    s.append(fitting2(bx, by - 1.9 * cc, cc, {'up': 'N', 'down': 'N'}))
+    s.append(R(px + 206, top, 120, 12, 'url(#tpM)', rx=5, stroke=O, stroke_width=3))
+    s.append(hero([(bx - cc, by - 3.0 * cc), (bx, by - 3.0 * cc), (bx + cc, by - 3.0 * cc)], cc, 2, 5, ring=False))
+    s.append(Ln(bx + 2.1 * cc, by - 1.4 * cc, bx + 2.1 * cc, by - 2.3 * cc, '#8A8578', 3, stroke_dasharray='6 5'))
+    s.append(gen.mark(bx + 2.1 * cc, by - 2.8 * cc, True, .5))
+    # 3) прикрученный Лапидус обрывает струю
+    tx, ty = px + 420, fl - .5 * cc
+    s.append(source2(tx, ty, cc, {'up': 'N'}, ty - .5 * cc, fl + 16, 3))
+    s.append(hero([(tx, ty - 1.05 * cc), (tx, ty - 2.05 * cc), (tx + cc, ty - 2.05 * cc)], cc, 2, 5, ring=False, screwed=(True, False), wet=True))
+    s.append(Ln(tx, ty - .6 * cc, tx, ty - 3.6 * cc, Q['water'], cc * .22, opacity='.25', stroke_dasharray='8 7'))
+    s.append(gen.mark(tx + 2.1 * cc, ty - 1.4 * cc, False, .5))
+    return ''.join(s)
+
+
 def card7():
-    return card(7, 'Струя толкает и держит', pan_pressure)
+    return card(7, 'Струя толкает и держит', lambda px, py: pan_pressure(px, py) + pan_lapjet(px, py + 336), h=560)
 
 
 def drops(x, y, k=1.0):

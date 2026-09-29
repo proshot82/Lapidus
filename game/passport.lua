@@ -42,7 +42,8 @@ function Passport:draw()
     local x = gx + ((i - 1) % cols) * (cw + 16)
     local y = 222 + math.floor((i - 1) / cols) * (ch + 40)
     if p.img then
-      lg.setColor(1, 1, 1); lg.draw(p.img, x, y, 0, z, z)
+      local zz = math.min(z, ch / p.img:getHeight()) -- высокий вкладыш кв. 7 — в тот же ряд
+      lg.setColor(1, 1, 1); lg.draw(p.img, x, y, 0, zz, zz)
     else
       lg.setColor(0.86, 0.84, 0.79); lg.rectangle("fill", x + 8, y + 8, cw - 22, ch - 22, 8)
       lg.setColor(0.7, 0.68, 0.63); lg.setLineWidth(2); lg.rectangle("line", x + 8, y + 8, cw - 22, ch - 22, 8)
