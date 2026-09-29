@@ -21,11 +21,15 @@
   },
   "02": {
     "moves": [
+      "heel:left",
+      "heel:left",
+      "heel:down",
       "heel:right",
-      "heel:up",
+      "head:left",
+      "head:down",
       "head:left",
       "head:left",
-      "head:left",
+      "heel:left",
       "head:left",
       "head:up",
       "head:left",
@@ -36,10 +40,7 @@
       "head:right",
       "head:up",
       "head:up",
-      "head:right",
-      "heel:right",
-      "head:right",
-      "head:right"
+      "head:left"
     ],
     "name": "Скалолаз"
   },

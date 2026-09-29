@@ -43,24 +43,28 @@
   "02": {
     "ablations": [
       {
-        "name": "крючья замурованы",
+        "name": "замурован только крюк ряда лаза",
         "solvable": false
       },
       {
-        "name": "резьба крючьев",
+        "name": "замурован только якорь шахты",
+        "solvable": false
+      },
+      {
+        "name": "зацепиться на лету нельзя",
         "solvable": false
       }
     ],
     "corridor": "ok",
-    "deadPct": 53.5,
-    "falseBranches": 13,
-    "grid": "9×10",
+    "deadPct": 70.7,
+    "falseBranches": 11,
+    "grid": "11×10",
     "id": 2,
     "length": [
       2,
       4
     ],
-    "minMoves": 19,
+    "minMoves": 20,
     "monkey": 0,
     "name": "Скалолаз",
     "note": "19 ходов в коридоре 15–40 (решение Lao 29.09); ложная ветка у пути ≈ 6 ходов — дотянуть до 8 (план 29.09)",
@@ -68,10 +72,10 @@
     "shortest": 1,
     "shortestWidth": 1,
     "solvable": true,
-    "states": 172,
+    "states": 215,
     "target": {
-      "dead": 30,
-      "fb": 2,
+      "dead": 25,
+      "fb": 0,
       "moves": [
         15,
         40
