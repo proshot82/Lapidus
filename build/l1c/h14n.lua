@@ -1,4 +1,4 @@
--- Квартира 1 «Не той стороной» — кандидат build/l1c/h11s.lua. 
+-- Квартира 1 «Не той стороной» — кандидат build/l1c/h14n.lua. 
 -- Решение здесь не пишется. Проверка: luajit build/l6b/check.lua <файл>; разбор: luajit build/l1c/an.lua <файл>.
 -- Видимый проигрыш — мерка новичка (build/l1c): знает правила, но не решение. Видимо проиграно, если Лапидус
 -- не может выиграть ни так, ни перевёрнутым концами (то же тело, голова ↔ ноги): «заперт в яме без выхода»,
@@ -53,7 +53,20 @@ local function visibleLoss(lvl, st)
   local j = g.idx[R.key(vlFlip(R, lvl, st))]
   return not (j and g.ok[j])
 end
--- Абляции РОЛИ: крюк — единственная точка опоры для разворота.
+-- Абляции РОЛИ: крюк — единственная точка опоры для разворота; карман — единственное место, где ждёт второй конец.
+local function wallAt(x, y)
+  return function(d)
+    local r = d.grid[y]
+    d.grid[y] = r:sub(1, x - 1) .. "#" .. r:sub(x + 1)
+  end
+end
+local function hookWalled(d)
+  local keep = {}
+  for _, o in ipairs(d.objects) do
+    if o.tag == "hook" then wallAt(o.at[1], o.at[2])(d) else keep[#keep + 1] = o end
+  end
+  d.objects = keep
+end
 local function noHook(lvl, st, ns)
   local R = require("core.rules")
   local piece = R.occupancy(ns)
@@ -72,9 +85,9 @@ return {
   grid = {
     "##########",
     "##......##",
-    "##.#~.~#.#",
-    "##.##.##.#",
-    "##.#####.#",
+    "##.##.~###",
+    "##.##.####",
+    "##.###...#",
     "#.....##.#",
     "###~.....#",
     "####~#####",
@@ -83,11 +96,12 @@ return {
     { kind = "source", at = { 6, 6 }, ports = { left = "N" } },
     { kind = "fixture", what = "bath", at = { 2, 6 }, ports = { right = "V" } },
     { kind = "stub", tag = "hook", at = { 8, 2 }, ports = { left = "V" } },
-    { kind = "lapidus", cells = { { 3, 5 }, { 3, 4 }, { 3, 3 }, { 3, 2 } }, head = 4 },
+    { kind = "lapidus", cells = { { 3, 4 }, { 3, 3 }, { 3, 2 }, { 4, 2 } }, head = 4 },
   },
   ablations = {
-    { name = "без крюка", remove = "hook" },
+    { name = "крюк замурован", mutate = hookWalled },
     { name = "крюк без крепления", filter = noHook },
+    { name = "карман засыпан", mutate = function(d) wallAt(6, 3)(d) wallAt(6, 4)(d) end },
   },
   texts = {
     request = "Ванна есть. Воды нет. Прошу наоборот.",
