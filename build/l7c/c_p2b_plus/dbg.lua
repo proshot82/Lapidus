@@ -2,7 +2,7 @@
 package.path = "./?.lua;" .. package.path
 local R = require("core.rules")
 local SV = require("solver.solve")
-local V = dofile("build/l7c/c_p2b_plus/qvis.lua")
+local V = dofile(os.getenv("VIS") or "build/l7c/c_p2b_plus/qvis.lua")
 local def = dofile(arg[1])
 local why = V.why(def, { adpStackVisible = true })
 local lvl = R.compile(def)
