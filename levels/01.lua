@@ -14,7 +14,7 @@ end
 return {
   id = 1, flat = 1, name = "Не той стороной",
   length = { 2, 4 }, pressure = 0, tile = "mint",
-  target = { moves = { 12, 30 }, states = 20000, dead = 25, fb = 1 },
+  target = { moves = { 15, 40 }, states = 20000, dead = 25, fb = 1 },
   grid = {
     "#########",
     "#....#..#",

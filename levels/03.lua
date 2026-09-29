@@ -106,7 +106,7 @@ return {
   washOk = true, -- одно мыло уходит в слив по замыслу: проигрыш решает visibleLoss, а не «смыта деталь»
   id = 3, flat = 3, name = "Мыло",
   length = { 2, 5 }, pressure = 0, tile = "mustard",
-  target = { moves = { 25, 45 }, states = 100000, dead = 35, fb = 2 },
+  target = { moves = { 15, 40 }, states = 100000, dead = 35, fb = 2 },
   grid = {
     "###########",
     "####......#",

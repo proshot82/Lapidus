@@ -14,7 +14,7 @@ end
 return {
   id = 2, flat = 2, name = "Скалолаз",
   length = { 2, 4 }, pressure = 0, tile = "blue",
-  target = { moves = { 22, 38 }, states = 50000, dead = 30, fb = 2 },
+  target = { moves = { 15, 40 }, states = 50000, dead = 30, fb = 2 },
   grid = {
     "#########",
     "##......#",
