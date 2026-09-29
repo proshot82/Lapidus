@@ -17,6 +17,7 @@ function App.load(args)
   App.shot = argValue(App.args, "--shot")
   App.autoplay = argValue(App.args, "--autoplay") and true or false
   App.demo = argValue(App.args, "--demo")
+  App.unlockAll = argValue(App.args, "--unlock") and true or false -- пробная сборка для автора: все квартиры открыты
   local lv = tonumber(argValue(App.args, "--level") or "")
   local screen = argValue(App.args, "--screen")
   if lv or App.autoplay then
@@ -43,7 +44,7 @@ function App.availability()
   local st, open = {}, 0
   for i = 1, #App.levels do
     if App.save.solved[tostring(i)] then st[i] = "solved"
-    elseif open < 2 then st[i] = "open"; open = open + 1
+    elseif App.unlockAll or open < 2 then st[i] = "open"; open = open + 1
     else st[i] = "locked" end
   end
   return st
