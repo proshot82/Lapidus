@@ -5,6 +5,7 @@ local SV = require("solver.solve")
 local def = dofile(arg[1])
 local lvl = R.compile(def)
 local G = SV.explore(lvl, 3000000)
+if not G or not G.firstWin then print("нерешаем"); os.exit(0) end
 local good = SV.goodSet(G)
 local path, x = {}, G.firstWin
 while x ~= 1 do table.insert(path, 1, x); x = G.parent[x] end

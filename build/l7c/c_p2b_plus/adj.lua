@@ -8,6 +8,7 @@ local def = dofile(arg[1])
 local lvl = R.compile(def)
 do local e = R.validate(lvl); if #e > 0 then print("ОШИБКИ: " .. table.concat(e, "; ")); os.exit(0) end end
 local G = SV.explore(lvl, 3000000)
+if not G or not G.firstWin then print("нерешаем"); os.exit(0) end
 local good = SV.goodSet(G)
 local E, ES = G.edges.p, G.eStart.p
 local path, x = {}, G.firstWin

@@ -6,6 +6,7 @@ local SV = require("solver.solve")
 local def = dofile(arg[1])
 local lvl = R.compile(def)
 local G = SV.explore(lvl, 3000000)
+if not G or not G.firstWin then print("нерешаем"); os.exit(0) end
 local E, ES = G.edges.p, G.eStart.p
 local opt = G.depth[G.firstWin]
 local on = {}
