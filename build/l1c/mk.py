@@ -42,12 +42,29 @@ cells = [c.split(',') for c in kv['LAP'].split(';')]
 lap = ', '.join('{ %s, %s }' % (c[0].strip(), c[1].strip()) for c in cells)
 lines.append('    { kind = "lapidus", cells = { %s }, head = %d },' % (lap, len(cells)))
 vl = open(os.path.join(here, 'vl_flip.lua.txt'), encoding='utf-8').read()
+pocketAbl = ''
+if 'POCKET' in kv:
+    cells = [c.split(',') for c in kv['POCKET'].split(';')]
+    pocketAbl = '\n    { name = "карман засыпан", mutate = function(d) %s end },' % ' '.join('wallAt(%s, %s)(d)' % (c[0], c[1]) for c in cells)
 note = kv.get('NOTE', '')
 g = ',\n    '.join('"%s"' % r for r in grid)
 out = '''-- Квартира 1 «Не той стороной» — кандидат build/l1c/%s.lua. %s
 -- Решение здесь не пишется. Проверка: luajit build/l6b/check.lua <файл>; разбор: luajit build/l1c/an.lua <файл>.
 %s
--- Абляции РОЛИ: крюк — единственная точка опоры для разворота.
+-- Абляции РОЛИ: крюк — единственная точка опоры для разворота; карман — единственное место, где ждёт второй конец.
+local function wallAt(x, y)
+  return function(d)
+    local r = d.grid[y]
+    d.grid[y] = r:sub(1, x - 1) .. "#" .. r:sub(x + 1)
+  end
+end
+local function hookWalled(d)
+  local keep = {}
+  for _, o in ipairs(d.objects) do
+    if o.tag == "hook" then wallAt(o.at[1], o.at[2])(d) else keep[#keep + 1] = o end
+  end
+  d.objects = keep
+end
 local function noHook(lvl, st, ns)
   local R = require("core.rules")
   local piece = R.occupancy(ns)
@@ -70,8 +87,8 @@ return {
 %s
   },
   ablations = {
-    { name = "без крюка", remove = "hook" },
-    { name = "крюк без крепления", filter = noHook },
+    { name = "крюк замурован", mutate = hookWalled },
+    { name = "крюк без крепления", filter = noHook },%s
   },
   texts = {
     request = "Ванна есть. Воды нет. Прошу наоборот.",
@@ -82,6 +99,6 @@ return {
     },
   },
 }
-''' % (name, note, vl.rstrip(), kv.get('LEN', '2, 4'), g, '\n'.join(lines))
+''' % (name, note, vl.rstrip(), kv.get('LEN', '2, 4'), g, '\n'.join(lines), pocketAbl)
 open(os.path.join(here, name + '.lua'), 'w', encoding='utf-8').write(out)
 print('build/l1c/%s.lua' % name)
