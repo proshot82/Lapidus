@@ -7,7 +7,8 @@ Menu.__index = Menu
 
 function Menu.new(app)
   local self = setmetatable({ app = app, sel = 1, t = 0, bg = Board.img("scr_menu") }, Menu)
-  self.items = { { id = "continue", label = "Продолжить" }, { id = "select", label = "Квартиры" }, { id = "passport", label = "Паспорт изделия" } }
+  self.items = { { id = "continue", label = "Продолжить" }, { id = "select", label = "Квартиры" }, { id = "passport", label = "Паспорт изделия" },
+                 { id = "sound", label = app.audio.on and "Звук: вкл" or "Звук: выкл" } }
   if not UI.isMobile() then self.items[#self.items + 1] = { id = "quit", label = "Выход" } end
   return self
 end
@@ -18,8 +19,12 @@ function Menu:draw()
   local F = self.app.font
   lg.setColor(1, 1, 1)
   if self.bg then lg.draw(self.bg, 0, 0) end
+  if #self.app.levels < 10 then
+    lg.setFont(F.xs); UI.setc(UI.GOLD, 0.8)
+    lg.printf(string.format("тестовая сборка: %d квартир из 10", #self.app.levels), 0, 1030, 1880, "right")
+  end
   for i, it in ipairs(self.items) do
-    local x, y, w, h = 1180, 606 + (i - 1) * 90, 540, 74
+    local x, y, w, h = 1180, 586 + (i - 1) * 86, 540, 72
     it.rect = { x, y, w, h }
     if i == self.sel then UI.brass(x, y, w, h) else UI.plate(x, y, w, h) end
     lg.setFont(F.menu)
@@ -33,6 +38,13 @@ function Menu:activate(id)
   if id == "continue" then App.play(App.continueIndex())
   elseif id == "select" then App.go("select")
   elseif id == "passport" then App.go("passport", { back = "menu" })
+  elseif id == "sound" then
+    local on = App.audio.toggle()
+    App.save.settings = App.save.settings or {}
+    App.save.settings.sound = on
+    require("game.save").write(App.save)
+    for _, it in ipairs(self.items) do if it.id == "sound" then it.label = on and "Звук: вкл" or "Звук: выкл" end end
+    App.audio.play("click", 0.7)
   elseif id == "quit" then love.event.quit() end
 end
 

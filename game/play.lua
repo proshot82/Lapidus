@@ -67,12 +67,46 @@ function Play:start(index)
 end
 
 function Play:refresh()
+  local old = self.status
   self.status = R.status(self.lvl, self.state)
   self.jets = R.jets(self.lvl, self.state)
+  local A = self.app.audio
+  if old and not self.quiet and not self.state.dead and ((self.status.headQ and self.status.headQ ~= old.headQ) or (self.status.heelQ and self.status.heelQ ~= old.heelQ)) then
+    A.play("screw", 0.8)
+  end
+  A.setJet((self.lvl.R > 0 and #self.jets > 0) and math.min(1, 0.4 + 0.15 * #self.jets) or 0)
 end
 
 function Play:say(text, dur) self.toast = { text = text, t = dur or 3 } end
 function Play:keyName() local d = self.app.lastInput; return d == "pad" and "B" or (d == "touch" and "кнопка ↶" or "Z") end
+
+-- Звук сегмента анимации (§9): ход, толчок, свинчивание, «окаменение», падение (звук — на приземлении), смыв.
+local MOVE_SFX = { stretch = "stretch", slide = "stretch", compress = "compress", push_stretch = "push", push_slide = "push" }
+local function changed(a, b)
+  if #a.body ~= #b.body then return true end
+  for i = 1, #a.body do if a.body[i] ~= b.body[i] then return true end end
+  for q = 1, #a.pos do if a.pos[q] ~= b.pos[q] then return true end end
+  return false
+end
+function Play:segSound(seg, nxt)
+  local A = self.app.audio
+  if MOVE_SFX[seg.kind] then
+    A.play(MOVE_SFX[seg.kind], 0.7, 0.95 + 0.1 * math.random())
+    if seg.kind:sub(1, 4) == "push" then A.play("stretch", 0.4) end
+  elseif seg.kind == "wash" then A.play("wash", 0.9)
+  elseif seg.kind == "settle" then
+    local f0, f1, merged = 0, 0, false
+    for q = 1, #seg.to.pos do
+      if seg.from.fixed[q] then f0 = f0 + 1 end
+      if seg.to.fixed[q] then f1 = f1 + 1 end
+      if seg.from.asm[q] ~= seg.to.asm[q] then merged = true end
+    end
+    if f1 > f0 then A.play("screw", 0.8); A.play("stone", 0.6)
+    elseif merged then A.play("screw", 0.8) end
+    local fall = changed(seg.from, seg.to)
+    if fall and not (nxt and nxt.kind == "settle" and changed(nxt.from, nxt.to)) then A.play("land", 0.8) end
+  end
+end
 
 function Play:finishAnim()
   if self.anim then self.anim = nil; self:afterMove() end
@@ -88,6 +122,8 @@ function Play:tryMove(dir)
     local why = { soap = "Голова по фаянсу скользит: толкай ногами.", taut = "Натянут: второй конец прикручен.",
                   short = "Короче уже не сжаться.", blocked = "Не сдвинуть: упирается.", fixed = "Закреплено намертво." }
     if why[kind] then self:say(why[kind], 2) end
+    local snd = { soap = "squeak", taut = "taut", blocked = "blocked", fixed = "stone", short = "compress" }
+    if snd[kind] then self.app.audio.play(snd[kind], kind == "fixed" and 0.4 or 0.7) end
     return
   end
   table.insert(self.history, { state = self.state, moves = self.moves, active = self.active })
@@ -101,6 +137,7 @@ function Play:tryMove(dir)
   self.state = ns
   self.moves = self.moves + 1
   self.anim = { segs = segs, i = 1, t = 0 }
+  if segs[1] then self:segSound(segs[1], segs[2]) end
 end
 
 function Play:afterMove()
@@ -109,6 +146,7 @@ function Play:afterMove()
     self.washN = self.washN + 1
   elseif self.status.win then
     self.won, self.winPhase, self.winT = true, "water", 0
+    self.app.audio.play("win", 0.9)
     self.hotline = nil
     local key = tostring(self.index)
     self.app.save.solved[key] = true
@@ -124,14 +162,16 @@ function Play:undoMove()
   if not h then return end
   self.state, self.moves, self.active = h.state, h.moves, h.active
   self.won, self.master, self.winPhase = false, nil, nil
-  self:refresh()
+  self.quiet = true; self:refresh(); self.quiet = false
+  self.app.audio.play("compress", 0.35, 1.3)
 end
 
 function Play:restart()
   self:finishAnim()
   table.insert(self.history, { state = self.state, moves = self.moves, active = self.active })
   self.state, self.moves, self.won, self.master, self.winPhase = R.newState(self.lvl), 0, false, nil, nil
-  self:refresh()
+  self.quiet = true; self:refresh(); self.quiet = false
+  self.app.audio.play("wash", 0.35, 1.4)
 end
 
 function Play:optimum()
@@ -175,6 +215,13 @@ end
 
 function Play:update(dt)
   self.t = self.t + dt
+  local A = self.app.audio
+  local h = self.hotline ~= nil
+  if h ~= (self.holdOn or false) then self.holdOn = h; A.hold(h) end
+  if not self.anim and self.lvl.R == 0 and self.status and #(self.status.leaks or {}) > 0 and not self.request then
+    self.dripT = (self.dripT or 0.5) - dt
+    if self.dripT <= 0 then self.dripT = 0.45 + math.random() * 0.8; A.play("drip", 0.3, 0.85 + 0.3 * math.random()) end
+  end
   -- «окаменение» (§8): деталь, прикрученная к сети, за ~0,3 с переходит из латуни в сталь; отмена — обратно
   local fx = self.anim and self.anim.segs[self.anim.i].from.fixed or self.state.fixed
   self.stone = self.stone or {}
@@ -190,7 +237,8 @@ function Play:update(dt)
     while self.anim and a.t >= a.segs[a.i].dur do
       a.t = a.t - a.segs[a.i].dur
       a.i = a.i + 1
-      if a.i > #a.segs then self.anim = nil; self:afterMove() end
+      if a.i > #a.segs then self.anim = nil; self:afterMove()
+      else self:segSound(a.segs[a.i], a.segs[a.i + 1]) end
     end
   end
   if self.search and not self.search.done then
@@ -459,7 +507,7 @@ end
 
 function Play:action(a, arg)
   if a == "move" then self:tryMove(arg)
-  elseif a == "switch" then self.active = (self.active == "head") and "heel" or "head"
+  elseif a == "switch" then self.active = (self.active == "head") and "heel" or "head"; self.app.audio.play("click", 0.5, self.active == "head" and 1.2 or 0.85)
   elseif a == "undo" then self:undoMove()
   elseif a == "restart" then self:restart()
   elseif a == "hint" then if self.hotline then self.hotline = nil else self:openHotline() end

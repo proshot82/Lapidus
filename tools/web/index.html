@@ -101,6 +101,20 @@
   window.onerror = function () { statusEl.textContent = 'ошибка запуска — откройте консоль браузера'; };
   var applicationLoad = function () { Love(Module); };
 </script>
+<script>
+  // звук: браузер держит AudioContext на паузе до первого касания/клавиши — запоминаем контексты love.js и будим их
+  (function () {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    var ctxs = [];
+    function Wrapped(opts) { var c = opts ? new AC(opts) : new AC(); ctxs.push(c); return c; }
+    Wrapped.prototype = AC.prototype;
+    window.AudioContext = Wrapped;
+    if (window.webkitAudioContext) window.webkitAudioContext = Wrapped;
+    function wake() { ctxs.forEach(function (c) { if (c.state !== 'running') { try { c.resume(); } catch (e) {} } }); }
+    ['pointerdown', 'touchend', 'mousedown', 'keydown'].forEach(function (ev) { window.addEventListener(ev, wake, true); });
+  })();
+</script>
 <script type="text/javascript" src="game.js"></script>
 <script async type="text/javascript" src="love.js" onload="applicationLoad(this)"></script>
 </body>

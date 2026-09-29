@@ -12,6 +12,8 @@ function App.load(args)
   App.font = { xs = nf(UI, 32), s = nf(UIB, 30), m = nf(UI, 36), b = nf(UIB, 38), l = nf(UIB, 66), num = nf(UIB, 80), digit = nf(UIB, 60),
                hand = nf(HAND, 42), handL = nf(HAND, 60), gradeF = nf(HAND, 84), menu = nf(UIB, 46) }
   App.save = require("game.save").load()
+  App.audio = require("game.audio")
+  App.audio.init(App.save.settings)
   App.levels = require("game.levels").load()
   App.resize(love.graphics.getDimensions())
   App.shot = argValue(App.args, "--shot")
@@ -30,10 +32,16 @@ function App.load(args)
 end
 
 function App.go(name, arg)
+  if name ~= App.screen then App.audio.play("click", 0.6) end
+  App.screen = name
   if name == "menu" then App.scene = require("game.menu").new(App)
   elseif name == "select" then App.scene = require("game.select").new(App, arg)
   elseif name == "passport" then App.scene = require("game.passport").new(App, arg)
   else App.scene = require("game.play").new(App, arg) end
+  if name == "play" then
+    local def = App.levels[App.scene.index] or {}
+    App.audio.theme((def.pressure or 0) > 0 and "pressure" or "bossa")
+  else App.audio.theme("dub") end
 end
 
 function App.play(index)
@@ -68,6 +76,7 @@ function App.toVirtual(x, y) return (x - App.ox) / App.scale, (y - App.oy) / App
 
 function App.update(dt)
   App.frame = App.frame + 1
+  App.audio.update(dt)
   if App.scene and App.scene.update then App.scene:update(math.min(dt, 0.05)) end
   if App.shot and App.frame == (tonumber(App.shotFrame) or 8) then
     local path = App.shot
