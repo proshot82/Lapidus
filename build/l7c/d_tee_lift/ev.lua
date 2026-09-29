@@ -1,12 +1,14 @@
 -- ev.lua файл.lua [pic|-] [N] [режим переписи] — всё разом по ОДНОМУ графу: проверка раскладки, решаемость,
--- метрики по мерке НОВИЧКА (ворота, gnov.lua) и для сведения по меркам ЗНАТОКА: «знаток» — точная самая широкая
--- (gvis3: F J I L + N), «знаток-ск» — статичная в духе скептиков (gvis4). Перепись скрытых классов (по умолчанию новичок).
+-- метрики: «новичок» — gnov.lua (смыта, никогда не сдвинется, никогда не поднимется, выход занят тупиковой резьбой —
+-- точно, по графу; ворота считаю по ней как по самой широкой новичковой); «линейка» — tools/vislib.lua без правил уровня
+-- (как check.lua для файла без visibleLoss); «знаток» — tools/vislib.lua (для сведения, как в check.lua);
+-- «знаток-точно» — gvis3 (F J I L + N наибольшей неподвижной точкой). Перепись скрытых классов — по «новичку».
 -- Ходов и кадров не печатает (pic — только стартовый кадр).
 package.path = "./?.lua;" .. package.path
 local R = require("core.rules")
 local SV = require("solver.solve")
 local GV = dofile("build/l7c/d_tee_lift/gvis3.lua")
-local GS = dofile("build/l7c/d_tee_lift/gvis4.lua")
+local VL = require("tools.vislib")
 local GN = dofile("build/l7c/d_tee_lift/gnov.lua")
 local def = dofile(arg[1])
 local name = arg[1]:match("([^/]+)$")
@@ -33,11 +35,12 @@ local n = G.n
 local nwin = 0
 for i = 1, n do if G.flag[i] == 1 then nwin = nwin + 1 end end
 local marks = GV.compute(lvl, G, def)
-local skep = GS.compute(lvl, G, def)
+local vl = VL.compute(lvl, G, def, good)
 local nov = GN.compute(lvl, G, def)
 local function vis(i, mode)
   if mode == "новичок" then return nov[i] and true or false end
-  if mode == "знаток-ск" then return skep[i] and true or false end
+  if mode == "линейка" then return vl.newbie[i] and true or false end
+  if mode == "знаток" then return vl.expert[i] and true or false end
   local m = marks[i]
   return (m and m ~= "D" and m ~= "d") and true or false
 end
@@ -121,7 +124,7 @@ print(string.format("%s: ходов %d | сост. %d | выигрышных %d 
   name, opt, n, nwin, maxStreak, maxForced, maxw, events, table.concat(safeSeq, "")))
 local cens = arg[4] or "новичок"
 local hidC
-for _, mode in ipairs({ "новичок", "знаток-ск", "знаток" }) do
+for _, mode in ipairs({ "новичок", "линейка", "знаток", "знаток-точно" }) do
   local line, hs = metrics(mode)
   print("   " .. line)
   if mode == cens then hidC = hs end
@@ -134,7 +137,7 @@ local function tally(arr)
   table.sort(s)
   return table.concat(s, " ")
 end
-print("   тупики: новичок " .. tally(nov) .. " | знаток " .. tally(marks) .. " | знаток-ск " .. tally(skep))
+print("   тупики: новичок " .. tally(nov) .. " | знаток-точно " .. tally(marks))
 local agg = {}
 for i = 1, n do
   if hidC[i] then
