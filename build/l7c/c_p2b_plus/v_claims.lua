@@ -1,5 +1,5 @@
 -- v_claims.lua файл.lua — ошибка из подсказки №1 на конкретных состояниях (кв. 7, кандидат c7): для каждого класса
--- ошибки — сколько состояний (живых / скрытых / видимых) по мерке новичка (def.visibleLoss) и мерке знатока (fvis.lua),
+-- ошибки — сколько состояний (живых / скрытых / видимых) по общей линейке tools/vislib.lua (новичок, знаток) и fvis.lua,
 -- как близко к кратчайшему пути, ближайшее скрытое состояние (конфигурация деталей без Лапидуса) и скрытая ветка
 -- из него. Решений, ходов и кадров не печатает.
 package.path = "./?.lua;" .. package.path
@@ -21,12 +21,17 @@ local px0 = R.xy(lvl, P[k.plug].start)
 local S = {}
 for i = 1, G.n do if G.flag[i] ~= 2 then S[i] = R.decode(lvl, G.keys[i]) end end
 local function washed(st) for q, p in ipairs(P) do if p.movable and st.pos[q] == 0 then return true end end return false end
-local marks = { { "новичок", def.visibleLoss }, { "знаток", V.make(def) } }
-local vis = {}
-for _, m in ipairs(marks) do
-  local t = {}
-  for i = 1, G.n do if G.flag[i] == 0 and good[i] ~= 1 then t[i] = washed(S[i]) or m[2](lvl, S[i]) end end
-  vis[m[1]] = t
+-- мерки: общая линейка tools/vislib.lua (новичок — ворота, знаток — для сведения) и широкая разметка fvis.lua
+local VL = require("tools.vislib").compute(lvl, G, def, good)
+local FX = V.make(def)
+local marks = { { "новичок" }, { "знаток" }, { "fvis" } }
+local vis = { ["новичок"] = {}, ["знаток"] = {}, ["fvis"] = {} }
+for i = 1, G.n do
+  if G.flag[i] == 0 and good[i] ~= 1 then
+    vis["новичок"][i] = VL.newbie[i]
+    vis["знаток"][i] = VL.expert[i]
+    vis["fvis"][i] = washed(S[i]) or FX(lvl, S[i])
+  end
 end
 local path, x = {}, G.firstWin
 while x ~= 1 do table.insert(path, 1, x); x = G.parent[x] end
