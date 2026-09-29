@@ -22,8 +22,8 @@ end
 local out = {}
 out[#out + 1] = "-- Кв. 4 «Резьба», кандидат " .. name .. " (build/l4e, раунд 4, три детали). " .. (s.comment or "")
 out[#out + 1] = "-- Сгенерировано build/l4e/mk.lua из build/l4e/specs.lua. Решение здесь не пишется."
-out[#out + 1] = specs.VIS
-out[#out + 1] = specs.FILTERS
+out[#out + 1] = s.vis or specs.VIS
+out[#out + 1] = s.filters or specs.FILTERS
 out[#out + 1] = "return {"
 out[#out + 1] = "  visibleLoss = visibleLoss,"
 out[#out + 1] = '  id = 4, flat = 4, name = "Резьба",'
@@ -37,7 +37,7 @@ for _, o in ipairs(s.objects) do out[#out + 1] = obj(o) end
 out[#out + 1] = "  },"
 out[#out + 1] = s.ablations or specs.ABL
 out[#out + 1] = s.controls or specs.CTRL
-out[#out + 1] = specs.TEXTS
+out[#out + 1] = s.texts or specs.TEXTS
 out[#out + 1] = "}"
 local f = assert(io.open("build/l4e/" .. name .. ".lua", "w"))
 f:write(table.concat(out, "\n"), "\n")
