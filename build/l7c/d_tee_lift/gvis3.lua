@@ -20,16 +20,8 @@ local SV = require("solver.solve")
 local ffi = require("ffi")
 local M = {}
 
-function M.modes(def, opts)
-  opts = opts or {}
-  local marks -- key -> "F"/"J"/"I"/"L"/"N"/"W"/false
-  local function build()
-    local d = {}
-    for k, v in pairs(def) do d[k] = v end
-    d.visibleLoss = nil; d.visModes = nil
-    local L = R.compile(d)
-    local G = assert(SV.explore(L, opts.cap or 5000000), "cap")
-    assert(G.firstWin, "нет решения")
+-- compute(L, G, def) — разметка по готовому графу: возвращает массив id -> буква правила или false.
+function M.compute(L, G, def)
     local n = G.n
     local E, ES = G.edges.p, G.eStart.p
     local P = L.pieces
@@ -197,7 +189,7 @@ function M.modes(def, opts)
         end
       end
     end
-    marks = {}
+    local out = {}
     for i = 1, n do
       local m = stat[i]
       if not m and inC[i] == 1 then m = "N" end
@@ -207,9 +199,25 @@ function M.modes(def, opts)
         end
         if not m and canLap[i] == 0 then m = "d" end
       end
-      marks[G.keys[i]] = m or false
+      out[i] = m or false
     end
     M.lastFinal = fin
+    return out
+end
+
+function M.modes(def, opts)
+  opts = opts or {}
+  local marks -- key -> "F"/"J"/"I"/"L"/"N"/"W"/"D"/"d"/false
+  local function build()
+    local d = {}
+    for k, v in pairs(def) do d[k] = v end
+    d.visibleLoss = nil; d.visModes = nil
+    local L = R.compile(d)
+    local G = assert(SV.explore(L, opts.cap or 5000000), "cap")
+    assert(G.firstWin, "нет решения")
+    local byId = M.compute(L, G, def)
+    marks = {}
+    for i = 1, G.n do marks[G.keys[i]] = byId[i] end
     SV.freeGraph(G)
   end
   local function why(lvl, st)
