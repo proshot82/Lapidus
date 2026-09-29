@@ -6,6 +6,7 @@ local R = require("core.rules")
 local SV = require("solver.solve")
 local def = dofile(arg[1])
 local lvl = R.compile(def)
+do local e = R.validate(lvl); if #e > 0 then print("ОШИБКИ: " .. table.concat(e, "; ")); os.exit(0) end end
 local G = SV.explore(lvl, 3000000)
 local good = SV.goodSet(G)
 local E, ES = G.edges.p, G.eStart.p

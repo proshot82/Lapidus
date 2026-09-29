@@ -1,10 +1,13 @@
--- ev.lua файл.lua [pic|-] [N] [режим переписи: точно|скептик|...] — всё разом по ОДНОМУ графу: проверка раскладки, решаемость, метрики по точной разметке
--- gvis3 (static / wide / strict), перепись скрытых классов (wide). Ходов и кадров не печатает (pic — только старт).
+-- ev.lua файл.lua [pic|-] [N] [режим переписи] — всё разом по ОДНОМУ графу: проверка раскладки, решаемость,
+-- метрики по мерке НОВИЧКА (ворота, gnov.lua) и для сведения по меркам ЗНАТОКА: «знаток» — точная самая широкая
+-- (gvis3: F J I L + N), «знаток-ск» — статичная в духе скептиков (gvis4). Перепись скрытых классов (по умолчанию новичок).
+-- Ходов и кадров не печатает (pic — только стартовый кадр).
 package.path = "./?.lua;" .. package.path
 local R = require("core.rules")
 local SV = require("solver.solve")
 local GV = dofile("build/l7c/d_tee_lift/gvis3.lua")
 local GS = dofile("build/l7c/d_tee_lift/gvis4.lua")
+local GN = dofile("build/l7c/d_tee_lift/gnov.lua")
 local def = dofile(arg[1])
 local name = arg[1]:match("([^/]+)$")
 local lvl = R.compile(def)
@@ -26,35 +29,32 @@ local G = SV.explore(lvl, 3000000)
 if not G then print(name .. ": CAP") return end
 if not G.firstWin then print(string.format("%s: НЕРЕШАЕМ (состояний %d)", name, G.n)) SV.freeGraph(G) return end
 local good = SV.goodSet(G)
-local marks = GV.compute(lvl, G, def)
-local skep = GS.compute(lvl, G, def)
 local n = G.n
 local nwin = 0
 for i = 1, n do if G.flag[i] == 1 then nwin = nwin + 1 end end
+local marks = GV.compute(lvl, G, def)
+local skep = GS.compute(lvl, G, def)
+local nov = GN.compute(lvl, G, def)
 local function vis(i, mode)
-  if mode == "скептик-ст" then local m = skep[i]; return m and m ~= "N" or false end
-  if mode == "скептик" then return skep[i] and true or false end
+  if mode == "новичок" then return nov[i] and true or false end
+  if mode == "знаток-ск" then return skep[i] and true or false end
   local m = marks[i]
-  if not m then return false end
-  if mode == "точно-ст" then return m ~= "N" and m ~= "D" and m ~= "d" end
-  if mode == "точно" then return m ~= "D" and m ~= "d" end
-  return m ~= "d"
+  return (m and m ~= "D" and m ~= "d") and true or false
 end
 local opt = G.depth[G.firstWin]
 local path, x = {}, G.firstWin
 while x ~= 1 do table.insert(path, 1, x); x = G.parent[x] end
 table.insert(path, 1, 1)
 local function metrics(mode)
-  local live, hid, nv = 0, 0, 0
+  local live, hid, nv, liveMarked = 0, 0, 0, 0
   local hidden = {}
   for i = 1, n do
     if G.flag[i] ~= 2 then
-      if good[i] == 1 then live = live + 1
+      if good[i] == 1 then live = live + 1; if vis(i, mode) then liveMarked = liveMarked + 1 end
       elseif vis(i, mode) then nv = nv + 1
       else hid = hid + 1; hidden[i] = true end
     end
   end
-  -- умная обезьяна
   local T = 5 * opt
   local p, ok = { [1] = 1.0 }, 0
   for _ = 1, T do
@@ -93,10 +93,10 @@ local function metrics(mode)
     end
     if best >= 0 then dl[#dl + 1] = (k - 1) .. ":" .. best; if best > maxDeep then maxDeep = best end end
   end
-  return string.format("[%s] живых %d, видимых %d, скрытых %d → СКРЫТЫХ %.1f %% | обезьяна %.3f %% | глубина %d {%s}",
-    mode, live, nv, hid, 100 * hid / math.max(1, hid + live), smart, maxDeep, table.concat(dl, " ")), hidden
+  return string.format("[%s] живых %d, видимых %d, скрытых %d → СКРЫТЫХ %.1f %% | обезьяна %.3f %% | глубина %d {%s}%s",
+    mode, live, nv, hid, 100 * hid / math.max(1, hid + live), smart, maxDeep, table.concat(dl, " "),
+    liveMarked > 0 and (" | !!! помечено живых " .. liveMarked) or ""), hidden
 end
--- путь: прогулка, вынужденные, события, ширина
 local function objs(i) local st = R.decode(lvl, G.keys[i]); local t = {}; for q = 1, #st.pos do t[#t+1] = st.pos[q] .. (st.fixed[q] and "f" or "") end; return table.concat(t, ",") end
 local streak, maxStreak, events, forced, maxForced = 0, 0, 0, 0, 0
 local safeSeq = {}
@@ -119,50 +119,39 @@ local maxw = 0
 for d = 0, opt do if (w[d] or 0) > maxw then maxw = w[d] end end
 print(string.format("%s: ходов %d | сост. %d | выигрышных %d | прогулка %d | вынужд. %d | ширина %d | событий %d | безоп. %s",
   name, opt, n, nwin, maxStreak, maxForced, maxw, events, table.concat(safeSeq, "")))
-local _, hidW
-local live0 = 0
-for i = 1, n do if good[i] == 1 and marks[i] then live0 = live0 + 1 end end
-if live0 > 0 then print("   !!! точная разметка пометила живых: " .. live0) end
-local live1 = 0
-for i = 1, n do if good[i] == 1 and skep[i] then live1 = live1 + 1 end end
-if live1 > 0 then print("   !!! разметка скептика пометила живых: " .. live1) end
-for _, mode in ipairs({ "скептик-ст", "скептик", "точно-ст", "точно", "strict" }) do
+local cens = arg[4] or "новичок"
+local hidC
+for _, mode in ipairs({ "новичок", "знаток-ск", "знаток" }) do
   local line, hs = metrics(mode)
   print("   " .. line)
-  if mode == (arg[4] or "точно") then hidW = hs end
+  if mode == cens then hidC = hs end
 end
--- перепись скрытых (wide) и видимых по правилам
-local agg, letters = {}, {}
+local function tally(arr)
+  local l = {}
+  for i = 1, n do if G.flag[i] ~= 2 and good[i] ~= 1 then local m = arr[i] or "-"; l[m] = (l[m] or 0) + 1 end end
+  local s = {}
+  for k, v in pairs(l) do s[#s + 1] = k .. "=" .. v end
+  table.sort(s)
+  return table.concat(s, " ")
+end
+print("   тупики: новичок " .. tally(nov) .. " | знаток " .. tally(marks) .. " | знаток-ск " .. tally(skep))
+local agg = {}
 for i = 1, n do
-  if G.flag[i] ~= 2 and good[i] ~= 1 then
-    local m = marks[i] or "-"
-    letters[m] = (letters[m] or 0) + 1
-    if hidW[i] then
-      local st = R.decode(lvl, G.keys[i])
-      local t = {}
-      for qq, p in ipairs(lvl.pieces) do if p.movable then
-        if st.pos[qq] == 0 then t[#t+1] = (p.tag or p.what) .. "=смыт" else
-          local xx, yy = R.xy(lvl, st.pos[qq]); t[#t+1] = string.format("%s(%d,%d)%s", p.tag or p.what, xx, yy, st.fixed[qq] and "F" or "") end end end
-      local up = false
-      for _, j in ipairs(R.jets(lvl, st)) do if j.dir == 1 and not j.lapidus and #j.cells > 0 then up = true end end
-      t[#t+1] = up and "фонтан" or "-"
-      local k = table.concat(t, " ")
-      agg[k] = (agg[k] or 0) + 1
-    end
+  if hidC[i] then
+    local st = R.decode(lvl, G.keys[i])
+    local t = {}
+    for qq, p in ipairs(lvl.pieces) do if p.movable then
+      if st.pos[qq] == 0 then t[#t+1] = (p.tag or p.what) .. "=смыт" else
+        local xx, yy = R.xy(lvl, st.pos[qq]); t[#t+1] = string.format("%s(%d,%d)%s%s", p.tag or p.what, xx, yy, st.fixed[qq] and "F" or "", st.asm[qq] ~= qq and ("~" .. st.asm[qq]) or "") end end end
+    local up = false
+    for _, j in ipairs(R.jets(lvl, st)) do if j.dir == 1 and not j.lapidus and #j.cells > 0 then up = true end end
+    t[#t+1] = up and "фонтан" or "-"
+    local k = table.concat(t, " ")
+    agg[k] = (agg[k] or 0) + 1
   end
 end
-local ls = {}
-for k, v in pairs(letters) do ls[#ls + 1] = k .. "=" .. v end
-table.sort(ls)
-print("   тупики по правилам (точно): " .. table.concat(ls, " ") .. "   (- скрытые; D/d — только в strict)")
-local ls2 = {}
-local l2 = {}
-for i = 1, n do if G.flag[i] ~= 2 and good[i] ~= 1 then local m = skep[i] or "-"; l2[m] = (l2[m] or 0) + 1 end end
-for k, v in pairs(l2) do ls2[#ls2 + 1] = k .. "=" .. v end
-table.sort(ls2)
-print("   тупики по правилам (скептик): " .. table.concat(ls2, " "))
 local list = {}
 for k, v in pairs(agg) do list[#list + 1] = { k, v } end
 table.sort(list, function(a, b) return a[2] > b[2] end)
-for i = 1, math.min(tonumber(arg[3] or 8), #list) do print(string.format("   скрыто %6d  %s", list[i][2], list[i][1])) end
+for i = 1, math.min(tonumber(arg[3] or 8), #list) do print(string.format("   скрыто[%s] %6d  %s", cens, list[i][2], list[i][1])) end
 SV.freeGraph(G); require("ffi").C.free(good)

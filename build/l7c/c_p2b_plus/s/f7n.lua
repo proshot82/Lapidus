@@ -1,4 +1,4 @@
-local V = dofile("build/l7c/c_p2b_plus/fvis.lua")
+local V = dofile("build/l7c/c_p2b_plus/nvis.lua")
 local d = dofile("build/l7c/c_p2b_plus/s/f7.lua")
 d.visibleLoss = V.make(d)
 return d

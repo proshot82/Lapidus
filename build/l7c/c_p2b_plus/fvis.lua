@@ -15,6 +15,10 @@
 --  E  тройник у мойки, а заглушки на нём нет;
 --  F  ниппель едет в столбе или закреплён не над стояком;
 --  Ca свинчены пары, которых нет в сборке: тройник или заглушка сидят на ниппеле.
+-- opts.novice = true — мерка НОВИЧКА (docs/DESIGN.md §7, решение Lao 29.09): остаются только A (деталь больше не
+-- попадёт в столб вообще: угол, зажата, запечатана, нечем поднять), B (выход стояка навсегда закрыт деталью без хода
+-- наверх — фонтана нет), D (тройник навсегда закреплён не у мойки — выход в стену), E (тройник у мойки, а его верх
+-- навсегда открыт в глухую шахту); C, F, Ca и N (неверный порядок, пара, место, «следующий толчок») — новичку не видны.
 -- НЕ помечает (нужно несколько ходов вперёд): порядок деталей в очереди, ещё не въехавших в столб; заглушку,
 -- уехавшую в лифт раньше, чем тройник переправлен; Лапидуса, запертого не на той стороне.
 local R = require("core.rules")
@@ -49,22 +53,23 @@ function M.why(def, opts)
     local sup = base
     for _ = 1, lvl.R + 1 do local u = lvl.nb[sup][R.UP]; if u == 0 or wall(u) then break end; sup = u end
     local _, supY = R.xy(lvl, sup)
-    -- C
-    if inCol(tc) and inCol(pc) and pc > tc then return "C" end
-    if inCol(tc) and not st.fixed[tq] then
+    local nov = opts.novice
+    -- C (знаток: неверный порядок в стопке — новичку не виден)
+    if not nov and inCol(tc) and inCol(pc) and pc > tc then return "C" end
+    if not nov and inCol(tc) and not st.fixed[tq] then
       local _, ty = R.xy(lvl, tc)
       if ty < supY and not (inCol(pc) and pc < tc) then return "C" end
     end
-    -- F
-    if st.fixed[nq] and nc ~= baseCell then return "F" end
-    if not st.fixed[nq] and inCol(nc) then return "F" end
+    -- F (знаток: ниппель не на своём месте)
+    if not nov and st.fixed[nq] and nc ~= baseCell then return "F" end
+    if not nov and not st.fixed[nq] and inCol(nc) then return "F" end
     -- Ca
     local function on(a, b) -- a сидит на b и свинчена с ним
       local ca, cb = st.pos[a], st.pos[b]
       if ca == 0 or cb == 0 or lvl.nb[cb][R.UP] ~= ca then return false end
       return (not st.fixed[a] and not st.fixed[b] and st.asm[a] == st.asm[b])
     end
-    if on(tq, nq) or on(pq, nq) then return "Ca" end
+    if not nov and (on(tq, nq) or on(pq, nq)) then return "Ca" end
     -- B
     local w = R.water(lvl, st, nil, true)
     local jetUp = false
@@ -155,7 +160,7 @@ function M.why(def, opts)
         if q == nq then
           if e == 0 then return "A" end
         elseif e == 0 then return "A"
-        elseif e == 1 then return "N" end
+        elseif e == 1 and not nov then return "N" end
       end
     end
     return false
