@@ -40,6 +40,16 @@ filters.nolid = function(l, st, ns) -- нельзя держать деталь 
   for q, p in ipairs(lvl.pieces) do if p.movable and ns.pos[q] == c1 and not ns.fixed[q] then return false end end
   return true
 end
+filters.enorise = function(l, st, ns) -- угольник не поднимается выше своей стартовой строки (фонтан его не возит)
+  local q = tag.e
+  if ns.pos[q] ~= 0 then local _, y = xy(ns.pos[q]); local _, y0 = xy(lvl.pieces[q].start); if y < y0 then return false end end
+  return true
+end
+filters.qnorise = function(l, st, ns) -- заглушка не поднимается выше своей стартовой строки
+  local q = tag.q
+  if ns.pos[q] ~= 0 then local _, y = xy(ns.pos[q]); local _, y0 = xy(lvl.pieces[q].start); if y < y0 then return false end end
+  return true
+end
 filters.noride = function(l, st, ns)
   for q, p in ipairs(lvl.pieces) do
     if p.movable and ns.pos[q] ~= 0 then
