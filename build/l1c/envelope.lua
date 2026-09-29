@@ -305,13 +305,26 @@ local tried, valid = 0, 0
 local reasons, firstErr = {}, nil
 local bestPct, bestSmart = 0, 1e9
 local front = {}
+local archive = {}
+local function dominates(a, b)
+  return a.pct >= b.pct and a.smart <= b.smart and a.deep >= math.min(b.deep, 8) and (a.pct > b.pct or a.smart < b.smart)
+end
 local function record(L, r)
-  local key = string.format("%.1f/%.3f", r.pct, r.smart)
-  front[#front + 1] = { L = L, r = r }
+  if r.opt < 12 then return end
+  for _, a in ipairs(archive) do
+    if dominates(a.r, r) or (a.r.pct == r.pct and a.r.smart == r.smart) then return end
+  end
+  local keep = {}
+  for _, a in ipairs(archive) do if not dominates(r, a.r) then keep[#keep + 1] = a end end
+  keep[#keep + 1] = { L = L, r = r }
+  archive = keep
+  front = archive
 end
 while os.clock() - t0 < secs do
   local L
-  if #pool > 0 and math.random() < 0.6 then
+  if #archive > 0 and math.random() < 0.5 then
+    L = mutate(archive[math.random(#archive)].L)
+  elseif #pool > 0 and math.random() < 0.7 then
     L = mutate(pool[math.random(#pool)].L)
   else
     L = randomLayout()
@@ -349,7 +362,7 @@ local f = io.open(out, "w")
 f:write(string.format("# envelope W=%d H=%d Lmax=%d seed=%d secs=%d: опробовано %d, годных (решаем, крюк обязателен, одна победа) %d\n",
   W, H, LMAX, seed, secs, tried, valid))
 f:write(string.format("# лучшая доля скрытых %.1f %%, лучшая умная обезьяна %.3f %%\n", bestPct, bestSmart))
-for i = 1, math.min(25, #pareto) do
+for i = 1, math.min(60, #pareto) do
   local a = pareto[i]
   f:write(string.format("скрытых %5.1f %% | обезьяна %8.3f %% | глубина %2d | ходов %2d | состояний %4d (живых %d, скрытых %d, видимых %d)\n",
     a.r.pct, a.r.smart, a.r.deep, a.r.opt, a.r.n, a.r.live, a.r.hid, a.r.vis))
