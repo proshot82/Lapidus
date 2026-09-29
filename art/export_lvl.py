@@ -45,7 +45,7 @@ for lv in screens2.L:
             out('fit_' + sig, G(gen2.fitting2(CR, CR, CR, ob['ports']), filter='url(#dsh)'), 2 * CR, 2 * CR)
     body, extra, _ = frame(lv, no_lap=True, hud=False, skip=('fixture', 'porcelain', 'fitting'))
     out('lvl%02d' % lv['id'], body, 1920, 1080, extra, base=False, jpeg=True)
-for cid, fn in ((6, screens2.card6), (7, screens2.card7)):  # карточки новых правил на экране заявки
-    if cid in IDS:
+for cname, fn in screens2.CARDS.items():  # вкладыши новых правил на экране заявки (card01b/c — страницы паспорта кв. 1)
+    if int(cname[4:6]) in IDS:
         body, extra = fn()
-        out('card%02d' % cid, body, 564, 380, extra)
+        out(cname, body, 564, 380, extra)

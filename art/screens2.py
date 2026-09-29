@@ -26,7 +26,11 @@ def tile_pat(pid, c, tile):
             + R(c * .022, c * .022, h - c * .044, h - c * .044, base, rx=c * .05) + Ln(c * .07, c * .07, h - c * .13, c * .07, hi, c * .03, opacity='.9') + '</pattern>')
 
 
-BASE = defs2(120, 0, 0, 'mint') + tile_pat('tpM', 120, 'mint') + tile_pat('tpB', 120, 'blue') + tile_pat('tpY', 120, 'mustard')
+# «окаменевшая» деталь (прикручена к сети): латунь → холодная сталь, тот же фильтр — шейдер в game/board.lua
+STEEL = ('<filter id="steel" color-interpolation-filters="sRGB"><feColorMatrix type="saturate" values="0.08"/>'
+         '<feComponentTransfer><feFuncR type="linear" slope="0.78" intercept="0.02"/><feFuncG type="linear" slope="0.82" intercept="0.03"/>'
+         '<feFuncB type="linear" slope="0.9" intercept="0.06"/></feComponentTransfer></filter>')
+BASE = STEEL + defs2(120, 0, 0, 'mint') + tile_pat('tpM', 120, 'mint') + tile_pat('tpB', 120, 'blue') + tile_pat('tpY', 120, 'mustard')
 
 
 def render(name, body, extra, w=1920, h=1080):
@@ -299,13 +303,17 @@ def pan_crane(px, py):
     return ''.join(s)
 
 
-def card6():
-    """Карточка нового правила перед кв. 6 — в стиле панелей «Паспорта изделия», седьмая."""
+def card(num, title, pan):
+    """Вкладыш нового правила на экране заявки (и страница паспорта): номер квартиры, где правило вводится, заголовок, немая панель."""
     px, py = 10, 10
     s = [G(R(px, py, 540, 356, '#FBF8F0', rx=10, stroke=INK, stroke_width=2.5) + C(px + 38, py + 40, 24, INK)
-           + T(px + 38, py + 51, '7', 30, '#FBF8F0', weight='bold', anchor='middle') + T(px + 76, py + 52, 'Поднимает, но не носит', 32, INK, weight='bold'), filter='url(#dsh)'),
-         pan_crane(px, py)]
+           + T(px + 38, py + 51, str(num), 30, '#FBF8F0', weight='bold', anchor='middle') + T(px + 76, py + 52, title, 32, INK, weight='bold'), filter='url(#dsh)'),
+         pan(px, py)]
     return ''.join(s), BASE
+
+
+def card6():
+    return card(6, 'Поднимает, но не носит', pan_crane)
 
 
 def jet2(x1, y1, x2, y2, c):
@@ -357,12 +365,96 @@ def pan_pressure(px, py):
 
 
 def card7():
-    """Карточка правила напора перед кв. 7 — восьмая, в стиле панелей «Паспорта изделия»."""
-    px, py = 10, 10
-    s = [G(R(px, py, 540, 356, '#FBF8F0', rx=10, stroke=INK, stroke_width=2.5) + C(px + 38, py + 40, 24, INK)
-           + T(px + 38, py + 51, '8', 30, '#FBF8F0', weight='bold', anchor='middle') + T(px + 76, py + 52, 'Струя толкает и держит', 32, INK, weight='bold'), filter='url(#dsh)'),
-         pan_pressure(px, py)]
-    return ''.join(s), BASE
+    return card(7, 'Струя толкает и держит', pan_pressure)
+
+
+def drops(x, y, k=1.0):
+    return ''.join(E(x + dx * k, y + dy * k, 6 * k, 9 * k, Q['water'], stroke=O, stroke_width=1.5) for dx, dy in ((0, 0), (8, 26), (-6, 50)))
+
+
+def pan_intro(px, py):
+    """Кв. 1: Н входит в В (Н+Н и В+В — нет); цель — вода от стояка через Лапидуса до прибора."""
+    cc, s = 60, []
+    y = py + 118
+    for x, a, b, ok in ((px + 70, 'N', 'V', True), (px + 300, 'N', 'N', False)):
+        s.append(R(x - .5 * cc, y - .2 * cc, .52 * cc, .4 * cc, 'url(#ironH)', stroke=O, stroke_width=2))
+        s.append(R(x + 1.13 * cc, y - .2 * cc, .52 * cc, .4 * cc, 'url(#ironH)', stroke=O, stroke_width=2))
+        s.append(port2(x, y, cc, 'right', a) + port2(x + 1.15 * cc, y, cc, 'left', b))
+        s.append(T(x + .57 * cc, y + 62, {'N': 'Н', 'V': 'В'}[a] + ' + ' + {'N': 'Н', 'V': 'В'}[b], 30, INK, weight='bold', anchor='middle'))
+        s.append(gen.mark(x + 150, y, ok, .8))
+    cc, y = 56, py + 268
+    s.append(source2(px + 60, y, cc, {'right': 'V'}, py + 205, py + 340))
+    s.append(hero([(px + 116 + i * cc, y) for i in range(4)], cc, 2, 5, ring=False, wet=True, screwed=(True, True)))
+    s.append(bath2(px + 116 + 4 * cc, y, cc, True) + port2(px + 116 + 4 * cc, y - .02 * cc, cc, 'left', 'N', True))
+    s.append(gen.mark(px + 490, y - 50, True, .9))
+    return ''.join(s)
+
+
+def pan_parts(px, py):
+    """Кв. 4: деталь падает и свинчивается с той, на которую упала; прикрученная к сети — «каменеет» (сталь)."""
+    cc, s = 58, []
+    fl = py + 312
+    s.append(R(px + 24, fl, 236, 22, 'url(#tpB)', rx=6, stroke=O, stroke_width=3) + R(px + 286, fl, 236, 22, 'url(#tpB)', rx=6, stroke=O, stroke_width=3))
+    s.append(Ln(px + 273, py + 92, px + 273, fl - 8, '#B9AF98', 2.5, stroke_dasharray='6 8'))
+    # слева: латунная деталь падает на другую и свинчивается
+    x = px + 140
+    s.append(fitting2(x, fl - .5 * cc, cc, {'up': 'V', 'down': 'V'}))
+    s.append(fitting2(x, fl - 2.9 * cc, cc, {'up': 'N', 'down': 'N'}))
+    s.append(gen.arrow(x + 58, fl - 3.2 * cc, x + 58, fl - 1.6 * cc, '#C0392B', 5))
+    s.append(gen.mark(x + 80, py + 100, True, .7))
+    # справа: деталь прикрутилась к сети — стала сталью, её больше не сдвинуть
+    x, y = px + 440, fl - 2.2 * cc
+    s.append(stub2(x - cc, y, cc, 'right', 'V', 'left'))
+    s.append(G(fitting2(x, y, cc, {'left': 'N', 'right': 'N'}), filter='url(#steel)'))
+    s.append(fluff2(x - .5 * cc, y, cc))
+    s.append(T(x - 20, fl - 30, 'намертво', 34, INK, font=HAND, anchor='middle'))
+    return ''.join(s)
+
+
+def pan_tee(px, py):
+    """Кв. 5: у тройника три выхода; лишний течёт — вода не дойдёт; заглушка на лишнем — дойдёт."""
+    cc, s = 60, []
+    for i, (y, plugged) in enumerate(((py + 150, False), (py + 285, True))):
+        x = px + 120
+        s.append(source2(x - cc, y, cc, {'right': 'V'}, y - .5 * cc, y + .6 * cc))
+        s.append(fitting2(x, y, cc, {'left': 'N', 'right': 'V', 'up': 'V'}))
+        s.append(bath2(x + 4 * cc, y, cc, plugged) + port2(x + 4 * cc, y - .02 * cc, cc, 'left', 'N', True))
+        if plugged:
+            s.append(fitting2(x, y - cc, cc, {'down': 'N'}))
+            s.append(Ln(x + .6 * cc, y, x + 3.4 * cc, y, Q['water'], 14, opacity='.9'))
+            s.append(gen.mark(px + 490, y - 40, True, .8))
+        else:
+            s.append(drops(x, y - .75 * cc) + drops(x + 18, y - .9 * cc, .8))
+            s.append(gen.mark(px + 490, y - 40, False, .8))
+    return ''.join(s)
+
+
+def card1():
+    return card(1, 'Н входит в В — вода до прибора', pan_intro)
+
+
+def card3():
+    return card(3, 'Фаянс толкают только ноги', pan_soap)
+
+
+def card4():
+    return card(4, 'Деталь падает и свинчивается', pan_parts)
+
+
+def card5():
+    return card(5, 'Лишний выход — заглушить', pan_tee)
+
+
+def card_fall():
+    return card(1, 'Без опоры падает, резьба держит', pan_support)
+
+
+def card_drain():
+    return card(1, 'Слив смывает', pan_drain)
+
+
+CARDS = {'card01': card1, 'card01b': card_fall, 'card01c': card_drain, 'card03': card3, 'card04': card4, 'card05': card5,
+         'card06': card6, 'card07': card7}
 
 
 def passport2():

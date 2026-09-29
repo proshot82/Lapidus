@@ -53,6 +53,16 @@ function Play:start(index)
   elseif demo == "act" then self.request = false; self.won, self.winPhase, self.moves = true, "act", 21
   elseif demo == "scene" then self.request = false; self.won, self.winPhase = true, "scene"
   elseif demo == "washed" then self.request = false; self.state = R.clone(self.state); self.state.dead = true
+  elseif demo == "late" then -- снимок поля перед последним ходом решения (проверка «окаменевших» деталей); только в выводе
+    self.request = false
+    local sol = self.solutions[string.format("%02d", self.index)]
+    local mv = sol and sol.moves or {}
+    for k = 1, #mv - 1 do
+      local w, d = mv[k]:match("^(%a+):(%a+)$")
+      local ns = R.move(self.lvl, self.state, w, R.DIRINDEX[d])
+      if ns then self.state = ns end
+    end
+    self.active = "head"; self:refresh()
   elseif demo == "toast" then self.request = false; self:say("Голова по фаянсу скользит: толкай ногами.", 60) end
 end
 
@@ -165,6 +175,14 @@ end
 
 function Play:update(dt)
   self.t = self.t + dt
+  -- «окаменение» (§8): деталь, прикрученная к сети, за ~0,3 с переходит из латуни в сталь; отмена — обратно
+  local fx = self.anim and self.anim.segs[self.anim.i].from.fixed or self.state.fixed
+  self.stone = self.stone or {}
+  for q = 1, #self.lvl.pieces do
+    local goal = fx[q] and 1 or 0
+    local cur = self.stone[q] or goal
+    self.stone[q] = goal > cur and math.min(goal, cur + dt * 3.5) or math.max(goal, cur - dt * 3.5)
+  end
   if self.toast then self.toast.t = self.toast.t - dt; if self.toast.t <= 0 then self.toast = nil end end
   if self.anim then
     local a = self.anim
@@ -401,7 +419,7 @@ function Play:draw()
   local wet = self.status.wet or {}
   for q, p in ipairs(self.lvl.pieces) do
     local v = pv[q]
-    if v then B:drawPiece(p, v[1][1], v[1][2], (not self.anim) and wet[q], v[2]) end
+    if v then B:drawPiece(p, v[1][1], v[1][2], (not self.anim) and wet[q], v[2], self.stone and self.stone[q] or (self.state.fixed[q] and 1 or 0)) end
   end
   if not self.anim then B:drawWater(self.status, self.jets, self.lvl.R, self.t) end
   local sh, sf = false, false

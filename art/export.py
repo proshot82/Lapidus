@@ -69,10 +69,9 @@ for lv in screens2.L:
 # экраны
 body, extra = screens2.menu2(items=False)
 out('scr_menu', body, 1920, 1080, extra)
-body, extra = screens2.passport2()
-out('scr_passport', body, 1920, 1080, extra)
-body, extra = screens2.card6()
-out('card06', body, 564, 380, extra)
+for cname, fn in screens2.CARDS.items():  # вкладыши новых правил (экран заявки и страницы паспорта)
+    body, extra = fn()
+    out(cname, body, 564, 380, extra)
 body, extra = screens2.select2(solved=(), opened=())
 out('scr_building', body, 1920, 1080, extra)
 NL = tuple(range(1, len(screens2.L) + 1))

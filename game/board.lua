@@ -80,9 +80,34 @@ function Board:drawBackground()
   end
 end
 
-function Board:drawPiece(p, cx, cy, wet, alpha)
-  lg.setColor(1, 1, 1, alpha or 1)
+-- Сталь для «окаменевших» деталей: тот же сдвиг цвета, что фильтр steel в art/screens2.py.
+local STEEL
+local function steelShader()
+  if STEEL == nil then
+    local ok, sh = pcall(lg.newShader, [[
+      extern number amt;
+      vec4 effect(vec4 color, Image tex, vec2 tc, vec2 sc) {
+        vec4 c = Texel(tex, tc) * color;
+        float g = dot(c.rgb, vec3(0.30, 0.59, 0.11));
+        vec3 st = vec3(g * 0.78 + 0.02, g * 0.82 + 0.03, g * 0.90 + 0.06);
+        return vec4(mix(c.rgb, st, amt), c.a);
+      }]])
+    STEEL = ok and sh or false
+  end
+  return STEEL or nil
+end
+
+-- stone: 0 — подвижная латунь (с тенью на полу), 1 — прикручена к сети, сталь без тени (§8).
+function Board:drawPiece(p, cx, cy, wet, alpha, stone)
   local k = self.k
+  stone = stone or 0
+  if p.kind == "fitting" and stone < 1 then
+    lg.setColor(0, 0, 0, 0.28 * (1 - stone) * (alpha or 1))
+    lg.ellipse("fill", cx + 0.04 * self.cs, cy + 0.44 * self.cs, 0.40 * self.cs, 0.07 * self.cs)
+  end
+  lg.setColor(1, 1, 1, alpha or 1)
+  local sh = p.kind == "fitting" and stone > 0 and steelShader()
+  if sh then sh:send("amt", stone); lg.setShader(sh) end
   if p.kind == "fixture" then
     local pd
     for d = 1, 4 do if p.ports[d] then pd = d end end
@@ -96,6 +121,7 @@ function Board:drawPiece(p, cx, cy, wet, alpha)
     if img("fit_" .. sig) then spr("fit_" .. sig, cx, cy, k)
     else for d = 1, 4 do if p.ports[d] then spr("port_" .. p.ports[d], cx, cy, k, ANG[d]) end end end
   end
+  if sh then lg.setShader() end
 end
 
 -- Сглаживание изломов пути (радиус — полклетки), как в генераторе арта.

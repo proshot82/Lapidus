@@ -35,9 +35,9 @@ def defs2(c, ox, oy, tile):
     g = lambda i, stops, x2='0', y2='1': ('<linearGradient id="%s" x1="0" y1="0" x2="%s" y2="%s">' % (i, x2, y2)
                                           + ''.join('<stop offset="%s" stop-color="%s"/>' % st for st in stops) + '</linearGradient>')
     return (g('nutG', [('0', '#F8E29A'), ('.3', '#F8E29A'), ('.3', '#D1A238'), ('.7', '#D1A238'), ('.7', '#8E6819'), ('1', '#8E6819')])
-            + g('nutGd', [('0', '#E2C57C'), ('.3', '#E2C57C'), ('.3', '#AA8127'), ('.7', '#AA8127'), ('.7', '#6B4E11'), ('1', '#6B4E11')])
+            + g('nutGd', [('0', '#D9DEE3'), ('.3', '#D9DEE3'), ('.3', '#8F98A1'), ('.7', '#8F98A1'), ('.7', '#555D66'), ('1', '#555D66')])
             + g('cylG', [('0', '#FBE7A6'), ('.28', '#E2B54B'), ('.62', '#B08424'), ('1', '#6E500F')])
-            + g('cylGd', [('0', '#E8CF88'), ('.28', '#C39837'), ('.62', '#8E6A1C'), ('1', '#58400C')])
+            + g('cylGd', [('0', '#E4E9EE'), ('.28', '#A7B0B9'), ('.62', '#6E7781'), ('1', '#3E454C')])
             + g('ironV', [('0', '#3A4047'), ('.22', '#A3ADB8'), ('.45', '#68717C'), ('.8', '#454C54'), ('1', '#2C3136')], '1', '0')
             + g('ironH', [('0', '#3A4047'), ('.22', '#A3ADB8'), ('.45', '#68717C'), ('.8', '#454C54'), ('1', '#2C3136')])
             + g('enam', [('0', '#FFFFFF'), ('.56', '#F7F8F6'), ('.56', '#D3DBE4'), ('1', '#B7C2CF')], '1', '1')
@@ -164,23 +164,26 @@ def room_paint(ox, oy, W, H, c):
 # ---------- детали
 
 def port2(cx, cy, c, dr, th, fixed=False):
+    # закреплённое (сеть) — сталь, подвижное — латунь (§8: «сдвинется ли это?»); резьба на 20 % толще, чтобы читалась на телефоне
     o, lw = Q['ol'], c * .04
     nut, cyl = ('url(#nutGd)', 'url(#cylGd)') if fixed else ('url(#nutG)', 'url(#cylG)')
+    dk, hl, inn = ('#2F353B', '#E6ECF2', '#7C868F') if fixed else ('#5E4410', '#FBE7A6', '#9C7A2E')
     s = []
     if th == 'N':
         s.append(R(cx + .16 * c, cy - .25 * c, .13 * c, .50 * c, nut, rx=.035 * c, stroke=o, stroke_width=lw))
         s.append(R(cx + .27 * c, cy - .17 * c, .31 * c, .34 * c, cyl, rx=.06 * c, stroke=o, stroke_width=lw))
         for i in range(4):
             x = cx + .31 * c + i * .062 * c
-            s.append(Ln(x, cy - .155 * c, x + .045 * c, cy + .155 * c, '#5E4410', c * .026))
-            s.append(Ln(x + .022 * c, cy - .15 * c, x + .062 * c, cy + .12 * c, '#FBE7A6', c * .012, opacity='.8'))
+            s.append(Ln(x, cy - .155 * c, x + .045 * c, cy + .155 * c, dk, c * .026))
+            s.append(Ln(x + .022 * c, cy - .15 * c, x + .062 * c, cy + .12 * c, hl, c * .012, opacity='.8'))
     else:
         s.append(R(cx + .16 * c, cy - .30 * c, .37 * c, .60 * c, nut, rx=.05 * c, stroke=o, stroke_width=lw))
         s.append(Ln(cx + .28 * c, cy - .28 * c, cx + .28 * c, cy + .28 * c, '#000000', c * .018, opacity='.25'))
         s.append(E(cx + .52 * c, cy, .07 * c, .19 * c, '#1A120C', stroke=o, stroke_width=c * .03))
         for k in (-.11, -.035, .035, .11):
-            s.append(Ln(cx + .47 * c, cy + k * c, cx + .55 * c, cy + k * c + .012 * c, '#9C7A2E', c * .02))
-    return orient(''.join(s), dr, cx, cy)
+            s.append(Ln(cx + .47 * c, cy + k * c, cx + .55 * c, cy + k * c + .012 * c, inn, c * .02))
+    body = '<g transform="translate(0 %s) scale(1 1.2)">%s</g>' % (n(-.2 * cy), ''.join(s))
+    return orient(body, dr, cx, cy)
 
 
 def source2(cx, cy, c, ports, top=-20, bot=1100, pressure=0):

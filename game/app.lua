@@ -37,7 +37,7 @@ function App.go(name, arg)
 end
 
 function App.play(index)
-  if not App.save.passportSeen then App.go("passport", { play = index }) else App.go("play", index) end
+  App.go("play", index) -- паспорт перед игрой не показывается: правила вводятся вкладышами по квартирам (§5)
 end
 
 function App.availability()
