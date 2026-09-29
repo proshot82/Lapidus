@@ -200,6 +200,14 @@ function M.eval(def, opt2, quiet, fast)
   local dl = {}
   for k = 0, #path - 2 do if deepAt[k] then dl[#dl + 1] = k .. ":" .. deepAt[k] end end
   out.deep, out.deepList = maxDeep, table.concat(dl, " ")
+  -- двери (ворота 30.09): шаги пути с рёбрами в скрытое, по половинам
+  local halves = { 0, 0 }
+  for k = 1, #path - 1 do
+    local c = 0
+    for _, e in ipairs(G.succ[path[k]]) do if hidden[e.j] then c = c + 1 end end
+    if c > 0 then local hidx = ((k - 1) < (#path - 1) / 2) and 1 or 2; halves[hidx] = halves[hidx] + 1 end
+  end
+  out.doors1, out.doors2 = halves[1], halves[2]
   local ev, walk, maxWalk, forcedRun, maxForced, choices, tempt = 0, 0, 0, 0, 0, 0, 0
   local line = {}
   local pathFalls, fallSteps = 0, {}
@@ -231,8 +239,8 @@ function M.eval(def, opt2, quiet, fast)
   out.monkey, out.shortest, out.width = sx and sx.monkey or -1, sx and sx.shortest or -1, sx and sx.maxWidth or -1
   P(string.format("СКРЫТЫХ (автор) %.1f %% | умная обезьяна %.2f %% (ещё живы %.0f %%) | наобум %.3f %% | кратчайших %d, ширина %d | глубина скрытой ветки у пути %d [%s]",
     out.pctAuthor, out.smart, out.smartLive, out.monkey, out.shortest, out.width, maxDeep, out.deepList))
-  P(string.format("путь %d: событий %d, прогулка max %d, развилок %d, вынужденных подряд max %d, шагов с соблазном %d, падений на пути %d (шаги %s)",
-    #path - 1, ev, maxWalk, choices, maxForced, tempt, pathFalls, out.fallSteps))
+  P(string.format("путь %d: событий %d, прогулка max %d, развилок %d, вынужденных подряд max %d, шагов с соблазном %d (двери: %d в 1-й половине, %d во 2-й), падений на пути %d (шаги %s)",
+    #path - 1, ev, maxWalk, choices, maxForced, tempt, out.doors1, out.doors2, pathFalls, out.fallSteps))
   if opt2 == "path" then P("  по шагам [*событие, живых не-откат, !соблазн]: " .. table.concat(line, " ")) end
   local egl = {}
   for k, v in pairs(eg) do egl[#egl + 1] = "  вход: " .. k .. "  ×" .. v end
