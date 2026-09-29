@@ -5,7 +5,10 @@
 --   · смыта подвижная деталь (кроме уровней с def.washOk, где одна деталь уходит в слив по замыслу);
 --   · смыта деталь, которая есть в выигрышной конфигурации («нужная»), — и при washOk тоже;
 --   · нужная незакреплённая деталь стоит не на своём финальном месте и ни в одном достижимом будущем больше
---     не сдвинется (сокобан-угол, зажата, запечатана — с учётом того, куда вообще может добраться Лапидус);
+--     не сдвинется (сокобан-угол, зажата — с учётом того, куда вообще может добраться Лапидус);
+--   · нужная незакреплённая деталь «запечатана в кармане»: во всех достижимых будущих она может оказаться лишь
+--     в нескольких клетках (не больше M.POCKET = 3), и её финального места среди них нет — ёрзает в тупике
+--     (обобщение правила скептиков кв. 3 и 7, 29.09; дальние судьбы детали — «обречена по итогу» — это мерка знатока);
 --   · сработало правило самого уровня def.visibleLoss(lvl, st).
 -- Мерка знатока (для сведения): плюс то, что видно сравнением с единственной финальной сборкой, — деталь прикручена
 --   не на своё место; две детали свинчены иначе, чем в финале (другим боком или другим взаимным положением);
@@ -16,7 +19,7 @@
 -- local V = require("tools.vislib"); local L = V.compute(lvl, G, def)
 -- L.newbie[i], L.expert[i] — true, если состояние i видимо проиграно (для смытых Лапидусом, flag == 2, — nil).
 local R = require("core.rules")
-local M = {}
+local M = { POCKET = 3 }
 
 -- обратные рёбра графа (только между состояниями, где Лапидус не смыт)
 local function reverseEdges(G)
@@ -76,7 +79,82 @@ function M.compute(lvl, G, def, good)
     if p.movable and win.pos[q] ~= 0 then needed[#needed + 1] = q end
   end
   local start, rev = reverseEdges(G)
-  local canMove, canGoal = {}, {}
+  local canMove, canGoal, sealedBy = {}, {}, {}
+  -- компоненты сильной связности (итеративный Тарьян) по рёбрам между несмытыми состояниями;
+  -- компоненты выходят в обратном топологическом порядке (сначала стоки)
+  local comp, order = {}, {}
+  do
+    local idx, low, onst, st, cnt = {}, {}, {}, {}, 0
+    for root = 1, n do
+      if flag[root] ~= 2 and not idx[root] then
+        local call = { { root, ES[root - 1] } }
+        cnt = cnt + 1; idx[root], low[root] = cnt, cnt; st[#st + 1] = root; onst[root] = true
+        while #call > 0 do
+          local top = call[#call]
+          local v, e = top[1], top[2]
+          if e < ES[v] then
+            top[2] = e + 1
+            local w = E[e]
+            if flag[w] ~= 2 then
+              if not idx[w] then
+                cnt = cnt + 1; idx[w], low[w] = cnt, cnt; st[#st + 1] = w; onst[w] = true
+                call[#call + 1] = { w, ES[w - 1] }
+              elseif onst[w] and idx[w] < low[v] then low[v] = idx[w] end
+            end
+          else
+            call[#call] = nil
+            if #call > 0 then local u = call[#call][1]; if low[v] < low[u] then low[u] = low[v] end end
+            if low[v] == idx[v] then
+              local c = #order + 1
+              order[c] = {}
+              repeat local w = st[#st]; st[#st] = nil; onst[w] = nil; comp[w] = c; order[c][#order[c] + 1] = w until w == v
+            end
+          end
+        end
+      end
+    end
+  end
+  local POCKET = M.POCKET
+  -- для детали q: множество будущих клеток (до POCKET + 1 штук, дальше — «много») и есть ли среди них финальное место
+  local function pocketSealed(q, goal)
+    local cells, big, hasGoal = {}, {}, {}
+    for c = 1, #order do
+      local set, cntc, isBig, g = {}, 0, false, false
+      local function add(x)
+        if isBig or x == 0 or set[x] then return end
+        set[x] = true; cntc = cntc + 1
+        if x == goal then g = true end
+        if cntc > POCKET then isBig = true end
+      end
+      for _, v in ipairs(order[c]) do add(pos[v][q]) end
+      for _, v in ipairs(order[c]) do
+        for e = ES[v - 1], ES[v] - 1 do
+          local w = E[e]
+          if flag[w] ~= 2 then
+            local d = comp[w]
+            if d ~= c then
+              if big[d] then isBig = true
+              else
+                if hasGoal[d] then g = true end
+                for x in pairs(cells[d]) do add(x) end
+              end
+            end
+          end
+          if isBig then break end
+        end
+        if isBig then break end
+      end
+      big[c], hasGoal[c], cells[c] = isBig, g, isBig and {} or set
+    end
+    local S = {}
+    for i = 1, n do
+      if flag[i] ~= 2 then
+        local c, ci = pos[i][q], comp[i]
+        if c ~= 0 and not fixed[i][q] and c ~= goal and not big[ci] and not hasGoal[ci] then S[i] = true end
+      end
+    end
+    return S
+  end
   for _, q in ipairs(needed) do
     local goal = win.pos[q]
     local mv, gl = {}, {}
@@ -92,6 +170,7 @@ function M.compute(lvl, G, def, good)
     end
     canMove[q] = backClosure(n, start, rev, mv)
     canGoal[q] = backClosure(n, start, rev, gl)
+    sealedBy[q] = pocketSealed(q, goal)
   end
   local newbie, expert, omni = {}, {}, {}
   local counts = { frozen = 0, levelRule = 0, washed = 0, goal = 0 }
@@ -107,6 +186,7 @@ function M.compute(lvl, G, def, good)
           local c = st.pos[q]
           if c == 0 then lost, why = true, "washed" break end
           if not st.fixed[q] and c ~= win.pos[q] and not canMove[q][i] then lost, why = true, "frozen" break end
+          if sealedBy[q][i] then lost, why = true, "frozen" break end
         end
       end
       if not lost and def.visibleLoss and def.visibleLoss(lvl, st) then lost, why = true, "levelRule" end
