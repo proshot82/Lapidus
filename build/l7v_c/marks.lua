@@ -83,12 +83,22 @@ function M.N2(lvl, st)
   -- стоящую на твёрдом деталь можно «пройти», толкнув её перед собой, если за ней свободно и там, куда она
   -- упадёт, она не окажется в сокобан-углу (иначе проход стоит детали — это уже видимая потеря)
   local function pushThrough(v, d)
+    -- Лапидус входит в клетку v в направлении d, деталь уезжает в w = nb[v][d] (свободна по построению BFS),
+    -- затем падает; в столбе струи она не падает, а висит над верхушкой
     local w = lvl.nb[v][d]
     if w == 0 or solid(w) or pieceAt[w] then return false end
-    while true do
-      local b = lvl.nb[w][DOWN]
-      if b == 0 or solid(b) or pieceAt[b] or body[b] then break end
-      w = b
+    local wx = xy(lvl, w)
+    local _, sy = xy(lvl, P[k.src].start)
+    if wx == sx then
+      local top = R.idx(lvl, sx, sy - lvl.R - 1)
+      if pieceAt[top] or body[top] then return false end
+      w = top
+    else
+      while true do
+        local b = lvl.nb[w][DOWN]
+        if b == 0 or solid(b) or pieceAt[b] or body[b] then break end
+        w = b
+      end
     end
     for _, e in ipairs({ LEFT, RIGHT }) do
       local a, bk = lvl.nb[w][e], lvl.nb[w][OPP[e]]
@@ -106,7 +116,8 @@ function M.N2(lvl, st)
         local v = lvl.nb[u][d]
         if v ~= 0 and not seen[v] and not avoid[v] then
           local pass = not obstacle(v)
-          if not pass and not solid(v) and (d == LEFT or d == RIGHT) and pushThrough(v, d) then pass = true end
+          -- BFS идёт от клетки толкающего к телу; Лапидус же движется навстречу: из-за v в сторону OPP[d], деталь — в u
+          if not pass and not solid(v) and (d == LEFT or d == RIGHT) and pushThrough(v, OPP[d]) then pass = true end
           if pass then seen[v] = true; q[#q + 1] = v end
         end
       end
@@ -176,7 +187,8 @@ function M.X1(lvl, st)
   local k = find(lvl)
   local _, sy = xy(lvl, lvl.pieces[k.src].start)
   local rowY = sy - 1
-  local function xr(q) local c = st.pos[q]; if c == 0 or st.fixed[q] then return nil end; local x, y = xy(lvl, c); if y == rowY then return x end end
+  local sx = xy(lvl, lvl.pieces[k.src].start)
+  local function xr(q) local c = st.pos[q]; if c == 0 or st.fixed[q] then return nil end; local x, y = xy(lvl, c); if y == rowY and x > sx then return x end end
   local xt, xp, xn = xr(k.tee), xr(k.plug), xr(k.nip)
   if xn and ((xt and xn < xt) or (xp and xn < xp)) then return true end
   if xt and xp and xt < xp then return true end
