@@ -145,7 +145,7 @@ return {
   visibleLoss = visibleLoss,
   id = 5, flat = 5, name = "Лишний выход",
   length = { 2, 4 }, pressure = 0, tile = "blue",
-  target = { moves = { 15, 40 }, states = 300000, dead = 40, fb = 2 },
+  target = { moves = { 15, 40 }, states = 100000, dead = 35, fb = 1 },
   grid = {
     "#########",
     "#......##",

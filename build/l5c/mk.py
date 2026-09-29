@@ -63,7 +63,8 @@ def build(name, spec):
     lines.append('  visibleLoss = visibleLoss,')
     lines.append('  id = 5, flat = 5, name = "Лишний выход",')
     lines.append('  length = { %d, %d }, pressure = 0, tile = "blue",' % tuple(spec['length']))
-    lines.append('  target = { moves = { 15, 40 }, states = 300000, dead = 40, fb = 2 },')
+    # коридор солвера — как у нынешней levels/05.lua (не меняю: качество меряют ворота общей линейки)
+    lines.append('  target = { moves = { 15, 40 }, states = 100000, dead = 35, fb = 1 },')
     lines.append('  grid = {')
     for r in grid:
         lines.append('    "%s",' % r)
@@ -72,7 +73,7 @@ def build(name, spec):
     sx, sy = spec['source']
     lines.append('    { kind = "source", at = { %d, %d }, ports = { left = "N" } },' % (sx, sy))
     dx, dy = spec['dryer']
-    lines.append('    { kind = "fixture", what = "dryer", at = { %d, %d }, ports = { left = "N" } },' % (dx, dy))
+    lines.append('    { kind = "fixture", what = "dryer", at = { %d, %d }, ports = { %s = "N" } },' % (dx, dy, spec.get('dryer_port', 'left')))
     tx, ty = spec['tee']
     lines.append('    { kind = "fitting", what = "tee", tag = "tee", at = { %d, %d }, ports = { up = "V", right = "V", left = "V" } },' % (tx, ty))
     px, py = spec['plug']
@@ -147,6 +148,43 @@ SPECS['k2'] = dict(
     comment=K1_COMMENT, length=(2, 4), grid=K1_GRID,
     source=(6, 7), dryer=(8, 5), tee=(6, 5), plug=(3, 6),
     lap=[(3, 4), (3, 5), (2, 5), (2, 6)], head=1,
+)
+
+# Семейство V' (для сравнения, 29.09): стояк внизу колонны, сушитель — над колонной (резьба вниз); закуток толчка — рядом
+# с лестницей за стенкой; заглушка идёт к гнезду низким лазом. Прогулка короче, но нет ложной пары «тройник на сушитель».
+V_GRID_WIDE = [
+    "#########",
+    "#....#.##",
+    "#..#.#.##",
+    "#..#...##",
+    "#..###.##",
+    "#......##",
+    "#####...#",
+    "#########",
+]
+SPECS['v1'] = dict(
+    title='v1: колонна стояка под сушителем; закуток толчка рядом с лестницей за стенкой; низкий лаз заглушки к гнезду.',
+    comment=['Ложный план: заглушку — сразу по лазу в гнездо (ступеньки больше нет).'],
+    length=(2, 4), grid=V_GRID_WIDE,
+    source=(8, 7), dryer=(7, 2), dryer_port='down', tee=(6, 4), plug=(3, 6),
+    lap=[(2, 4), (2, 5), (2, 6)], head=1,
+)
+SPECS['v2'] = dict(
+    title='v2: как v1, левая комната узкая (без разворота до толчка тройника), старт головой к заглушке.',
+    comment=['Ложный план: заглушку — сразу по лазу в гнездо (ступеньки больше нет).'],
+    length=(2, 4),
+    grid=[
+        "#########",
+        "##...#.##",
+        "##.#.#.##",
+        "##.#...##",
+        "#..###.##",
+        "#......##",
+        "#####...#",
+        "#########",
+    ],
+    source=(8, 7), dryer=(7, 2), dryer_port='down', tee=(6, 4), plug=(3, 6),
+    lap=[(2, 6), (2, 5), (3, 5), (3, 4)], head=1,
 )
 
 if __name__ == '__main__':
