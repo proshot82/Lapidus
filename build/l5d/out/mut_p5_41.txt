@@ -26,3 +26,45 @@ BEST it 4 ходов 22 n 7834 скр 32% обез 0.042 прогулка 8 дв
    fitting tee (5,2) up=V,right=V,left=V
    fitting plug (6,7) right=N
    lapidus {8,4} {8,5} {8,6} {8,7} head=1
+BEST it 50 ходов 35 n 8494 скр 32% обез 0.000 прогулка 14 двери 1п 2(стойк 4) 2п 0(стойк 0) score 16.1 L 3-5
+   ##########
+   #.#.....##
+   ###.#.#.##
+   ###...#.##
+   #.#...#.##
+   ##....#.##
+   #........#
+   ##########
+   source  (3,6) down=N
+   fixture dryer (9,7) left=N
+   fitting tee (5,2) up=V,right=V,left=V
+   fitting plug (6,6) right=N
+   lapidus {4,4} {4,5} {4,6} {4,7} head=1
+BEST it 51 ходов 36 n 8494 скр 32% обез 0.000 прогулка 12 двери 1п 4(стойк 4) 2п 0(стойк 0) score 32.1 L 3-5
+   ##########
+   #.#.....##
+   ###.#.#.##
+   ###...#.##
+   #.#...#.##
+   ##....#.##
+   #........#
+   ##########
+   source  (3,6) down=N
+   fixture dryer (9,7) left=N
+   fitting tee (5,2) up=V,right=V,left=V
+   fitting plug (6,6) right=N
+   lapidus {5,4} {5,5} {5,6} {5,7} head=1
+BEST it 58 ходов 36 n 9026 скр 32% обез 0.000 прогулка 12 двери 1п 4(стойк 4) 2п 0(стойк 0) score 32.2 L 3-5
+   ##########
+   #.#.....##
+   ##..#.#.##
+   ###...#.##
+   #.#...#.##
+   ##....#.##
+   #........#
+   ##########
+   source  (3,6) down=N
+   fixture dryer (9,7) left=N
+   fitting tee (5,2) up=V,right=V,left=V
+   fitting plug (6,6) right=N
+   lapidus {5,4} {5,5} {5,6} {5,7} head=1
