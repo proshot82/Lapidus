@@ -12,6 +12,7 @@ function M.run(def)
   if not G then return { err = "CAP" } end
   if not G.firstWin then local n = G.n; SV.freeGraph(G); return { unsolv = true, n = n } end
   local good = SV.goodSet(G)
+  V.POCKET = tonumber(os.getenv("POCKET") or 4)
   local VL = V.compute(lvl, G, def, good)
   local m = V.measure(G, good, VL.newbie)
   local ES, E, flag = G.eStart.p, G.edges.p, G.flag
