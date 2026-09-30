@@ -280,5 +280,53 @@
     },
     "unstable": 0,
     "winStates": 1
+  },
+  "07": {
+    "ablations": [
+      {
+        "name": "без угольника",
+        "solvable": false
+      },
+      {
+        "name": "без ниппеля",
+        "solvable": false
+      },
+      {
+        "name": "деталь в столбе не вдавить сверху",
+        "solvable": false
+      },
+      {
+        "name": "фонтан не держит деталь на весу",
+        "solvable": false
+      }
+    ],
+    "corridor": "мало ложных веток; выигрышных конфигураций 2",
+    "deadPct": 89.8,
+    "falseBranches": 0,
+    "grid": "12×8",
+    "id": 7,
+    "length": [
+      2,
+      4
+    ],
+    "minMoves": 20,
+    "monkey": 0,
+    "name": "Дали напор",
+    "pressure": 2,
+    "shortest": 1,
+    "shortestWidth": 1,
+    "solvable": true,
+    "states": 21990,
+    "target": {
+      "dead": 55,
+      "fb": 3,
+      "moves": [
+        15,
+        40
+      ],
+      "states": 30000
+    },
+    "unstable": 0,
+    "winStates": 2
   }
 }

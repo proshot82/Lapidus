@@ -156,5 +156,30 @@
       "head:right"
     ],
     "name": "Намертво"
+  },
+  "07": {
+    "moves": [
+      "head:right",
+      "head:right",
+      "head:right",
+      "head:right",
+      "head:down",
+      "head:left",
+      "heel:left",
+      "heel:left",
+      "heel:left",
+      "heel:down",
+      "heel:right",
+      "head:right",
+      "head:down",
+      "head:down",
+      "heel:left",
+      "heel:up",
+      "head:left",
+      "head:left",
+      "head:right",
+      "head:right"
+    ],
+    "name": "Дали напор"
   }
 }

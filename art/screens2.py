@@ -182,7 +182,13 @@ def select2(solved=(1,), opened=(2, 3)):
     b += [Ln(bx0, top + k * 150, bx1, top + k * 150, '#80878B', 4) for k in range(1, 5)]
     b += [R(bx0, 940, bx1 - bx0, 120, '#3B3632', stroke=O, stroke_width=5), T(bx0 + 30, 1012, 'подвал · главный вентиль', 30, '#C9C0AE'),
           R(rx, top - 10, 20, 1060 - top, 'url(#ironV)', stroke=O, stroke_width=3), R(rx + 4, 940 - ((max(solved) + 1) // 2 if solved else 0) * 150, 12, 120 + ((max(solved) + 1) // 2 if solved else 0) * 150, Q['water'])]
-    fx = {1: (bath2, 'mint'), 2: (toilet2, 'blue'), 3: (sink2, 'mustard'), 4: (gen2.washer2, 'mint'), 5: (gen2.dryer2, 'blue'), 6: (gen2.heater2, 'mustard')}
+    # окна: прибор и плитка по файлам уровней (levels/NN.lua → L), чтобы новая квартира появлялась на доме сама
+    FXF = {'bath': bath2, 'toilet': toilet2, 'sink': sink2, 'washer': gen2.washer2, 'dryer': gen2.dryer2, 'heater': gen2.heater2}
+    fx = {}
+    for lv in L:
+        what = next((ob.get('what') for ob in lv['objects'] if ob['kind'] == 'fixture'), None)
+        if what in FXF:
+            fx[lv['id']] = (FXF[what], lv.get('tile') or 'mint')
     for apt in range(1, 11):
         fl, left = (apt + 1) // 2, apt % 2 == 1
         y0, x0, w, h = 940 - fl * 150 + 10, (bx0 + 20 if left else rx + 40), 350, 130
