@@ -1,6 +1,11 @@
 -- Видимый проигрыш уровня (дополняет общую линейку tools/vislib.lua; мерка НОВИЧКА — только то, что видно без знания
--- финальной сборки): закреплённая деталь смотрит открытой резьбой в стену или в глухой бок / такую же резьбу
--- закреплённого — эта течь навсегда (как правило 1 в levels/04.lua).
+-- финальной сборки, по резьбам):
+--  1) закреплённая деталь смотрит открытой резьбой в стену или в глухой бок / такую же резьбу закреплённого — эта течь
+--     навсегда (как правило 1 в levels/04.lua);
+--  2) тройник закреплён не под выходом стояка: стояк смотрит вниз, принять его может только тройник снизу — стояк
+--     останется открытым навсегда;
+--  3) тройник уже сидит на стояке, а свободная заглушка — по другую сторону от него, чем его лишний выход: резьба
+--     заглушки смотрит вправо, закрыть она может только выход, смотрящий влево, а проехать сквозь тройник нельзя.
 local OPP = { 3, 4, 1, 2 }
 local function visibleLoss(lvl, st)
   local occ = {}
@@ -21,6 +26,23 @@ local function visibleLoss(lvl, st)
           end
         end
       end
+    end
+  end
+  -- 2) и 3)
+  local src, qt, qp
+  for q, p in ipairs(lvl.pieces) do
+    if p.source then src = q elseif p.tag == "tee" then qt = q elseif p.tag == "plug" then qp = q end
+  end
+  if src and qt and st.fixed[qt] then
+    local sp = lvl.pieces[src]
+    local sd
+    for d = 1, 4 do if sp.ports[d] then sd = d end end
+    local T = lvl.nb[sp.start][sd]
+    if lvl.pieces[src].ports[3] and st.pos[qt] ~= T then return true end
+    if qp and not st.fixed[qp] and st.pos[qp] ~= 0 then
+      local tx = (st.pos[qt] - 1) % lvl.W
+      local px = (st.pos[qp] - 1) % lvl.W
+      if px > tx then return true end
     end
   end
   return false

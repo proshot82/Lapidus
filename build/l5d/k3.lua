@@ -1,6 +1,5 @@
--- Квартира 5 «Лишний выход» — кандидат p7 (30.09.2026, build/l5d).
--- Лишний выход тройника смотрит влево — заглушка должна оказаться слева, когда тройник въедет на место.
--- Ложный план: столкнуть тройник сразу, раз уж Лапидус наверху, а заглушку подать потом.
+-- Квартира 5 «Лишний выход» — кандидат k3 (30.09.2026, build/l5d).
+-- Ядро k2 (build/l5c). Первый порыв — толкнуть тройник на сушитель.
 -- Решение здесь не пишется.
 
 -- Видимый проигрыш уровня (дополняет общую линейку tools/vislib.lua; мерка НОВИЧКА — только то, что видно без знания
@@ -74,24 +73,24 @@ end
 return {
   visibleLoss = visibleLoss,
   id = 5, flat = 5, name = "Лишний выход",
-  length = { 2, 5 }, pressure = 0, tile = "blue",
+  length = { 2, 4 }, pressure = 0, tile = "blue",
   target = { moves = { 15, 40 }, states = 300000, dead = 25, fb = 2 },
   grid = {
-    "##########",
-    "###......#",
-    "###.#.#.##",
-    "###.#.#.##",
-    "###...#.##",
-    "##....#.##",
-    "#........#",
-    "##########",
+    "#########",
+    "#......##",
+    "#..###.##",
+    "#...##.##",
+    "#.......#",
+    "#....####",
+    "###...###",
+    "#########",
   },
   objects = {
-    { kind = "source", at = { 3, 6 }, ports = { down = "N" } },
-    { kind = "fixture", what = "dryer", at = { 5, 5 }, ports = { down = "N" } },
-    { kind = "fitting", what = "tee", tag = "tee", at = { 5, 2 }, ports = { up = "V", right = "V", left = "V" } },
-    { kind = "fitting", what = "plug", tag = "plug", at = { 6, 7 }, ports = { right = "N" } },
-    { kind = "lapidus", cells = { { 6, 2 }, { 7, 2 }, { 8, 2 } }, head = 1 },
+    { kind = "source", at = { 6, 7 }, ports = { left = "N" } },
+    { kind = "fixture", what = "dryer", at = { 8, 5 }, ports = { left = "N" } },
+    { kind = "fitting", what = "tee", tag = "tee", at = { 6, 5 }, ports = { up = "V", right = "V", left = "V" } },
+    { kind = "fitting", what = "plug", tag = "plug", at = { 3, 6 }, ports = { right = "N" } },
+    { kind = "lapidus", cells = { { 4, 4 }, { 4, 5 }, { 5, 5 } }, head = 3 },
   },
   ablations = {
     { name = "без заглушки", remove = "plug" },
