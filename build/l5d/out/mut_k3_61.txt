@@ -1,0 +1,98 @@
+BASE ходов 26 n 1552 скр 37% обез 0.001 прогулка 13 двери 1п 2(стойк 4) 2п 0(стойк 0) score 29.1 L 2-4
+   #########
+   #......##
+   #..###.##
+   #...##.##
+   #.......#
+   #....####
+   ###...###
+   #########
+   source  (6,7) left=N
+   fixture dryer (8,5) left=N
+   fitting tee (6,5) right=V,up=V,left=V
+   fitting plug (3,6) right=N
+   lapidus {4,4} {4,5} {5,5} head=3
+BEST it 42 ходов 26 n 1488 скр 38% обез 0.002 прогулка 13 двери 1п 2(стойк 4) 2п 0(стойк 0) score 29.7 L 2-4
+   #########
+   ##.....##
+   ##.###.##
+   #...##.##
+   #.......#
+   #....##.#
+   #.#...###
+   #########
+   source  (6,7) left=N
+   fixture dryer (8,5) left=N
+   fitting tee (6,5) left=V,up=V,right=V
+   fitting plug (3,4) right=N
+   lapidus {4,4} {4,5} {5,5} head=3
+BEST it 52 ходов 26 n 1380 скр 38% обез 0.003 прогулка 13 двери 1п 2(стойк 4) 2п 0(стойк 0) score 29.7 L 2-4
+   #########
+   ##.....##
+   ##.###.##
+   ##..##.##
+   #.......#
+   #....##.#
+   #.#...###
+   #########
+   source  (6,7) left=N
+   fixture dryer (8,5) left=N
+   fitting tee (6,5) right=V,up=V,left=V
+   fitting plug (3,4) right=N
+   lapidus {4,4} {4,5} {5,5} head=3
+BEST it 73 ходов 25 n 1718 скр 35% обез 0.001 прогулка 12 двери 1п 2(стойк 4) 2п 0(стойк 0) score 34.6 L 2-4
+   #########
+   ##.....##
+   ##.##...#
+   #...##.##
+   #.......#
+   #....#..#
+   #.#...###
+   #########
+   source  (6,7) left=N
+   fixture dryer (8,5) left=N
+   fitting tee (6,5) left=V,up=V,right=V
+   fitting plug (3,4) right=N
+   lapidus {4,4} {4,5} {5,5} head=3
+BEST it 122 ходов 25 n 1914 скр 35% обез 0.001 прогулка 12 двери 1п 2(стойк 4) 2п 0(стойк 0) score 34.6 L 2-4
+   #########
+   ##......#
+   ##.##...#
+   #....#.##
+   #.......#
+   #....#.##
+   #.#...#.#
+   #########
+   source  (6,7) left=N
+   fixture dryer (8,5) left=N
+   fitting tee (6,5) left=V,up=V,right=V
+   fitting plug (3,2) right=N
+   lapidus {4,6} {4,7} {5,7} head=3
+BEST it 147 ходов 25 n 2350 скр 40% обез 0.001 прогулка 12 двери 1п 2(стойк 4) 2п 0(стойк 0) score 39.6 L 2-4
+   #########
+   ##......#
+   ##.#....#
+   #....#.##
+   #.......#
+   #....#.##
+   ###...#.#
+   #########
+   source  (6,7) left=N
+   fixture dryer (8,5) left=N
+   fitting tee (6,5) right=V,up=V,left=V
+   fitting plug (3,2) right=N
+   lapidus {4,6} {4,7} {5,7} head=3
+BEST it 149 ходов 25 n 2146 скр 40% обез 0.001 прогулка 12 двери 1п 2(стойк 4) 2п 0(стойк 0) score 39.9 L 2-4
+   #########
+   ##......#
+   ##.#....#
+   #..#.#.##
+   #.......#
+   #....#.##
+   ###...#.#
+   #########
+   source  (6,7) left=N
+   fixture dryer (8,5) left=N
+   fitting tee (6,5) left=V,up=V,right=V
+   fitting plug (3,2) right=N
+   lapidus {4,6} {4,7} {5,7} head=3
