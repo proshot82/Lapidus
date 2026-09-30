@@ -42,4 +42,29 @@ function F.hoseOn(lvl, ns)
   return w.lapWet and ((w.headQ ~= nil) ~= (w.heelQ ~= nil))
 end
 
+-- номер детали по виду (первой найденной)
+local function find(lvl, kind, what)
+  for q, p in ipairs(lvl.pieces) do if p.kind == kind and (what == nil or p.what == what) then return q end end
+end
+F.find = find
+
+-- Абляция «ванна не крюк»: конец Лапидуса не бывает прикручен к прибору, пока другой конец не прикручен к мокрому
+-- (повиснуть на сухой ванне нельзя; в финале ванна мокрая — разрешено).
+function F.noBathHook(lvl, st, ns)
+  if ns.dead then return true end
+  local w = R.water(lvl, ns)
+  local qb = find(lvl, "fixture")
+  local onBath = (w.headQ == qb) or (w.heelQ == qb)
+  if not onBath then return true end
+  local other = (w.headQ == qb) and w.heelQ or w.headQ
+  return other ~= nil and w.wet[other] == true and other ~= qb
+end
+
+-- Контроль «Q не якорь»: ни один конец Лапидуса не прикручен к лишнему выходу (первому источнику в списке).
+function F.noQAnchor(lvl, st, ns)
+  if ns.dead then return true end
+  local w = R.water(lvl, ns)
+  local qq = find(lvl, "source")
+  return w.headQ ~= qq and w.heelQ ~= qq
+end
 return F
