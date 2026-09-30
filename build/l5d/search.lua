@@ -92,6 +92,7 @@ local function solvable(def, filter)
   return s
 end
 local tried, hits = 0, 0
+local st = { solv = 0, gate = 0, step = 0 }
 for it = 1, N do
   local def = gen()
   if def then
@@ -99,7 +100,10 @@ for it = 1, N do
     if ok and #R.validate(lvl) == 0 then
       tried = tried + 1
       local okn, G = pcall(SV.explore, lvl, 200000)
+      if okn and G and G.firstWin then st.step = st.step + 1; HIST = HIST or {}; local o = G.depth[G.firstWin]; HIST[o] = (HIST[o] or 0) + 1 end
+      if not okn and not ERRP then ERRP = true; print("ERR", G) end
       if okn and G and G.firstWin and G.depth[G.firstWin] >= 15 and G.depth[G.firstWin] <= 34 then
+        st.solv = st.solv + 1
         local good = SV.goodSet(G)
         local VL = V.compute(lvl, G, def, good)
         local m = V.measure(G, good, VL.newbie)
@@ -124,6 +128,8 @@ for it = 1, N do
         for k = 1, #m.path - 1 do if objs(m.path[k]) ~= objs(m.path[k+1]) then streak = 0 else streak = streak + 1; if streak > walk then walk = streak end end end
         SV.freeGraph(G); require("ffi").C.free(good)
         if m.hiddenPct >= 20 and h1 > 0 and h2 > 0 and best1 >= 3 and best2 >= 3 and walk <= 7 and m.smart <= 0.5 then
+          st.gate = st.gate + 1
+          if os.getenv("LOOSE") then fo:write(string.format("GATE it %d: ходов %d скр %.0f%% обез %.3f прогулка %d двери %d/%d вскр %d/%d\n", it, m.opt, m.hiddenPct, m.smart, walk, h1, h2, best1, best2)) end
           local s1 = solvable(def, noStep)
           local d2 = SV.deepcopy(def); for i = #d2.objects, 1, -1 do local o = d2.objects[i]; if o.tag == "plug" then table.remove(d2.objects, i) elseif o.tag == "tee" then o.ports.left = nil end end
           local s2 = solvable(d2)
@@ -143,4 +149,5 @@ for it = 1, N do
     end
   end
 end
-fo:write(string.format("done seed %d: tried %d hits %d\n", seed, tried, hits)); fo:flush()
+local hs = {} for k, v in pairs(HIST or {}) do hs[#hs+1] = k .. ":" .. v end fo:write("solvable " .. st.step .. " opt " .. table.concat(hs, " ") .. "\n")
+fo:write(string.format("done seed %d: tried %d solv %d gate %d hits %d\n", seed, tried, st.solv, st.gate, hits)); fo:flush()
