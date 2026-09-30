@@ -4,7 +4,7 @@ local R = require("core.rules")
 local SV = require("solver.solve")
 local V = require("tools.vislib")
 local M = {}
-function M.run(def)
+function M.run(def, pocket)
   local lvl = R.compile(def)
   local errs = R.validate(lvl)
   if #errs > 0 then return { err = table.concat(errs, ";") } end
@@ -12,7 +12,7 @@ function M.run(def)
   if not G then return { err = "CAP" } end
   if not G.firstWin then local n = G.n; SV.freeGraph(G); return { unsolv = true, n = n } end
   local good = SV.goodSet(G)
-  V.POCKET = tonumber(os.getenv("POCKET") or 4)
+  V.POCKET = pocket or tonumber(os.getenv("POCKET") or 4)
   local VL = V.compute(lvl, G, def, good)
   local m = V.measure(G, good, VL.newbie)
   local ES, E, flag = G.eStart.p, G.edges.p, G.flag
@@ -43,5 +43,50 @@ function M.fmt(r)
   return string.format("ходов %d n=%d win=%d | скрытых %.1f%% обез %.3f глуб %d [%s] | прогулки %s | двери %s (%d/%d)",
     r.opt, r.n, r.nwin, r.hid, r.smart, r.deep, r.dl, r.walks, r.doors, r.h1, r.h2)
 end
-if arg and arg[0] and arg[0]:match("m%.lua$") and arg[1] then print(M.fmt(M.run(dofile(arg[1])))) end
+-- M.wallDead(def): сетка, где замурованы пустые клетки без роли — ни в одном живом состоянии и ни в одном
+-- состоянии сразу за дверью (приманка) в них нет ни Лапидуса, ни мыла. Возвращает новую сетку и число клеток.
+function M.wallDead(def, pocket)
+  local lvl = R.compile(def)
+  local G = SV.explore(lvl, 3000000)
+  if not G or not G.firstWin then SV.freeGraph(G) return nil end
+  local good = SV.goodSet(G)
+  V.POCKET = pocket or 4
+  local VL = V.compute(lvl, G, def, good)
+  local ES, E, flag = G.eStart.p, G.edges.p, G.flag
+  local used = {}
+  local function mark(i)
+    local st = R.decode(lvl, G.keys[i])
+    for _, c in ipairs(st.body) do used[c] = true end
+    for q = 1, #st.pos do if st.pos[q] ~= 0 then used[st.pos[q]] = true end end
+  end
+  for i = 1, G.n do
+    if flag[i] ~= 2 and good[i] == 1 then
+      mark(i)
+      for e = ES[i-1], ES[i]-1 do local j = E[e]; if flag[j] == 0 and good[j] ~= 1 and not VL.newbie[j] then mark(j) end end
+    end
+  end
+  local g, n = {}, 0
+  for y = 1, lvl.H do
+    local row = def.grid[y]
+    local out = {}
+    for x = 1, lvl.W do
+      local ch = row:sub(x, x)
+      if ch == "." and not used[(y-1)*lvl.W + x] then ch = "#"; n = n + 1 end
+      out[x] = ch
+    end
+    g[y] = table.concat(out)
+  end
+  SV.freeGraph(G); require("ffi").C.free(good)
+  return g, n
+end
+if arg and arg[0] and arg[0]:match("m%.lua$") and arg[1] then
+  local d = dofile(arg[1])
+  print("карман4: " .. M.fmt(M.run(d, 4)))
+  print("карман5: " .. M.fmt(M.run(d, 5)))
+  local g, n = M.wallDead(d)
+  if g then
+    local d2 = dofile(arg[1]); d2.grid = g
+    print(string.format("замуровано %d клеток без роли: %s | карман5 %.1f%%", n, M.fmt(M.run(d2, 4)), (M.run(d2, 5).hid or 0)))
+  end
+end
 return M
