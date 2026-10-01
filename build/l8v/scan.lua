@@ -1,4 +1,4 @@
--- build/l8v/scan.lua [вариант] — скептик кв. 8: разведка семейства «два крана + ниппель как якорь для головы».
+-- build/l8v/scan.lua [вариант] [Lmax] [R] — скептик кв. 8: разведка семейства «два крана + ниппель как якорь для головы».
 -- Скелет b5 (левая стена, Q в ней, X справа, ванна внизу, старт слева внизу). Перебираются: резьба Q (N/V),
 -- клетки пробки и ниппеля на полках (полка = стена под деталью), положение ванны. Для каждой раскладки — решаема ли,
 -- ходов, скрытых % (мерка новичка), двери по половинам пути, абляция «брандспойт не бьёт». Ходы не печатаются.
@@ -8,6 +8,7 @@ local SV = require("solver.solve")
 local V = require("tools.vislib")
 local F = dofile("build/l8a/filt.lua")
 local variant = arg[1] or "N"
+local LMAX, RR = tonumber(arg[2] or 5), tonumber(arg[3] or 2)
 local function mk(qth, plug, nip, bath, extra)
   local rows = {
     "#############",
@@ -34,7 +35,7 @@ local function mk(qth, plug, nip, bath, extra)
     { kind = "lapidus", cells = { { 6, 8 }, { 7, 8 } }, head = 2 },
   }
   return {
-    id = 8, flat = 8, name = "Брандспойт", length = { 2, 5 }, pressure = 2, grid = rows, objects = objs,
+    id = 8, flat = 8, name = "Брандспойт", length = { 2, LMAX }, pressure = RR, grid = rows, objects = objs,
     ablations = { { name = "брандспойт не бьёт", filter = F.noHose } },
   }
 end
@@ -78,7 +79,7 @@ for _, b in ipairs(baths) do
         local def = mk(variant, p, n, b)
         local r = eval(def)
         cnt = cnt + 1
-        print(string.format("Q=%s пробка(%d,%d) ниппель(%d,%d) ванна(%d,%d): %s", variant, p[1], p[2], n[1], n[2], b[1], b[2], r))
+        print(string.format("Q=%s L=2–%d R=%d пробка(%d,%d) ниппель(%d,%d) ванна(%d,%d): %s", variant, LMAX, RR, p[1], p[2], n[1], n[2], b[1], b[2], r))
         io.stdout:flush()
       end
     end
