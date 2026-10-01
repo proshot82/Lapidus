@@ -1,1 +1,52 @@
 база: R=3 ходов 33 n=232539 win=1 скрытых   0.0% обез 0.00 глуб  0 двери 0/0 (оценка 0.0)
+--- улучшение на шаге 6: R=2 ходов 47 n= 58224 win=1 скрытых  26.5% обез 0.00 глуб  0 двери 0/0 (оценка 26.5)
+  #############
+  ##..........#
+  ##.###.....##
+  #...........#
+  ##.........##
+  #..#.......##
+  ##........###
+  ##..#......##
+  #############
+  source   at 2,4 ports right=N
+  source   at 2,6 ports right=V
+  source   at 12,2 ports left=N
+  fixture bath  at 12,4 ports left=V
+  fitting plug plug1 at 6,2 ports left=V
+  fitting plug plug2 at 4,5 ports left=N
+  lapidus 3,8-4,8 head=2
+--- улучшение на шаге 14: R=2 ходов 47 n= 60876 win=1 скрытых  26.6% обез 0.00 глуб  0 двери 0/0 (оценка 26.6)
+  #############
+  ##..........#
+  ##.###.....##
+  #...........#
+  ##..........#
+  #..#.......##
+  ##........###
+  ##..#......##
+  #############
+  source   at 2,4 ports right=N
+  source   at 2,6 ports right=V
+  source   at 12,2 ports left=N
+  fixture bath  at 12,4 ports left=V
+  fitting plug plug1 at 6,2 ports left=V
+  fitting plug plug2 at 4,5 ports left=N
+  lapidus 3,8-4,8 head=2
+--- улучшение на шаге 20: R=2 ходов 44 n= 62523 win=1 скрытых  26.6% обез 0.00 глуб  0 двери 0/0 (оценка 26.6)
+  #############
+  ##..........#
+  #..###.....##
+  #...........#
+  ##..........#
+  #..#.......##
+  ##.......####
+  ##..#......##
+  #############
+  source   at 2,4 ports right=N
+  source   at 2,6 ports right=V
+  source   at 12,2 ports left=N
+  fixture bath  at 12,4 ports left=V
+  fitting plug plug1 at 6,2 ports left=V
+  fitting plug plug2 at 4,5 ports left=N
+  lapidus 3,8-4,8 head=2
