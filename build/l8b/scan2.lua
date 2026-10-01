@@ -43,7 +43,6 @@ for _, xx in ipairs(XXS) do
   local inner = {}
   for x = 4, xx - 2 do inner[#inner + 1] = x end
   local holeSets = {}
-  for i = 1, #inner do holeSets[#holeSets + 1] = { inner[i] } end
   for i = 1, #inner do for j = i + 1, #inner do holeSets[#holeSets + 1] = { inner[i], inner[j] } end end
   for _, yx in ipairs({ 5, 6 }) do
     for _, holes in ipairs(holeSets) do
@@ -52,7 +51,7 @@ for _, xx in ipairs(XXS) do
       local solid = {}
       for _, x in ipairs(inner) do if not isHole[x] then solid[#solid + 1] = x end end
       for _, pq in ipairs(solid) do for _, pn in ipairs(solid) do
-        if pq ~= pn then
+        if pq < holes[1] and pn > holes[1] then
           for _, xf in ipairs({ math.floor((3 + xx - 1) / 2) }) do
             local sx = (xf <= 4) and 6 or 3
             local r = eval(mk(xx, yx, holes, pq, pn, xf, sx))

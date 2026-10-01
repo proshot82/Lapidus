@@ -13,8 +13,6 @@ return function(xx, yx, holes, pq, pn, xf, sx)
   -- комната ряды 5..9, столбцы 3..xx-1 (столбец xx занят тумбой X ниже yx; выше yx — пусто до xx-1 только)
   for y = 5, 9 do for x = 3, xx - 1 do set(x, y, ".") end end
   set(2, YQ, "."); set(xx, yx, ".")
-  -- упоры: блоки на полу, чтобы струи кранов не сносили подходящее к ним тело (сдвиг «всё или ничего»)
-  set(5, 8, "#"); set(xx - 3, 8, "#")
   local objs = {
     { kind = "source", at = { 2, YQ }, ports = { right = "V" } },
     { kind = "source", at = { xx, yx }, ports = { left = "V" } },
