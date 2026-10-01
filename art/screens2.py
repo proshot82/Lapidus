@@ -497,8 +497,45 @@ def card_drain():
     return card(1, 'Слив смывает', pan_drain)
 
 
+def pan_hose(px, py):
+    """Кв. 8 «Брандспойт»: конец Лапидуса, прикрученного к мокрому крану, сам бьёт струёй туда, куда смотрит;
+    своя струя его не толкает; струя сбивает деталь с полки прочь от крана."""
+    cc, s = 40, []
+    fl = py + 312
+    for x0, w in ((px + 24, 236), (px + 286, 236)):
+        s.append(R(x0, fl, w, 22, 'url(#tpB)', rx=6, stroke=O, stroke_width=3))
+    s.append(Ln(px + 273, py + 92, px + 273, fl - 8, '#B9AF98', 2.5, stroke_dasharray='6 8'))
+
+    def tap(x, y):  # мокрый кран в стене: стальной отвод с резьбой В и капелькой воды
+        return (R(x - 14, y - .9 * cc, 20, 1.8 * cc, 'url(#ironV)', stroke=O, stroke_width=3)
+                + stub2(x + .3 * cc, y, cc, 'right', 'V', 'left')
+                + Ln(x + .55 * cc, y, x + .62 * cc, y, Q['water'], cc * .16, opacity='.9'))
+    # слева: ноги прикручены к крану, из головы бьёт струя; сам Лапидус на месте
+    sx, sy = px + 40, fl - 1.4 * cc
+    s.append(T(px + 30, py + 118, 'прикручен к мокрому —', 24, INK, weight='bold') + T(px + 30, py + 146, 'конец сам бьёт струёй', 24, INK, weight='bold'))
+    s.append(tap(sx, sy))
+    s.append(hero([(sx + 1.3 * cc, sy), (sx + 2.3 * cc, sy), (sx + 3.3 * cc, sy)], cc, 2, 5, ring=False, wet=True, screwed=(True, False)))
+    s.append(jet2(sx + 3.8 * cc, sy, sx + 5.2 * cc, sy, cc))
+    s.append(gen.mark(px + 232, sy - 1.3 * cc, True, .6))
+    # справа: струя сбивает пробку с полки прочь от крана; своя струя Лапидуса не толкает (серая стрелка назад зачёркнута)
+    bx, by = px + 302, fl - 1.4 * cc
+    s.append(T(px + 292, py + 118, 'струя сбивает деталь,', 24, INK, weight='bold') + T(px + 292, py + 146, 'а самого не толкает', 24, INK, weight='bold'))
+    s.append(tap(bx, by))
+    s.append(hero([(bx + 1.3 * cc, by), (bx + 2.3 * cc, by)], cc, 2, 5, ring=False, wet=True, screwed=(True, False)))
+    s.append(jet2(bx + 2.8 * cc, by, bx + 3.8 * cc, by, cc))
+    s.append(R(bx + 3.6 * cc, by + .5 * cc, 2.0 * cc, 14, 'url(#tpB)', rx=5, stroke=O, stroke_width=3))
+    s.append(fitting2(bx + 4.3 * cc, by, cc, {'left': 'N'}))
+    s.append(gen.arrow(bx + 4.5 * cc, by - 1.0 * cc, bx + 5.4 * cc, by - 1.0 * cc, INK, 5))
+    s.append(gen.arrow(bx + 2.2 * cc, by - 1.1 * cc, bx + 1.3 * cc, by - 1.1 * cc, '#8A8578', 4) + gen.mark(bx + 1.75 * cc, by - 1.75 * cc, False, .5))
+    return ''.join(s)
+
+
+def card8():
+    return card(8, 'Брандспойт', pan_hose)
+
+
 CARDS = {'card01': card1, 'card01b': card_fall, 'card01c': card_drain, 'card03': card3, 'card04': card4, 'card05': card5,
-         'card06': card6, 'card07': card7}
+         'card06': card6, 'card07': card7, 'card08': card8}
 
 
 def passport2():
