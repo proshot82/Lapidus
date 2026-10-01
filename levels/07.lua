@@ -16,7 +16,9 @@
 -- угольник, вдавленный до устья, закрывает фонтан на нижнем ярусе (скрыто).
 -- Поле 12×8, деталей 2. Видимый проигрыш — общая линейка tools/vislib.lua (M.POCKET = 4) плюс правило пола (visibleLoss).
 
-local F = dofile("build/l7f/filt.lua")
+-- Фильтры абляций нужны только инструментам (luajit из корня репозитория); в собранную игру build/ не входит.
+local okF, F = pcall(dofile, "build/l7f/filt.lua")
+if not okF then F = {} end
 local R = require("core.rules")
 
 return {

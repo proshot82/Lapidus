@@ -179,5 +179,29 @@
       "head:right"
     ],
     "name": "Дали напор"
+  },
+  "08": {
+    "moves": [
+      "head:up",
+      "head:up",
+      "head:up",
+      "head:up",
+      "head:left",
+      "head:right",
+      "head:right",
+      "heel:up",
+      "heel:up",
+      "heel:up",
+      "heel:up",
+      "heel:up",
+      "heel:left",
+      "heel:right",
+      "heel:down",
+      "heel:down",
+      "heel:down",
+      "heel:down",
+      "heel:down"
+    ],
+    "name": "Брандспойт"
   }
 }

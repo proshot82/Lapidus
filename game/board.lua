@@ -47,7 +47,7 @@ Board.spr = spr
 
 function Board.new(lvl, def)
   local self = setmetatable({ lvl = lvl, def = def }, Board)
-  local cs = math.min(120, math.floor(1920 / lvl.W), math.floor(1080 / lvl.H))
+  local cs = math.min(120, math.floor((1920 - 2 * 290) / lvl.W), math.floor(1080 / lvl.H)) -- по бокам резерв 290 px под HUD; та же формула в art/gen.py geom и art/gen2.py frame
   self.cs, self.k = cs, cs / CR
   self.x0 = math.floor((1920 - lvl.W * cs) / 2)
   self.y0 = math.floor((1080 - lvl.H * cs) / 2)

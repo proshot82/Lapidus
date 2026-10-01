@@ -559,7 +559,7 @@ def level_layers(lv, ox, oy, c, active='head', wet=False, no_lap=False):
 
 def geom(lv):
     H, W = len(lv['grid']), len(lv['grid'][0])
-    c = min(120, 1920 // W, 1080 // H)
+    c = min(120, (1920 - 2 * 290) // W, 1080 // H)  # резерв 290 px под HUD с каждой стороны — как в game/board.lua
     return c, (1920 - W * c) // 2, (1080 - H * c) // 2
 
 

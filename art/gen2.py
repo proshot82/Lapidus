@@ -686,7 +686,7 @@ def heater2(cx, cy, c, wet=False, big=False):
 def frame(lv, moves=0, active='head', no_lap=False, hud=True, skip=()):
     grid = lv['grid']
     H, W = len(grid), len(grid[0])
-    c = min(120, 1920 // W, 1080 // H)
+    c = min(120, (1920 - 2 * 290) // W, 1080 // H)  # резерв 290 px под HUD с каждой стороны — как в game/board.lua
     ox, oy = (1920 - W * c) // 2, (1080 - H * c) // 2
     ml, mt = math.ceil(ox / c) + 1, math.ceil(oy / c) + 1
 
