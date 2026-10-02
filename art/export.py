@@ -65,6 +65,7 @@ for th in ('N', 'V'):
     sprite('port_%s' % th, port2(X, Y, CR, 'right', th, False))
     sprite('port_%s_fixed' % th, port2(X, Y, CR, 'right', th, True))
     sprite('port_%s_fx' % th, parts.port(X, Y, CR, 'right', th, True, .36))  # короткая подводка прибора (не залезает на прибор)
+out('fountain', parts.fountain(X, Y, CR), 2 * CR, 2 * CR)  # фонтанчик протечки вверх: основание — центр холста
 # герой: голова и ноги во всех направлениях, активные и спящие
 for dr in ('right', 'left', 'up', 'down'):
     for act in (True, False):

@@ -319,35 +319,58 @@ function Board:jet(pts, t, seed, w)
   end
 end
 
+-- капля-«слёзка» хвостиком вверх (как в мультяшных фонтанах): обводка, вода, блик
 local function drop(x, y, r, a)
-  setc(COL.ol, 0.8 * a); lg.circle("fill", x, y, r + 1.5)
-  setc(COL.water, a); lg.circle("fill", x, y, r)
+  local tri = { x - r * 0.86, y - r * 0.5, x + r * 0.86, y - r * 0.5, x, y - r * 2.4 }
+  setc(COL.ol, 0.85 * a); lg.circle("fill", x, y, r + 1.8)
+  lg.polygon("fill", tri[1] - 1.8, tri[2], tri[3] + 1.8, tri[4], tri[5], tri[6] - 2.2)
+  setc(COL.water, a); lg.circle("fill", x, y, r); lg.polygon("fill", tri)
+  lg.setColor(1, 1, 1, 0.8 * a); lg.circle("fill", x - r * 0.35, y - r * 0.25, r * 0.28)
+end
+
+-- «шапка» фонтана: лепестки-языки воды из одной точки; боковые изгибаются вниз (зонтик). Сначала все обводки,
+-- потом тёмная вода (тени между языками), потом светлая, потом блики — чтобы языки читались по отдельности.
+local DEEP = { 0.10, 0.55, 0.80 }
+local function crown(cx, cy, list, cs)
+  for pass = 1, 4 do
+    for _, pt in ipairs(list) do
+      local ang, len, wid = pt[1], pt[2], pt[3]
+      local droop = math.cos(ang) * 0.9            -- вбок смотрящие языки загибаются вниз
+      lg.push(); lg.translate(cx, cy); lg.rotate(ang)
+      local function seg(pad, shrink)
+        lg.ellipse("fill", len * 0.30, 0, len * 0.30 + pad, wid * shrink + pad)
+        lg.push(); lg.translate(len * 0.55, 0); lg.rotate(droop * (ang < 0 and 1 or -1) * (math.cos(ang) > 0 and 1 or -1))
+        lg.ellipse("fill", len * 0.22, 0, len * 0.26 + pad, wid * 0.85 * shrink + pad)
+        lg.pop()
+      end
+      if pass == 1 then setc(COL.ol, 0.9); seg(3, 1)
+      elseif pass == 2 then lg.setColor(DEEP[1], DEEP[2], DEEP[3]); seg(0, 1)
+      elseif pass == 3 then setc(COL.water); seg(-1.5, 0.62)
+      elseif pt[4] then setc(COL.waterLt, 0.85); lg.ellipse("fill", len * 0.32, -wid * 0.25, len * 0.16, wid * 0.18) end
+      lg.pop()
+    end
+  end
 end
 
 function Board:fountain(x, y, dx, dy, t, seed, floorY)
   local cs = self.cs
   local wob = 0.03 * math.sin(t * 13 + seed * 2.1)
   if dy < 0 then
-    -- столбик вверх; наверху вода расходится зонтиком и падает по обе стороны мимо выхода
-    local h = cs * (0.60 + wob)
-    self:jet({ x, y, x + cs * 0.012 * math.sin(t * 17), y - h }, t, seed, 0.10)
-    for side = -1, 1, 2 do
-      for k = 1, 2 do
-        local spread, pts = cs * (0.20 + 0.14 * k), {}
-        for i = 0, 12 do
-          local s = i / 12
-          local py = y - h + cs * (-0.10 * s + (0.62 + 0.12 * k) * s * s)
-          if py > y + cs * 0.02 then break end
-          pts[#pts + 1] = x + side * spread * s
-          pts[#pts + 1] = py
-        end
-        self:jet(pts, t, seed + k, 0.065 - 0.015 * k)
-      end
+    -- фонтанчик (по образцу Lao 03.10): спрайт fountain (art/parts.py) — столбик и пышная шапка; «дышит» по высоте,
+    -- с краёв шапки падают капли-слёзки
+    local h = cs * 0.52
+    local cyc = y - h
+    local im = img("fountain")
+    if im then
+      local k = self.k
+      lg.setColor(1, 1, 1)
+      lg.draw(im, x, y, 0, k * (1 + 0.03 * math.sin(t * 7 + seed)), k * (1 + 0.06 * math.sin(t * 9 + seed * 1.7)), CR, CR)
     end
-    for k = 0, 5 do
-      local f = (t * 1.5 + k / 6 + seed * 0.37) % 1
+    for k = 0, 3 do
+      local f = (t * 1.1 + k / 4 + seed * 0.37) % 1
       local side = (k % 2 == 0) and 1 or -1
-      drop(x + side * cs * (0.10 + 0.34 * f), y - h + cs * (-0.10 * f + 0.62 * f * f), cs * 0.03, 1 - f * f)
+      local px = x + side * cs * (0.33 + 0.05 * (k % 3))
+      drop(px, cyc + cs * 0.20 + f * (h - cs * 0.16), cs * 0.032, math.min(1, (1 - f) * 2.5))
     end
   elseif dy == 0 then
     -- брызгалка вбок: струя выходит чуть вверх и дугой падает в пределах клетки

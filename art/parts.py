@@ -203,3 +203,41 @@ def drain(cx, cy, c, bottom=1100, left=False, right=False, pipe=True, flap=True)
                 s.append(C(hx - gw * .55 * u - tilt * v, hy - gh * v - .03 * c * u, .016 * c, '#3E454C'))
         s.append(C(hx - .01 * c, hy, .022 * c, '#8F98A1', stroke=OL, stroke_width=c * .012))
     return ''.join(s)
+
+
+def fountain(cx, cy, c):
+    """Фонтанчик из открытой резьбы вверх (образец Lao 03.10: мультяшный фонтан — столбик и пышная шапка: сверху
+    языки-всплески, по краю свисают округлые капли). (cx, cy) — торец резьбы; всё в пределах клетки над выходом."""
+    W1, W2, W3 = '#1B7FBA', '#3CB8EE', '#C8F3FF'
+    s, sw = [], c * .022
+    hy = cy - .52 * c                      # центр шапки
+    rx, ry = .28 * c, .13 * c
+    # столбик
+    s.append(R(cx - .06 * c, hy, .12 * c, cy - hy + .01 * c, W2, rx=.05 * c, stroke=OL, stroke_width=sw))
+    s.append(R(cx - .032 * c, hy + .05 * c, .026 * c, cy - hy - .09 * c, W3, rx=.013 * c, opacity='.85'))
+
+    def hang(x, y, w, h, ang, fill):
+        # округлый свисающий язык, повёрнутый наружу на ang градусов вокруг точки крепления
+        p = dd('M', x - w, y, 'C', x - w * 1.05, y + h * .75, x - w * .45, y + h, x, y + h,
+               'C', x + w * .45, y + h, x + w * 1.05, y + h * .75, x + w, y, 'Z')
+        return '<g transform="rotate(%s %s %s)">%s</g>' % (n(ang), n(x), n(y), Pa(p, fill, stroke=OL, stroke_width=sw, stroke_linejoin='round'))
+
+    def flame(x, y, w, h, tilt):
+        p = dd('M', x - w, y, 'C', x - w, y - h * .6, x + tilt - w * .35, y - h, x + tilt, y - h,
+               'C', x + tilt + w * .35, y - h, x + w, y - h * .6, x + w, y, 'Z')
+        return Pa(p, W2, stroke=OL, stroke_width=sw, stroke_linejoin='round')
+    # задние свисающие языки (темнее)
+    for k, x in enumerate((-.30, -.17, -.05, .05, .17, .30)):
+        s.append(hang(cx + x * c, hy + .02 * c, .07 * c, (.19 + .07 * abs(x) / .3) * c, -x * 70, W1))
+    # всплески сверху
+    for x, h, tl in ((-.19, .13, -.06), (-.065, .18, -.02), (.065, .18, .02), (.19, .13, .06)):
+        s.append(flame(cx + x * c, hy - .05 * c, .085 * c, h * c, tl * c))
+    # купол шапки
+    s.append(E(cx, hy, rx, ry, W2, stroke=OL, stroke_width=sw))
+    # передние свисающие языки (светлее), короче
+    for x in (-.21, -.07, .07, .21):
+        s.append(hang(cx + x * c, hy + .05 * c, .06 * c, .13 * c, -x * 45, W2))
+    # блики
+    s.append(E(cx - .10 * c, hy - .03 * c, .09 * c, .025 * c, W3, opacity='.9'))
+    s.append(E(cx + .10 * c, hy - .01 * c, .04 * c, .015 * c, W3, opacity='.7'))
+    return ''.join(s)

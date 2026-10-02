@@ -35,7 +35,7 @@ for row, (title, fn) in enumerate((('было', gen2.fitting2_old), ('стало
 # слив было / стало и цепочка стояк — переходник — муфта
 y0 = 760
 body.append(T(40, y0 - 20, 'слив: было / стало;  сборка в ряд (сталь — уже прикручено)', 34, '#F6DB8A', weight='bold'))
-body.append(G(gen2.drain2_old(40 + c / 2, y0 + c / 2, c, y0 + 2 * c)) + G(parts.drain(260 + c / 2, y0 + c / 2, c, y0 + 2 * c)))
+body.append(G(gen2.drain2(40 + c / 2, y0 + c / 2, c, y0 + 2 * c)) + G(parts.drain(260 + c / 2, y0 + c / 2, c, y0 + 2 * c)))
 x = 560
 body.append(grid(x, y0, 4))
 body.append(G(gen2.source2(x + c / 2, y0 + c / 2, c, {'right': 'N'}, top=y0 - 40, bot=y0 + 2 * c), filter='url(#dsh)'))

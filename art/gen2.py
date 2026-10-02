@@ -300,10 +300,6 @@ def bath2(cx, cy, c, wet=False):
 
 
 def drain2(cx, cy, c, bottom=1100):
-    return parts.drain(cx, cy, c, bottom)
-
-
-def drain2_old(cx, cy, c, bottom=1100):
     o, s, x0, top = Q['ol'], [], cx - c / 2, cy - c / 2
     s.append(R(x0, top, c, bottom - top, 'url(#pitG)'))
     for k in range(4):
@@ -723,19 +719,9 @@ def frame(lv, moves=0, active='head', no_lap=False, hud=True, skip=()):
          Pa(terr_d, '#000000', fill_rule='evenodd', filter='url(#grain)', opacity='.4'),
          G(Pa(room_d, stroke='#FFF7E2', stroke_width=.05 * c, opacity='.8', transform='translate(0 %s)' % n(.05 * c)), clip_path='url(#cTerr)')]
     for y in range(1, H + 1):
-        x = 1
-        while x <= W:                      # сливы подряд — один линейный трап: отвод посередине, решётка у правого края
-            if grid[y - 1][x - 1] != '~':
-                x += 1
-                continue
-            x2 = x
-            while x2 + 1 <= W and grid[y - 1][x2] == '~':
-                x2 += 1
-            mid = (x + x2) // 2
-            for xx in range(x, x2 + 1):
-                s.append(parts.drain(ox + (xx - .5) * c, oy + (y - .5) * c, c, 1100 if y == H else oy + y * c,
-                                     left=xx > x, right=xx < x2, pipe=xx == mid, flap=xx == x2))
-            x = x2 + 1
+        for x in range(1, W + 1):
+            if grid[y - 1][x - 1] == '~':      # слив — прежний (решётка в перспективе и воронка), решение Lao 03.10
+                s.append(drain2(ox + (x - .5) * c, oy + (y - .5) * c, c, 1100 if y == H else oy + y * c))
     s.append(Pa(room_d, stroke=Q['ol'], stroke_width=.08 * c, stroke_linejoin='round', filter='url(#wob)'))
     wl = lambda x, y: 1 <= x <= W and 1 <= y <= H and grid[y - 1][x - 1] == '#'
 
