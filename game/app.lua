@@ -52,7 +52,7 @@ function App.availability()
   local st, open = {}, 0
   for i = 1, #App.levels do
     if App.save.solved[tostring(i)] then st[i] = "solved"
-    elseif App.unlockAll or open < 2 then st[i] = "open"; open = open + 1
+    elseif App.unlockAll or open < 1 then st[i] = "open"; open = open + 1
     else st[i] = "locked" end
   end
   return st
