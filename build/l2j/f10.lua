@@ -20,7 +20,7 @@ return {
     { kind = "fixture", what = "bath", at = { 9, 5 }, ports = { left = "V" } },
     { kind = "fitting", what = "coupling", tag = "cpl", at = { 7, 6 }, ports = { left = "V", right = "V" } },
     { kind = "fitting", what = "nipple", tag = "nip", at = { 6, 4 }, ports = { left = "N", right = "N" } },
-    { kind = "lapidus", cells = { { 7, 4 }, { 7, 3 } }, head = 2 },
+    { kind = "lapidus", cells = { { 7, 5 }, { 7, 4 } }, head = 2 },
   },
   ablations = { { name = "без муфты", remove = "cpl" }, { name = "без ниппеля", remove = "nip" } },
   texts = {
