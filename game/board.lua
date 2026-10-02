@@ -328,76 +328,24 @@ local function drop(x, y, r, a)
   lg.setColor(1, 1, 1, 0.8 * a); lg.circle("fill", x - r * 0.35, y - r * 0.25, r * 0.28)
 end
 
--- «шапка» фонтана: лепестки-языки воды из одной точки; боковые изгибаются вниз (зонтик). Сначала все обводки,
--- потом тёмная вода (тени между языками), потом светлая, потом блики — чтобы языки читались по отдельности.
-local DEEP = { 0.10, 0.55, 0.80 }
-local function crown(cx, cy, list, cs)
-  for pass = 1, 4 do
-    for _, pt in ipairs(list) do
-      local ang, len, wid = pt[1], pt[2], pt[3]
-      local droop = math.cos(ang) * 0.9            -- вбок смотрящие языки загибаются вниз
-      lg.push(); lg.translate(cx, cy); lg.rotate(ang)
-      local function seg(pad, shrink)
-        lg.ellipse("fill", len * 0.30, 0, len * 0.30 + pad, wid * shrink + pad)
-        lg.push(); lg.translate(len * 0.55, 0); lg.rotate(droop * (ang < 0 and 1 or -1) * (math.cos(ang) > 0 and 1 or -1))
-        lg.ellipse("fill", len * 0.22, 0, len * 0.26 + pad, wid * 0.85 * shrink + pad)
-        lg.pop()
-      end
-      if pass == 1 then setc(COL.ol, 0.9); seg(3, 1)
-      elseif pass == 2 then lg.setColor(DEEP[1], DEEP[2], DEEP[3]); seg(0, 1)
-      elseif pass == 3 then setc(COL.water); seg(-1.5, 0.62)
-      elseif pt[4] then setc(COL.waterLt, 0.85); lg.ellipse("fill", len * 0.32, -wid * 0.25, len * 0.16, wid * 0.18) end
-      lg.pop()
-    end
-  end
-end
-
 function Board:fountain(x, y, dx, dy, t, seed, floorY)
-  local cs = self.cs
-  local wob = 0.03 * math.sin(t * 13 + seed * 2.1)
-  if dy < 0 then
-    -- фонтанчик (по образцу Lao 03.10): спрайт fountain (art/parts.py) — столбик и пышная шапка; «дышит» по высоте,
-    -- с краёв шапки падают капли-слёзки
-    local h = cs * 0.52
-    local cyc = y - h
-    local im = img("fountain")
-    if im then
-      local k = self.k
-      lg.setColor(1, 1, 1)
-      lg.draw(im, x, y, 0, k * (1 + 0.03 * math.sin(t * 7 + seed)), k * (1 + 0.06 * math.sin(t * 9 + seed * 1.7)), CR, CR)
-    end
-    for k = 0, 3 do
-      local f = (t * 1.1 + k / 4 + seed * 0.37) % 1
-      local side = (k % 2 == 0) and 1 or -1
-      local px = x + side * cs * (0.33 + 0.05 * (k % 3))
-      drop(px, cyc + cs * 0.20 + f * (h - cs * 0.16), cs * 0.032, math.min(1, (1 - f) * 2.5))
-    end
-  elseif dy == 0 then
-    -- брызгалка вбок: струя выходит чуть вверх и дугой падает в пределах клетки
-    local pts, ex, ey = {}, x, y
-    for i = 0, 14 do
-      local s = i / 14
-      local px, py = x + dx * cs * 0.75 * s * (1 + wob), y + cs * (-0.42 * s + 0.80 * s * s)
-      if floorY and py > floorY - cs * 0.03 then break end
-      pts[#pts + 1], pts[#pts + 2] = px, py
-      ex, ey = px, py
-    end
-    self:jet(pts, t, seed, 0.085)
-    for k = 0, 3 do
-      local f = (t * 2.1 + k / 4 + seed * 0.29) % 1
-      local px, py = ex + dx * cs * 0.12 * f + (k - 1.5) * cs * 0.05 * f, ey - cs * 0.10 * f + cs * 0.30 * f * f
-      if floorY and py > floorY - cs * 0.03 then py = floorY - cs * 0.03 end
-      drop(px, py, cs * 0.028, 1 - f)
-    end
-  else
-    -- вниз: тонкая струйка до пола (или на клетку) и всплеск-корона
-    local y2 = math.min(floorY and floorY - cs * 0.02 or y + cs, y + cs)
-    self:jet({ x, y, x + cs * 0.01 * math.sin(t * 15), y2 }, t, seed, 0.045)
-    for k = 0, 3 do
-      local f = (t * 2.4 + k / 4 + seed * 0.31) % 1
-      local side = (k % 2 == 0) and 1 or -1
-      drop(x + side * cs * 0.16 * f, y2 - cs * (0.16 * f - 0.2 * f * f), cs * 0.025, 1 - f)
-    end
+  -- Протечка — водяная пена у открытой резьбы (выбор Lao 03.10): клубы бурлят (покачивание и «дыхание»),
+  -- с краёв срываются капли-слёзки и падают в пределах соседней клетки. Одна и та же пена для любого направления.
+  local cs, k = self.cs, self.k
+  local px, py = x + dx * cs * 0.24, y + dy * cs * 0.24
+  if dy > 0 then py = y + cs * 0.26 end
+  local im = img("foam")
+  if im then
+    lg.setColor(1, 1, 1)
+    local b = 1 + 0.05 * math.sin(t * 6 + seed)
+    lg.draw(im, px, py, 0.05 * math.sin(t * 3.1 + seed), k * b, k * (2 - b), CR, CR)
+  end
+  local bottom = floorY and (floorY - cs * 0.04) or (py + cs * 0.55)
+  for q = 0, 2 do
+    local f = (t * 0.9 + q / 3 + seed * 0.37) % 1
+    local side = (q == 0) and -1 or ((q == 1) and 1 or 0)
+    local sx, sy = px + side * cs * 0.22, py + cs * 0.14
+    if sy < bottom then drop(sx, sy + f * (bottom - sy), cs * 0.03, math.min(1, (1 - f) * 2.5)) end
   end
 end
 
