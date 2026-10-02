@@ -11,7 +11,7 @@ ONLY = set(argv[1:]) - {'levels'}
 os.makedirs(OUT, exist_ok=True)
 
 LIM = .47
-R_BODY, R_SOCK, R_THR, R_HEX = .15, .19, .12, .21
+R_BODY, R_SOCK, R_THR, R_HEX = .18, .225, .145, .25  # крупнее (03.10): поле выросло, детали должны читаться
 
 
 def reset():
@@ -23,7 +23,7 @@ def reset():
     sc.view_settings.view_transform = 'Standard'
     sc.render.use_freestyle = True
     sc.render.line_thickness_mode = 'ABSOLUTE'
-    sc.render.line_thickness = 3.2
+    sc.render.line_thickness = 4.5
     vl = sc.view_layers[0]
     ls = vl.freestyle_settings.linesets.new('ol')
     ls.select_by_visibility = True
@@ -37,7 +37,7 @@ def reset():
     if ls.linestyle is None:
         ls.linestyle = bpy.data.linestyles.new('ol')
     ls.linestyle.color = (0.043, 0.027, 0.016)
-    ls.linestyle.thickness = 3.2
+    ls.linestyle.thickness = 4.5
     vl.freestyle_settings.crease_angle = math.radians(120)
     for other in vl.freestyle_settings.linesets:
         if other.linestyle is None:
@@ -100,7 +100,7 @@ def mats():
 def cyl(r, x0, x1, axis='X', verts=48, mat=None):
     """Цилиндр вдоль оси от x0 до x1 (в долях клетки)."""
     L = x1 - x0
-    bpy.ops.mesh.primitive_cylinder_add(vertices=verts, radius=r, depth=abs(L), end_fill_type='NOTHING')  # торцы сбоку не видны, а их рёбра дают обводке лишние чёрточки
+    bpy.ops.mesh.primitive_cylinder_add(vertices=verts, radius=r, depth=abs(L))
     o = bpy.context.object
     c = (x0 + x1) / 2
     if axis == 'X':
@@ -147,8 +147,7 @@ def thread(x0, x1, r=R_THR, pitch=.05):
 
 def socket(x0, x1):
     """Раструб с внутренней резьбой: шире тела, буртик на торце."""
-    cyl(R_SOCK, x0, x1 - .04)
-    cyl(R_SOCK * 1.06, x1 - .04, x1)
+    cyl(R_SOCK, x0, x1)
 
 
 def port(dirv, th, start):
@@ -169,14 +168,14 @@ DIRS = {'right': (1, 0), 'left': (-1, 0), 'up': (0, 1), 'down': (0, -1)}
 
 
 def arm(dirv, x1):
-    o = cyl(R_BODY, 0, x1)
+    o = cyl(R_BODY * .97, 0, x1)
     o.data.transform(Matrix.Rotation(-math.atan2(dirv[1], dirv[0]), 4, 'Y'))
 
 
 def elbow(d1, d2):
     """Гнутое колено: четверть тора между двумя выходами + прямые хвосты."""
     v1, v2 = Vector((DIRS[d1][0], 0, DIRS[d1][1])), Vector((DIRS[d2][0], 0, DIRS[d2][1]))
-    rb = .17
+    rb = .19
     corner = (v1 + v2) * rb  # центр изгиба
     bpy.ops.mesh.primitive_torus_add(major_radius=rb, minor_radius=R_BODY, major_segments=64, minor_segments=32)
     t = bpy.context.object
@@ -190,7 +189,7 @@ def elbow(d1, d2):
     bpy.ops.object.shade_smooth()
     t.data.materials.append(BRASS)
     for d in (d1, d2):
-        o = cyl(R_BODY, rb - .005, .30)
+        o = cyl(R_BODY * .97, rb - .02, .30)
         dv = DIRS[d]; o.data.transform(Matrix.Rotation(-math.atan2(dv[1], dv[0]), 4, 'Y'))
 
 
@@ -214,10 +213,14 @@ def build(ports):
         o = hexp(R_HEX, -.16, .06)
         dv = DIRS[d]; o.data.transform(Matrix.Rotation(-math.atan2(dv[1], dv[0]), 4, 'Y'))
         port(dv, ports[d], .06 if ports[d] == 'N' else .02)
-    else:                                              # тройник
-        for d in ds: arm(DIRS[d], .28)
-        bpy.ops.mesh.primitive_uv_sphere_add(radius=R_BODY * 1.12, segments=48, ring_count=24)
-        bpy.ops.object.shade_smooth(); bpy.context.object.data.materials.append(BRASS)
+    else:                                              # тройник: сквозная труба по паре противоположных выходов + отвод
+        pair = next(((a, b) for a in ds for b in ds if DIRS[a][0] == -DIRS[b][0] and DIRS[a][1] == -DIRS[b][1] and a < b), None)
+        if pair:
+            o = cyl(R_BODY, -.30, .30)
+            dv = DIRS[pair[0]]; o.data.transform(Matrix.Rotation(-math.atan2(dv[1], dv[0]), 4, 'Y'))
+        for d in ds:
+            if not pair or d not in pair:
+                arm(DIRS[d], .30)
         for d in ds: port(DIRS[d], ports[d], .26)
 
 
@@ -261,5 +264,9 @@ for name, ports in SET.items():
     sc.render.use_freestyle = False
     sc.render.filepath = b; bpy.ops.render.render(write_still=True)
     import subprocess
-    subprocess.run(['convert', a, b, '-composite', os.path.join(OUT, name + '.png')], check=True)
+    c = os.path.join(OUT, '_c.png')
+    subprocess.run(['convert', a, b, '-composite', c], check=True)
+    subprocess.run(['convert', c, '(', '+clone', '-background', 'black', '-shadow', '45x5+5+8', ')', '+swap',
+                    '-background', 'none', '-layers', 'merge', '+repage', '-gravity', 'northwest', '-crop', '480x480+0+0', '+repage',
+                    os.path.join(OUT, name + '.png')], check=True)
     print('RENDER', name)
