@@ -558,9 +558,13 @@ def level_layers(lv, ox, oy, c, active='head', wet=False, no_lap=False):
 
 
 def geom(lv):
+    """Геометрия поля (03.10): HUD в колонках по краям (слева 270, справа 170 px), поле — остальное; внешняя стена
+    на полклетки, нижний ряд со сливами целиком. Та же формула — game/board.lua Board.geom."""
     H, W = len(lv['grid']), len(lv['grid'][0])
-    c = min(120, (1920 - 2 * 290) // W, 1080 // H)  # резерв 290 px под HUD с каждой стороны — как в game/board.lua
-    return c, (1920 - W * c) // 2, (1080 - H * c) // 2
+    L, Rr = 270, 1920 - 170
+    bot = H - .5 + (.5 if '~' in lv['grid'][-1] else 0)
+    c = int(min((Rr - L) / (W - 1), 1080 / (bot - .5)))
+    return c, int((L + Rr) / 2 - W * c / 2), int(540 - (.5 + bot) / 2 * c)
 
 
 def icon(kind, x, y, r=50):

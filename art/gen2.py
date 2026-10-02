@@ -14,6 +14,7 @@ import json, math, os, random, subprocess, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from gen import n, R, C, E, Ln, Pg, Pa, G, T, dd, smooth, ribs, dname, TILE, DV, OPP, HAND
 import parts
+import gen
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'build', 'review2')
@@ -699,8 +700,7 @@ def heater2(cx, cy, c, wet=False, big=False):
 def frame(lv, moves=0, active='head', no_lap=False, hud=True, skip=()):
     grid = lv['grid']
     H, W = len(grid), len(grid[0])
-    c = min(120, (1920 - 2 * 290) // W, 1080 // H)  # резерв 290 px под HUD с каждой стороны — как в game/board.lua
-    ox, oy = (1920 - W * c) // 2, (1080 - H * c) // 2
+    c, ox, oy = gen.geom(lv)  # геометрия поля — одна формула с game/board.lua (Board.geom)
     ml, mt = math.ceil(ox / c) + 1, math.ceil(oy / c) + 1
 
     def empty(x, y):

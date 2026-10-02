@@ -45,12 +45,27 @@ local function spr(name, x, y, k, r, sx)
 end
 Board.spr = spr
 
+Board.FIELD_L, Board.FIELD_R = 270, 1920 - 170
+function Board.bottomDrains(def)
+  local g = def and def.grid
+  return g and g[#g]:find("~", 1, true) ~= nil or false
+end
+function Board.geom(W, H, drains)
+  local bot = H - 0.5 + (drains and 0.5 or 0)
+  local cs = math.floor(math.min((Board.FIELD_R - Board.FIELD_L) / (W - 1), 1080 / (bot - 0.5)))
+  local x0 = math.floor((Board.FIELD_L + Board.FIELD_R) / 2 - W * cs / 2)
+  local y0 = math.floor(540 - (0.5 + bot) / 2 * cs)
+  return cs, x0, y0
+end
+
 function Board.new(lvl, def)
   local self = setmetatable({ lvl = lvl, def = def }, Board)
-  local cs = math.min(120, math.floor((1920 - 2 * 290) / lvl.W), math.floor(1080 / lvl.H)) -- по бокам резерв 290 px под HUD; та же формула в art/gen.py geom и art/gen2.py frame
+  -- Геометрия поля (03.10, «экран используется не полностью»): HUD в колонках по краям (слева 270, справа 170 px),
+  -- поле — всё остальное; внешняя стена видна на полклетки, нижний ряд со сливами — целиком. Та же формула —
+  -- art/gen.py geom и art/gen2.py frame (фоны квартир рисуются под неё).
+  local cs, x0, y0 = Board.geom(lvl.W, lvl.H, Board.bottomDrains(def))
   self.cs, self.k = cs, cs / CR
-  self.x0 = math.floor((1920 - lvl.W * cs) / 2)
-  self.y0 = math.floor((1080 - lvl.H * cs) / 2)
+  self.x0, self.y0 = x0, y0
   self.bg = img(string.format("lvl%02d", def and def.id or 0))
   return self
 end
