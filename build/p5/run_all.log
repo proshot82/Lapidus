@@ -1,0 +1,10 @@
+01 «Не той стороной»: states=211 solvable=true minMoves=15 deadPct=38.4 falseBranches=0 winStates=1 unstable=0 time=0.0s | коридор: мало ложных веток
+02 «Вешалка»: states=1116 solvable=true minMoves=19 deadPct=53.4 falseBranches=2 winStates=1 unstable=0 time=0.1s | коридор: абляция «без крюка hook» решаема
+03 «Лишний выход»: states=1682 solvable=true minMoves=15 deadPct=41.7 falseBranches=1 winStates=1 unstable=0 time=0.1s | коридор: ok
+04 «Мыло»: states=4034 solvable=true minMoves=30 deadPct=82.3 falseBranches=6 winStates=1 unstable=0 time=0.2s | коридор: ok
+05 «Резьба»: states=9539 solvable=true minMoves=23 deadPct=79.6 falseBranches=1 winStates=1 unstable=0 time=0.8s | коридор: мало ложных веток; широкий коридор решений (7)
+06 «Звено»: states=3717 solvable=true minMoves=29 deadPct=61.7 falseBranches=2 winStates=1 unstable=0 time=0.2s | коридор: ok
+07 «Брандспойт»: states=764 solvable=true minMoves=19 deadPct=0.0 falseBranches=0 winStates=1 unstable=0 time=0.1s | коридор: мало тупиков; мало ложных веток
+08 «Гребёнка»: states=99548 solvable=true minMoves=23 deadPct=90.0 falseBranches=1 winStates=3 unstable=0 time=24.2s | коридор: мало ложных веток; выигрышных конфигураций 3
+09 «Опрессовка»: states=49332 solvable=true minMoves=24 deadPct=79.2 falseBranches=5 winStates=2 unstable=0 time=7.5s | коридор: выигрышных конфигураций 2
+10 «Намертво»: states=30969 solvable=true minMoves=23 deadPct=86.2 falseBranches=10 winStates=1 unstable=0 time=2.4s | коридор: ok

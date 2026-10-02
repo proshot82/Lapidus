@@ -43,44 +43,48 @@
   "02": {
     "ablations": [
       {
-        "name": "замурован только крюк ряда лаза",
+        "name": "крюк hook замурован",
         "solvable": false
       },
       {
-        "name": "замурован только якорь шахты",
+        "name": "без крюка hook",
+        "solvable": true
+      },
+      {
+        "name": "без детали cpl",
         "solvable": false
       },
       {
-        "name": "зацепиться на лету нельзя",
+        "name": "висеть на крюке нельзя",
         "solvable": false
       }
     ],
-    "corridor": "ok",
-    "deadPct": 70.7,
-    "falseBranches": 11,
-    "grid": "11×10",
+    "corridor": "абляция «без крюка hook» решаема",
+    "deadPct": 53.4,
+    "falseBranches": 2,
+    "grid": "8×9",
     "id": 2,
     "length": [
       2,
       4
     ],
-    "minMoves": 20,
+    "minMoves": 19,
     "monkey": 0,
-    "name": "Скалолаз",
+    "name": "Вешалка",
     "note": "ядро «крюк — точка отсчёта» (30.09, build/l2e/k6): 20 ходов, скрытых 71 %, «ага» применено дважды; класс «вводный»",
     "pressure": 0,
-    "shortest": 1,
-    "shortestWidth": 1,
+    "shortest": 4,
+    "shortestWidth": 3,
     "solvable": true,
-    "states": 215,
+    "states": 1116,
     "target": {
       "dead": 25,
-      "fb": 0,
+      "fb": 1,
       "moves": [
-        15,
+        12,
         40
       ],
-      "states": 50000
+      "states": 20000
     },
     "unstable": 0,
     "winStates": 1
@@ -239,7 +243,7 @@
   "06": {
     "ablations": [
       {
-        "name": "без угольника",
+        "name": "без муфты",
         "solvable": false
       },
       {
@@ -247,43 +251,51 @@
         "solvable": false
       },
       {
-        "name": "деталь в столбе не вдавить сверху",
+        "name": "на муфту не встают",
         "solvable": false
       },
       {
-        "name": "фонтан не держит деталь на весу",
+        "name": "муфта не стоит под лазом",
+        "solvable": false
+      },
+      {
+        "name": "муфта с самого начала на стояке",
+        "solvable": false
+      },
+      {
+        "name": "без ниши в шахту",
         "solvable": false
       }
     ],
-    "corridor": "мало ложных веток; выигрышных конфигураций 2",
-    "deadPct": 89.8,
-    "falseBranches": 0,
-    "grid": "12×8",
+    "corridor": "ok",
+    "deadPct": 61.7,
+    "falseBranches": 2,
+    "grid": "10×9",
     "id": 6,
     "length": [
-      2,
-      4
+      4,
+      5
     ],
-    "minMoves": 20,
+    "minMoves": 29,
     "monkey": 0,
-    "name": "Дали напор",
+    "name": "Звено",
     "note": "лёгкий ввод напора (F39, 30.09, build/l7f; решение Lao вариант Б): 20 ходов, честно 35 %, дверей с пути нет — ошибки напора видимы или обратимы; класс «вводный»",
-    "pressure": 2,
-    "shortest": 1,
-    "shortestWidth": 1,
+    "pressure": 0,
+    "shortest": 2,
+    "shortestWidth": 2,
     "solvable": true,
-    "states": 21990,
+    "states": 3717,
     "target": {
-      "dead": 55,
-      "fb": 3,
+      "dead": 40,
+      "fb": 2,
       "moves": [
         15,
         40
       ],
-      "states": 30000
+      "states": 100000
     },
     "unstable": 0,
-    "winStates": 2
+    "winStates": 1
   },
   "07": {
     "ablations": [

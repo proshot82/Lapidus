@@ -1,0 +1,25 @@
+-- l2k/h16 — кандидат кв. 2 (02.10.2026). Решение не записано.
+return {
+  visibleLoss = dofile("build/l2k/vis.lua"),
+  id = 2, flat = 2, name = "h17",
+  length = { 2, 4 }, pressure = 0, tile = "blue",
+  grid = {
+    "########",
+    "##...###",
+    "##.....#",
+    "##.#.###",
+    "##....##",
+    "#...#.##",
+    "##.....#",
+    "##....##",
+    "###~~###",
+  },
+  objects = {
+    { kind = "stub", tag = "hook", at = { 2, 6 }, ports = { right = "N" } },
+    { kind = "fixture", what = "toilet", at = { 6, 8 }, ports = { left = "N" } },
+    { kind = "source", at = { 7, 7 }, ports = { left = "N" } },
+    { kind = "fitting", what = "coupling", tag = "cpl", at = { 4, 3 }, ports = { left = "V", right = "V" } },
+    { kind = "lapidus", cells = { { 7, 3 }, { 6, 3 }, { 5, 3 } }, head = 3 },
+  },
+  ablations = dofile("build/l2k/abl.lua")({ "hook" }, { "cpl" }),
+}
