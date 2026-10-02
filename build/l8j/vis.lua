@@ -2,7 +2,8 @@
 -- 1) как build/l6j/vis.lua: закреплённая деталь смотрит открытой резьбой в стену, в глухой бок закреплённого
 --    или в такую же резьбу — шов, который никогда не закрыть;
 -- 3) деталь, которую можно поднять только на Лапидусе (def.mustLift — список тегов), лежит прямо на стене или на
---    закреплённом: снизу к ней не подлезть и подставку не выбить — «лежит там, где её нечем поднять» (DESIGN §7).
+--    закреплённом (или на зажатом мыле): снизу к ней не подлезть и подставку не выбить — «лежит там, где её нечем
+--    поднять» (DESIGN §7); то же, если её нельзя ни толкнуть вбок (с одной стороны стена, с другой — некуда), ни поднять.
 -- 2) открытая резьба закреплённой детали упирается в фаянс, который уже никак не сдвинуть (ни толкнуть вбок —
 --    некуда встать или некуда ехать, ни поднять снизу) — выход навсегда занят мылом (мерка новичка, DESIGN §7).
 local OPP = { 3, 4, 1, 2 }
@@ -33,8 +34,15 @@ return function(lvl, st)
       if st.pos[q] ~= 0 and not st.fixed[q] then
         for _, tg in ipairs(ml) do
           if p.tag == tg then
-            local b = lvl.nb[st.pos[q]][3]
+            local c0 = st.pos[q]
+            local b = lvl.nb[c0][3]
             if solid(b) then return true end
+            -- ни толкнуть вбок, ни поднять: сбоку стены, сверху стена
+            local stuck = solid(lvl.nb[c0][1])
+            for _, d in ipairs({ 2, 4 }) do
+              if not solid(lvl.nb[c0][OPP[d]]) and not solid(lvl.nb[c0][d]) then stuck = false end
+            end
+            if stuck then return true end
             local r = occ[b]
             if r and lvl.pieces[r].porcelain and frozenSoap(b) then return true end
           end
