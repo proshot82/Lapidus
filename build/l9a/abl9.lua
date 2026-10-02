@@ -50,5 +50,7 @@ run("у гребёнки один выход вверх", { mutate = F2.oneOutle
 run("с гребня не сдвинуть вбок", { filter = F2.noRideMove })
 run("удерживаемую в столбе деталь не сдвинуть вбок", { filter = F2.noSideFromHold })
 run("с гребня на гребень нельзя", { filter = F2.noCrestToCrest })
+run("деталь не поднимает другую (лифт стопки)", { filter = F2.noLift })
+run("стопки нет (деталь не стоит на детали в столбе)", { filter = F2.noStack })
 for _, ab in ipairs(def.ablations or {}) do run("абл: " .. ab.name, ab) end
 for _, ab in ipairs(def.controls or {}) do run("контр: " .. ab.name, ab) end

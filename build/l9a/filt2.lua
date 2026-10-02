@@ -63,4 +63,29 @@ function F2.noCrestToCrest(lvl, st, ns)
   end
   return true
 end
+-- Узкая абляция «деталь не поднимает другую»: свободная деталь в столбе не сдвигается вверх, если прямо над ней другая
+-- свободная деталь (стопка не едет лифтом).
+function F2.noLift(lvl, st, ns)
+  if ns.dead then return true end
+  local col = F.columns(lvl, st)
+  local occ = {}
+  for q, p in ipairs(lvl.pieces) do if p.movable and st.pos[q] ~= 0 and not st.fixed[q] then occ[st.pos[q]] = q end end
+  for q, p in ipairs(lvl.pieces) do
+    local c, c2 = st.pos[q], ns.pos[q]
+    if p.movable and c ~= 0 and not st.fixed[q] and col[c] and c2 == lvl.nb[c][R.UP] and occ[lvl.nb[c][R.UP]] then return false end
+  end
+  return true
+end
+-- Узкая абляция «стопки нет»: свободная деталь не бывает прямо над другой свободной деталью, стоящей в столбе или на гребне.
+function F2.noStack(lvl, st, ns)
+  if ns.dead then return true end
+  local col, top = F.columns(lvl, ns)
+  local occ = {}
+  for q, p in ipairs(lvl.pieces) do if p.movable and ns.pos[q] ~= 0 and not ns.fixed[q] then occ[ns.pos[q]] = q end end
+  for q, p in ipairs(lvl.pieces) do
+    local c = ns.pos[q]
+    if p.movable and c ~= 0 and not ns.fixed[q] and (col[c] or top[c]) and occ[lvl.nb[c][R.UP]] then return false end
+  end
+  return true
+end
 return F2
