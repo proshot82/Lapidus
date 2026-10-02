@@ -13,7 +13,7 @@ head = len(lap) if head == 'n' else int(head)
 g = ',\n    '.join('"%s"' % r for r in grid)
 src = kv.get('SRC', '7,8'); fx = kv.get('FX', '7,2')
 open('build/l9j/%s.lua' % name, 'w', encoding='utf-8').write('''-- кв. 9, кандидат %s. %s
-local okV, vis = pcall(dofile, "build/l9j/vis.lua")
+local okV, vis = pcall(dofile, "build/l9j/vis9.lua")
 return {
   visibleLoss = okV and vis or nil,
   id = 9, flat = 9, name = "%s",
