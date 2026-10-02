@@ -431,5 +431,50 @@
     },
     "unstable": 0,
     "winStates": 3
+  },
+  "10": {
+    "ablations": [
+      {
+        "name": "без переходника",
+        "solvable": false
+      },
+      {
+        "name": "без ниппеля",
+        "solvable": false
+      },
+      {
+        "name": "без напора (конвейера нет)",
+        "solvable": false
+      }
+    ],
+    "corridor": "выигрышных конфигураций 2",
+    "deadPct": 79.2,
+    "falseBranches": 5,
+    "grid": "13×8",
+    "id": 10,
+    "length": [
+      2,
+      6
+    ],
+    "minMoves": 24,
+    "monkey": 0,
+    "name": "Опрессовка",
+    "note": "«боковой стояк-конвейер» (o44, 02.10, build/l10a; решение Lao: near-версия): 24 хода, честно 41 %; долги — двери 2-й половины, стойкость 3–5, прогулка 9",
+    "pressure": 1,
+    "shortest": 3,
+    "shortestWidth": 3,
+    "solvable": true,
+    "states": 49332,
+    "target": {
+      "dead": 60,
+      "fb": 4,
+      "moves": [
+        15,
+        40
+      ],
+      "states": 3000000
+    },
+    "unstable": 0,
+    "winStates": 2
   }
 }

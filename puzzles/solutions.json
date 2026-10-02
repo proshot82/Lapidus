@@ -231,5 +231,34 @@
       "heel:left"
     ],
     "name": "Гребёнка"
+  },
+  "10": {
+    "moves": [
+      "head:right",
+      "head:up",
+      "head:up",
+      "head:up",
+      "head:right",
+      "head:right",
+      "head:down",
+      "head:down",
+      "head:down",
+      "head:left",
+      "head:left",
+      "head:left",
+      "heel:left",
+      "heel:up",
+      "head:left",
+      "head:left",
+      "heel:left",
+      "heel:left",
+      "heel:left",
+      "head:left",
+      "head:left",
+      "head:left",
+      "head:left",
+      "head:down"
+    ],
+    "name": "Опрессовка"
   }
 }
