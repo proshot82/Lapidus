@@ -7,7 +7,7 @@
 1920×1080 (виртуальное разрешение игры). Текст, который меняется, рисует движок."""
 import os, subprocess, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import gen, gen2, screens2
+import gen, gen2, screens2, parts
 from gen import R, C, G, T, Ln
 from gen2 import Q, frame, headL, heelL, bath2, toilet2, sink2, porcelain2, port2, fluff2, button2, defs2
 
@@ -35,9 +35,24 @@ def sprite(name, body):
 
 X = Y = CR
 # приборы (порт слева, как в каноне; сам порт — отдельным спрайтом), фаянс
+def fit_box(body, sw=.80, sh=.92):
+    """Прибор целиком в прямоугольник sw×sh клетки вокруг центра (03.10: приборы шире клетки залезали на стены и на свою же
+    подводку). Габарит меряется по отрисовке; движок затем сдвигает прибор от входа на 0.07 клетки."""
+    svg = os.path.join(TMP, '_fit.svg')
+    with open(svg, 'w', encoding='utf-8') as f:
+        f.write('<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="%d" height="%d"><defs>%s</defs>%s</svg>'
+                % (4 * CR, 4 * CR, DEFS, '<g transform="translate(%d %d)">%s</g>' % (CR, CR, body)))
+    png = os.path.join(TMP, '_fit.png')
+    subprocess.run(['rsvg-convert', '-o', png, svg], check=True)
+    w, h, x, y = map(int, subprocess.run(['convert', png, '-trim', '-format', '%w %h %X %Y', 'info:'], capture_output=True, text=True).stdout.replace('+', ' ').split())
+    bx, by = x - CR + w / 2, y - CR + h / 2                      # центр габарита относительно (X, Y)
+    k = min(sw * CR / w, sh * CR / h, 1.0)
+    return '<g transform="translate(%s %s) scale(%s) translate(%s %s)">%s</g>' % (X, Y, round(k, 4), round(-bx, 2), round(-by, 2), body)
+
+
 for what, fn in (('bath', bath2), ('toilet', toilet2), ('sink', sink2), ('washer', gen2.washer2), ('dryer', gen2.dryer2), ('heater', gen2.heater2)):
     for wet in (False, True):
-        sprite('fx_%s_%s' % (what, 'wet' if wet else 'dry'), fn(X, Y, CR, wet))
+        sprite('fx_%s_%s' % (what, 'wet' if wet else 'dry'), fit_box(fn(X, Y, CR, wet)))
 sprite('porcelain', porcelain2(X, Y, CR))
 SIG = {'up': 'u', 'right': 'r', 'down': 'd', 'left': 'l'}
 for lv in screens2.L:
@@ -49,6 +64,7 @@ for lv in screens2.L:
 for th in ('N', 'V'):
     sprite('port_%s' % th, port2(X, Y, CR, 'right', th, False))
     sprite('port_%s_fixed' % th, port2(X, Y, CR, 'right', th, True))
+    sprite('port_%s_fx' % th, parts.port(X, Y, CR, 'right', th, True, .36))  # короткая подводка прибора (не залезает на прибор)
 # герой: голова и ноги во всех направлениях, активные и спящие
 for dr in ('right', 'left', 'up', 'down'):
     for act in (True, False):

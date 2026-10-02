@@ -13,6 +13,7 @@
 import json, math, os, random, subprocess, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from gen import n, R, C, E, Ln, Pg, Pa, G, T, dd, smooth, ribs, dname, TILE, DV, OPP, HAND
+import parts
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'build', 'review2')
@@ -164,6 +165,10 @@ def room_paint(ox, oy, W, H, c):
 # ---------- детали
 
 def port2(cx, cy, c, dr, th, fixed=False):
+    return parts.port(cx, cy, c, dr, th, fixed)
+
+
+def port2_old(cx, cy, c, dr, th, fixed=False):
     # закреплённое (сеть) — сталь, подвижное — латунь (§8: «сдвинется ли это?»); резьба на 20 % толще, чтобы читалась на телефоне
     o, lw = Q['ol'], c * .04
     nut, cyl = ('url(#nutGd)', 'url(#cylGd)') if fixed else ('url(#nutG)', 'url(#cylG)')
@@ -295,6 +300,10 @@ def bath2(cx, cy, c, wet=False):
 
 
 def drain2(cx, cy, c, bottom=1100):
+    return parts.drain(cx, cy, c, bottom)
+
+
+def drain2_old(cx, cy, c, bottom=1100):
     o, s, x0, top = Q['ol'], [], cx - c / 2, cy - c / 2
     s.append(R(x0, top, c, bottom - top, 'url(#pitG)'))
     for k in range(4):
@@ -501,6 +510,10 @@ def porcelain2(cx, cy, c):
 
 
 def plug2(cx, cy, c, dr, th):
+    return parts.fitting(cx, cy, c, {dr: th})
+
+
+def plug2_old(cx, cy, c, dr, th):
     """Заглушка (кв. 5): шестигранная головка и резьбовой хвостовик в сторону порта."""
     o, s = Q['ol'], []
     s.append(orient(R(cx - .02 * c, cy - .15 * c, .20 * c, .30 * c, 'url(#cylG)', stroke=o, stroke_width=c * .04), dr, cx, cy))
@@ -514,6 +527,10 @@ def plug2(cx, cy, c, dr, th):
 
 
 def fitting2(cx, cy, c, ports):
+    return parts.fitting(cx, cy, c, ports)
+
+
+def fitting2_old(cx, cy, c, ports):
     o, s = Q['ol'], []
     ds = list(ports)
     if len(ds) == 1:
@@ -706,9 +723,19 @@ def frame(lv, moves=0, active='head', no_lap=False, hud=True, skip=()):
          Pa(terr_d, '#000000', fill_rule='evenodd', filter='url(#grain)', opacity='.4'),
          G(Pa(room_d, stroke='#FFF7E2', stroke_width=.05 * c, opacity='.8', transform='translate(0 %s)' % n(.05 * c)), clip_path='url(#cTerr)')]
     for y in range(1, H + 1):
-        for x in range(1, W + 1):
-            if grid[y - 1][x - 1] == '~':
-                s.append(drain2(ox + (x - .5) * c, oy + (y - .5) * c, c))
+        x = 1
+        while x <= W:                      # сливы подряд — один линейный трап: отвод посередине, решётка у правого края
+            if grid[y - 1][x - 1] != '~':
+                x += 1
+                continue
+            x2 = x
+            while x2 + 1 <= W and grid[y - 1][x2] == '~':
+                x2 += 1
+            mid = (x + x2) // 2
+            for xx in range(x, x2 + 1):
+                s.append(parts.drain(ox + (xx - .5) * c, oy + (y - .5) * c, c, 1100 if y == H else oy + y * c,
+                                     left=xx > x, right=xx < x2, pipe=xx == mid, flap=xx == x2))
+            x = x2 + 1
     s.append(Pa(room_d, stroke=Q['ol'], stroke_width=.08 * c, stroke_linejoin='round', filter='url(#wob)'))
     wl = lambda x, y: 1 <= x <= W and 1 <= y <= H and grid[y - 1][x - 1] == '#'
 

@@ -111,8 +111,11 @@ function Board:drawPiece(p, cx, cy, wet, alpha, stone)
   if p.kind == "fixture" then
     local pd
     for d = 1, 4 do if p.ports[d] then pd = d end end
-    spr(string.format("fx_%s_%s", p.what or "bath", wet and "wet" or "dry"), cx, cy, k, 0, pd == 2 and -1 or 1)
-    if pd then spr("port_" .. p.ports[pd] .. "_fixed", cx, cy - 0.02 * self.cs, k, ANG[pd]) end
+    -- прибор вписан в 0.80×0.92 клетки (art/export.py fit_box) и отодвинут от входа: подводка на свободном краю клетки
+    local ox, oy = 0, 0
+    if pd then ox, oy = -DIRV[pd][1] * 0.07 * self.cs, -DIRV[pd][2] * 0.07 * self.cs end
+    spr(string.format("fx_%s_%s", p.what or "bath", wet and "wet" or "dry"), cx + ox, cy + oy, k, 0, pd == 2 and -1 or 1)
+    if pd then spr(img("port_" .. p.ports[pd] .. "_fx") and ("port_" .. p.ports[pd] .. "_fx") or ("port_" .. p.ports[pd] .. "_fixed"), cx, cy, k, ANG[pd]) end
   elseif p.kind == "porcelain" then
     spr("porcelain", cx, cy, k)
   elseif p.kind == "fitting" then
@@ -283,28 +286,94 @@ function Board:drawWater(status, jets, pressure, t)
       end
     end
   else
-    -- без напора вода не бьёт, а льётся (§8): струйка по дуге вниз до пола и всплеск; вверх — низкий «ключ» с переливом.
-    -- Фонтан оставлен напору: он толкает и держит, и путать их нельзя.
+    -- Без напора — маленький фонтанчик из открытой резьбы (решение Lao 03.10; напора в игре больше нет, путать не с чем):
+    -- вверх — столбик с короной, вбок — дуга-брызгалка, вниз — струйка с всплеском. Всё в пределах соседней клетки.
     for n, lk in ipairs(status.leaks or {}) do
       local dx, dy = DIRV[lk.dir][1], DIRV[lk.dir][2]
       local cx, cy = self:center(lk.cell)
-      local ex, ey = cx + dx * cs * 0.55, cy + dy * cs * 0.55
-      if dy < 0 then
-        local wob = 0.03 * math.sin(t * 9 + n)
-        setc(COL.ol); lg.ellipse("fill", ex, ey - cs * 0.02, cs * 0.17, cs * (0.15 + wob))
-        setc(COL.water); lg.ellipse("fill", ex, ey - cs * 0.02, cs * 0.13, cs * (0.12 + wob))
-        lg.setColor(1, 1, 1, 0.85); lg.ellipse("fill", ex - cs * 0.04, ey - cs * 0.07, cs * 0.04, cs * 0.025)
-        for side = -1, 1, 2 do self:stream(ex + side * cs * 0.12, ey, side * 0.35, t, n + side) end
-      else
-        -- пол под струйкой: вода не заходит на плитку, капли разбиваются о него
-        local lvl, floorY = self.lvl, nil
-        local tc = lvl.nb[lk.cell][lk.dir]
-        if tc ~= 0 and dy == 0 then
-          local below = lvl.nb[tc][3]
-          if below == 0 or lvl.cell[below] == R.WALL then local _, ty = self:center(tc); floorY = ty + cs * 0.5 end
-        end
-        self:stream(ex, ey, dx * 0.9, t, n, floorY)
+      local ex, ey = cx + dx * cs * 0.47, cy + dy * cs * 0.47
+      local lvl, floorY = self.lvl, nil
+      local tc = lvl.nb[lk.cell][lk.dir]
+      if tc ~= 0 then
+        local below = lvl.nb[tc][3]
+        if below == 0 or lvl.cell[below] == R.WALL then local _, ty = self:center(tc); floorY = ty + cs * 0.5 end
       end
+      self:fountain(ex, ey, dx, dy, t, n, floorY)
+    end
+  end
+end
+
+-- Фонтанчик: струя по кривой pts (обводка, вода, бегущие блики) и капли с её конца.
+function Board:jet(pts, t, seed, w)
+  local cs = self.cs
+  if #pts < 4 then return end
+  setc(COL.ol, 0.55); lg.setLineWidth(cs * (w + 0.03)); lg.line(pts)
+  setc(COL.water); lg.setLineWidth(cs * w); lg.line(pts)
+  local L = cumul(pts)
+  local total, period = L[#L], cs * 0.22
+  local ph = (t * cs * 1.6 + seed * 7) % period
+  setc(COL.waterLt, 0.95); lg.setLineWidth(cs * w * 0.35)
+  for s0 = ph - period, total, period do
+    local seg = subpath(pts, L, math.max(0, s0), math.min(total, s0 + cs * 0.07))
+    if #seg >= 4 then lg.line(seg) end
+  end
+end
+
+local function drop(x, y, r, a)
+  setc(COL.ol, 0.8 * a); lg.circle("fill", x, y, r + 1.5)
+  setc(COL.water, a); lg.circle("fill", x, y, r)
+end
+
+function Board:fountain(x, y, dx, dy, t, seed, floorY)
+  local cs = self.cs
+  local wob = 0.03 * math.sin(t * 13 + seed * 2.1)
+  if dy < 0 then
+    -- столбик вверх; наверху вода расходится зонтиком и падает по обе стороны мимо выхода
+    local h = cs * (0.60 + wob)
+    self:jet({ x, y, x + cs * 0.012 * math.sin(t * 17), y - h }, t, seed, 0.10)
+    for side = -1, 1, 2 do
+      for k = 1, 2 do
+        local spread, pts = cs * (0.20 + 0.14 * k), {}
+        for i = 0, 12 do
+          local s = i / 12
+          local py = y - h + cs * (-0.10 * s + (0.62 + 0.12 * k) * s * s)
+          if py > y + cs * 0.02 then break end
+          pts[#pts + 1] = x + side * spread * s
+          pts[#pts + 1] = py
+        end
+        self:jet(pts, t, seed + k, 0.065 - 0.015 * k)
+      end
+    end
+    for k = 0, 5 do
+      local f = (t * 1.5 + k / 6 + seed * 0.37) % 1
+      local side = (k % 2 == 0) and 1 or -1
+      drop(x + side * cs * (0.10 + 0.34 * f), y - h + cs * (-0.10 * f + 0.62 * f * f), cs * 0.03, 1 - f * f)
+    end
+  elseif dy == 0 then
+    -- брызгалка вбок: струя выходит чуть вверх и дугой падает в пределах клетки
+    local pts, ex, ey = {}, x, y
+    for i = 0, 14 do
+      local s = i / 14
+      local px, py = x + dx * cs * 0.75 * s * (1 + wob), y + cs * (-0.42 * s + 0.80 * s * s)
+      if floorY and py > floorY - cs * 0.03 then break end
+      pts[#pts + 1], pts[#pts + 2] = px, py
+      ex, ey = px, py
+    end
+    self:jet(pts, t, seed, 0.085)
+    for k = 0, 3 do
+      local f = (t * 2.1 + k / 4 + seed * 0.29) % 1
+      local px, py = ex + dx * cs * 0.12 * f + (k - 1.5) * cs * 0.05 * f, ey - cs * 0.10 * f + cs * 0.30 * f * f
+      if floorY and py > floorY - cs * 0.03 then py = floorY - cs * 0.03 end
+      drop(px, py, cs * 0.028, 1 - f)
+    end
+  else
+    -- вниз: тонкая струйка до пола (или на клетку) и всплеск-корона
+    local y2 = math.min(floorY and floorY - cs * 0.02 or y + cs, y + cs)
+    self:jet({ x, y, x + cs * 0.01 * math.sin(t * 15), y2 }, t, seed, 0.045)
+    for k = 0, 3 do
+      local f = (t * 2.4 + k / 4 + seed * 0.31) % 1
+      local side = (k % 2 == 0) and 1 or -1
+      drop(x + side * cs * 0.16 * f, y2 - cs * (0.16 * f - 0.2 * f * f), cs * 0.025, 1 - f)
     end
   end
 end
