@@ -206,38 +206,64 @@ def drain(cx, cy, c, bottom=1100, left=False, right=False, pipe=True, flap=True)
 
 
 def fountain(cx, cy, c):
-    """Фонтанчик из открытой резьбы вверх (образец Lao 03.10: мультяшный фонтан — столбик и пышная шапка: сверху
-    языки-всплески, по краю свисают округлые капли). (cx, cy) — торец резьбы; всё в пределах клетки над выходом."""
-    W1, W2, W3 = '#1B7FBA', '#3CB8EE', '#C8F3FF'
-    s, sw = [], c * .022
-    hy = cy - .52 * c                      # центр шапки
-    rx, ry = .28 * c, .13 * c
+    """Фонтанчик из открытой резьбы вверх (образец Lao 03.10; первая попытка с лепестками — «угловатый цветок»).
+    Классическая форма фонтана с иконок: столбик воды, сверху гладкий водяной купол-зонтик, его края стекают вниз и
+    кончаются округлыми каплями. Только плавные кривые, обводка тёмно-синяя. (cx, cy) — торец резьбы."""
+    DK, W1, W2, W3 = '#0F4E78', '#1E8DCB', '#45BDF0', '#D2F5FF'
+    sw = .024 * c
+    s = []
+    top = cy - .62 * c                     # макушка купола
+    ry = cy - .40 * c                      # уровень края купола
+    # прозрачная водяная завеса под куполом (купол «полный», а не пустой зонтик)
+    s.append(Pa(dd('M', cx - .40 * c, cy - .16 * c, 'C', cx - .40 * c, ry - .10 * c, cx - .22 * c, top, cx, top,
+                   'C', cx + .22 * c, top, cx + .40 * c, ry - .10 * c, cx + .40 * c, cy - .16 * c, 'Z'), W2, opacity='.35'))
+    for x in (-.30, -.18, .18, .30):
+        s.append(Ln(cx + x * c, ry - .02 * c, cx + x * 1.08 * c, cy - .14 * c, W3, .014 * c, opacity='.55'))
     # столбик
-    s.append(R(cx - .06 * c, hy, .12 * c, cy - hy + .01 * c, W2, rx=.05 * c, stroke=OL, stroke_width=sw))
-    s.append(R(cx - .032 * c, hy + .05 * c, .026 * c, cy - hy - .09 * c, W3, rx=.013 * c, opacity='.85'))
+    s.append(R(cx - .055 * c, top + .06 * c, .11 * c, cy - top - .05 * c, W1, rx=.05 * c, stroke=DK, stroke_width=sw))
+    s.append(R(cx - .03 * c, top + .14 * c, .022 * c, cy - top - .20 * c, W3, rx=.011 * c, opacity='.8'))
 
-    def hang(x, y, w, h, ang, fill):
-        # округлый свисающий язык, повёрнутый наружу на ang градусов вокруг точки крепления
-        p = dd('M', x - w, y, 'C', x - w * 1.05, y + h * .75, x - w * .45, y + h, x, y + h,
-               'C', x + w * .45, y + h, x + w * 1.05, y + h * .75, x + w, y, 'Z')
-        return '<g transform="rotate(%s %s %s)">%s</g>' % (n(ang), n(x), n(y), Pa(p, fill, stroke=OL, stroke_width=sw, stroke_linejoin='round'))
+    def shell(ro, ri, drop_y, fill, edge):
+        # оболочка купола: внешняя кривая (ro — полуширина), внутренняя (ri), края стекают до drop_y
+        d = dd('M', cx - ro, drop_y,
+               'C', cx - ro, ry - .10 * c, cx - ro * .55, top, cx, top,
+               'C', cx + ro * .55, top, cx + ro, ry - .10 * c, cx + ro, drop_y,
+               'L', cx + ri, drop_y,
+               'C', cx + ri, ry - .02 * c, cx + ri * .5, top + .09 * c, cx, top + .09 * c,
+               'C', cx - ri * .5, top + .09 * c, cx - ri, ry - .02 * c, cx - ri, drop_y, 'Z')
+        return Pa(d, fill, stroke=edge, stroke_width=sw, stroke_linejoin='round')
+    s.append(shell(.42 * c, .30 * c, cy - .18 * c, W1, DK))          # задний, шире и длиннее
+    s.append(shell(.34 * c, .22 * c, cy - .26 * c, W2, DK))          # передний
+    # капли на концах струй (округлые «бусины»)
+    for x, y, r, col in ((-.36, -.18, .068, W1), (.36, -.18, .068, W1), (-.28, -.26, .062, W2), (.28, -.26, .062, W2)):
+        s.append(C(cx + x * c, cy + y * c, r * c, col, stroke=DK, stroke_width=sw))
+        s.append(C(cx + x * c - .018 * c, cy + y * c - .018 * c, .016 * c, '#FFFFFF', opacity='.85'))
+    # блики по куполу и брызги над ним
+    s.append(Pa(dd('M', cx - .22 * c, ry - .06 * c, 'C', cx - .18 * c, top + .05 * c, cx - .08 * c, top + .03 * c, cx - .02 * c, top + .03 * c),
+                stroke=W3, stroke_width=.03 * c, stroke_linecap='round', opacity='.85'))
+    for x, y, r in ((-.10, -.70, .025), (.06, -.73, .02), (.16, -.67, .018)):
+        s.append(C(cx + x * c, cy + y * c, r * c, W2, stroke=DK, stroke_width=sw * .6))
+    return ''.join(s)
 
-    def flame(x, y, w, h, tilt):
-        p = dd('M', x - w, y, 'C', x - w, y - h * .6, x + tilt - w * .35, y - h, x + tilt, y - h,
-               'C', x + tilt + w * .35, y - h, x + w, y - h * .6, x + w, y, 'Z')
-        return Pa(p, W2, stroke=OL, stroke_width=sw, stroke_linejoin='round')
-    # задние свисающие языки (темнее)
-    for k, x in enumerate((-.30, -.17, -.05, .05, .17, .30)):
-        s.append(hang(cx + x * c, hy + .02 * c, .07 * c, (.19 + .07 * abs(x) / .3) * c, -x * 70, W1))
-    # всплески сверху
-    for x, h, tl in ((-.19, .13, -.06), (-.065, .18, -.02), (.065, .18, .02), (.19, .13, .06)):
-        s.append(flame(cx + x * c, hy - .05 * c, .085 * c, h * c, tl * c))
-    # купол шапки
-    s.append(E(cx, hy, rx, ry, W2, stroke=OL, stroke_width=sw))
-    # передние свисающие языки (светлее), короче
-    for x in (-.21, -.07, .07, .21):
-        s.append(hang(cx + x * c, hy + .05 * c, .06 * c, .13 * c, -x * 45, W2))
-    # блики
-    s.append(E(cx - .10 * c, hy - .03 * c, .09 * c, .025 * c, W3, opacity='.9'))
-    s.append(E(cx + .10 * c, hy - .01 * c, .04 * c, .015 * c, W3, opacity='.7'))
+
+def fountain_puff(cx, cy, c):
+    """Вариант Б фонтанчика: столбик и пышная «облачная» шапка из круглых клубов с фестончатым краем
+    (ближе к образцу Lao по силуэту), без острых углов."""
+    DK, W1, W2, W3 = '#0F4E78', '#1E8DCB', '#45BDF0', '#D2F5FF'
+    sw = .024 * c
+    s = []
+    hy = cy - .52 * c
+    s.append(R(cx - .055 * c, hy, .11 * c, cy - hy + .01 * c, W1, rx=.05 * c, stroke=DK, stroke_width=sw))
+    back = [(-.30, .06, .085), (-.18, .10, .09), (-.06, .12, .09), (.06, .12, .09), (.18, .10, .09), (.30, .06, .085)]
+    top = [(-.22, -.05, .10), (-.08, -.10, .11), (.08, -.10, .11), (.22, -.05, .10), (0, -.02, .12)]
+    for x, y, r in back:                   # свисающие клубы (фестон снизу)
+        s.append(C(cx + x * c, hy + y * c, r * c, W1, stroke=DK, stroke_width=sw))
+    for x, y, r in top:                    # обводка верхних клубов
+        s.append(C(cx + x * c, hy + y * c, r * c + sw / 2, DK))
+    for x, y, r in back:
+        s.append(C(cx + x * c, hy + y * c, r * c - sw / 2, W1))
+    for x, y, r in top:
+        s.append(C(cx + x * c, hy + y * c, r * c - sw / 2, W2))
+    for x, y, r in top[:4]:
+        s.append(E(cx + (x - .03) * c, hy + (y - .04) * c, r * .38 * c, r * .2 * c, W3, opacity='.85'))
     return ''.join(s)
