@@ -765,6 +765,253 @@ def scenes6():
     return ''.join(s), BASE + clips
 
 
+def figure(x, y, sc=1.0, shirt='#F6F4EF', pants='#3D5A8E', hair='brown', arms=((-54, -12), (54, -12)), elbows=None,
+           look=(0, 0), brows=None, mouth='flat', mustache=False, glasses=False, sleeves=None, tie=None, flip=False):
+    """Жилец/гость немых сцен (по образцу resident()): x, y — таз, sc — масштаб.
+    arms — кисти (левая, правая) относительно таза; elbows — контрольные точки дуги рук; sleeves — цвет рукава (None — голая рука).
+    hair: brown | bald (лысина с венчиком) | bun (пучок) | hat (шляпа); brows: None | angry | up | sad; mouth: flat | frown | grit | o | smile."""
+    s = []
+    s.append(Pa(dd('M', -46, 0, 'L', -56, 160, 'L', -12, 160, 'L', -2, 48, 'L', 10, 160, 'L', 54, 160, 'L', 46, 0, 'Z'), pants, stroke=O, stroke_width=6, stroke_linejoin='round'))
+    s += [E(-38, 168, 32, 13, '#3A2E26', stroke=O, stroke_width=4), E(36, 168, 32, 13, '#3A2E26', stroke=O, stroke_width=4)]
+    s.append(Pa(dd('M', -52, 6, 'Q', -60, -92, -38, -152, 'L', 38, -152, 'Q', 60, -92, 52, 6, 'Z'), shirt, stroke=O, stroke_width=6))
+    s.append(Pa(dd('M', -22, -152, 'Q', 0, -122, 22, -152), stroke=O, stroke_width=5))
+    if tie:
+        s.append(Pg([(0, -140), (-10, -126), (-6, -60), (0, -48), (6, -60), (10, -126)], tie, stroke=O, stroke_width=3))
+    el = elbows or ((-80, -70), (80, -70))
+    for sx, hand, eb in ((-1, arms[0], el[0]), (1, arms[1], el[1])):
+        d = dd('M', sx * 42, -138, 'Q', eb[0], eb[1], hand[0], hand[1])
+        s.append(Pa(d, stroke=O, stroke_width=28 if sleeves else 26, stroke_linecap='round'))
+        s.append(Pa(d, stroke=sleeves or '#F0BD99', stroke_width=18 if sleeves else 16, stroke_linecap='round'))
+        if sleeves:
+            s.append(C(hand[0], hand[1], 12, '#F0BD99', stroke=O, stroke_width=4))
+    hy = -196
+    s += [E(0, hy, 46, 52, 'url(#skinG)', stroke=O, stroke_width=5), E(-4, hy + 24, 30, 20, '#4E6078', opacity='.22')]
+    if hair == 'brown':
+        s.append(Pa(dd('M', -42, hy - 18, 'Q', -30, hy - 66, 4, hy - 54, 'Q', 40, hy - 66, 44, hy - 18, 'Q', 20, hy - 40, -42, hy - 18, 'Z'), '#6B4B32', stroke=O, stroke_width=4))
+    elif hair == 'bald':
+        for sx in (-1, 1):
+            s.append(Pa(dd('M', sx * 44, hy - 4, 'Q', sx * 50, hy - 30, sx * 30, hy - 40, 'Q', sx * 40, hy - 20, sx * 36, hy + 6, 'Z'), '#3B2A1E', stroke=O, stroke_width=3))
+        s.append(Pa(dd('M', -20, hy - 40, 'Q', 0, hy - 50, 18, hy - 42), stroke='#FFFFFF', stroke_width=5, stroke_linecap='round', opacity='.6'))
+    elif hair == 'bun':
+        s.append(C(0, hy - 62, 22, '#8A3A26', stroke=O, stroke_width=4))
+        s.append(Pa(dd('M', -46, hy + 6, 'Q', -50, hy - 60, 0, hy - 56, 'Q', 50, hy - 60, 46, hy + 6, 'Q', 36, hy - 30, 0, hy - 34, 'Q', -36, hy - 30, -46, hy + 6, 'Z'),
+                    '#A0452C', stroke=O, stroke_width=4, stroke_linejoin='round'))
+    elif hair == 'hat':
+        s.append(E(0, hy - 34, 66, 13, '#4A4036', stroke=O, stroke_width=4))
+        s.append(Pa(dd('M', -38, hy - 36, 'Q', -40, hy - 86, 0, hy - 84, 'Q', 40, hy - 86, 38, hy - 36, 'Z'), '#5C5044', stroke=O, stroke_width=4))
+        s.append(R(-38, hy - 50, 76, 12, '#2E2620'))
+    lx, ly = look
+    for sx in (-1, 1):
+        s += [C(sx * 18, hy - 2, 13, '#FFFFFF', stroke=O, stroke_width=4), C(sx * 18 + lx * 6, hy + ly * 6, 5, O)]
+        if brows == 'angry':
+            s.append(Ln(sx * 32, hy - 24, sx * 8, hy - 14, O, 5))
+        elif brows == 'up':
+            s.append(Ln(sx * 30, hy - 26, sx * 8, hy - 28, O, 4))
+        elif brows == 'sad':
+            s.append(Ln(sx * 30, hy - 14, sx * 8, hy - 24, O, 4))
+        elif brows == 'flat':
+            s.append(Ln(sx * 30, hy - 13, sx * 6, hy - 13, O, 5))
+    if glasses:
+        s += [C(sx * 18, hy - 2, 18, 'none', stroke=O, stroke_width=4) for sx in (-1, 1)] + [Ln(-1, hy - 4, 1, hy - 4, O, 4)]
+    s.append(Ln(-4, hy + 8, 4, hy + 8, O, 4))
+    my = hy + 30
+    if mouth == 'flat':
+        s.append(Ln(-12, my, 12, my, O, 4))
+    elif mouth == 'frown':
+        s.append(Pa(dd('M', -14, my + 4, 'Q', 0, my - 6, 14, my + 4), stroke=O, stroke_width=4, stroke_linecap='round'))
+    elif mouth == 'smile':
+        s.append(Pa(dd('M', -14, my - 3, 'Q', 0, my + 8, 14, my - 3), stroke=O, stroke_width=4, stroke_linecap='round'))
+    elif mouth == 'o':
+        s.append(E(0, my + 2, 7, 9, '#5A2A22', stroke=O, stroke_width=3))
+    elif mouth == 'grit':
+        s.append(R(-16, my - 6, 32, 13, '#FFFFFF', rx=4, stroke=O, stroke_width=3))
+        s += [Ln(-16 + k * 8, my - 6, -16 + k * 8, my + 7, O, 2) for k in (1, 2, 3)]
+    if mustache:
+        s.append(Pa(dd('M', 0, hy + 14, 'Q', -14, hy + 12, -30, hy + 26, 'Q', -12, hy + 26, 0, hy + 20, 'Q', 12, hy + 26, 30, hy + 26, 'Q', 14, hy + 12, 0, hy + 14, 'Z'),
+                    '#3B2A1E', stroke=O, stroke_width=3, stroke_linejoin='round'))
+    tf = 'translate(%s %s) scale(%s%s %s)' % (n(x), n(y), '-' if flip else '', n(sc), n(sc))
+    return G(''.join(s), transform=tf)
+
+
+def spark(x, y, r, col='#FFFFFF'):
+    return Pg([(x, y - r), (x + r * .3, y - r * .3), (x + r, y), (x + r * .3, y + r * .3), (x, y + r), (x - r * .3, y + r * .3), (x - r, y), (x - r * .3, y - r * .3)], col)
+
+
+def bubble(x, y, w, h, tx, ty, txt, rot=0):
+    """Облачко-выкрик без слов: только знаки."""
+    b = E(x, y, w, h, '#FFFFFF', stroke=O, stroke_width=5)
+    b += Pg([(x - w * .2, y + h * .7), (tx, ty), (x + w * .15, y + h * .8)], '#FFFFFF', stroke=O, stroke_width=5, stroke_linejoin='round')
+    b += E(x, y, w - 3, h - 3, '#FFFFFF')
+    b += T(x, y + h * .42, txt, h * 1.25, '#C83E2C', weight='bold', anchor='middle')
+    return G(b, transform='rotate(%s %s %s)' % (n(rot), n(x), n(y))) if rot else b
+
+
+def drop_(x, y, r, col=None):
+    col = col or Q['water']
+    return Pa(dd('M', x, y - r * 1.9, 'Q', x + r * 1.05, y - r * .3, x + r, y + r * .1, 'A', r, r, 0, 1, 1, x - r, y + r * .1, 'Q', x - r * 1.05, y - r * .3, x, y - r * 1.9, 'Z'),
+              col, stroke=O, stroke_width=max(2, r * .22), stroke_linejoin='round')
+
+
+def scene_fountain(x0, y0, w, h):
+    """Кв. 6 «Дали напор»: фонтан из унитаза пробил перекрытие; сосед сверху стоит с ведром и смотрит в дыру."""
+    fl = y0 + h - 80
+    uf, sl = y0 + 262, 44                       # пол верхней квартиры, толщина плиты
+    b = [R(x0, y0, w, uf - y0, 'url(#tpY)'), R(x0, uf + sl, w, fl - uf - sl, 'url(#tpB)'), R(x0, fl, w, 80, '#6B5B4B'),
+         R(x0, uf - 18, w, 18, '#7A5A3E'), R(x0, uf, w, sl, '#A39C90'), Ln(x0, uf + sl, x0 + w, uf + sl, O, 5), Ln(x0, uf - 18, x0 + w, uf - 18, O, 4)]
+    b += [C(x0 + 30 + k * 64, uf + sl / 2 + (k % 2) * 6 - 3, 5, '#6E675C') for k in range(10)]
+    tx, ty, tc = x0 + 150, fl - 70, 250
+    jx = tx + .21 * tc                           # ось струи — над чашей
+    hx0, hx1 = jx - 46, jx + 52
+    b.append(Pg([(hx0, uf - 18), (hx0 + 14, uf + 8), (hx0 - 6, uf + 24), (hx0 + 8, uf + sl), (hx1 - 4, uf + sl), (hx1 + 8, uf + 22), (hx1 - 8, uf + 6), (hx1, uf - 18)],
+                '#2A2622', stroke=O, stroke_width=4, stroke_linejoin='round'))
+    b.append(E(tx + .2 * tc, fl + 10, 150, 14, 'url(#waterG)', stroke=O, stroke_width=3, opacity='.85'))
+    b.append(G(toilet2(tx, ty, tc, True), filter='url(#dsh)'))
+    top = y0 + 112
+    b.append(R(jx - 22, top, 44, ty - .1 * tc - top, 'url(#waterG)', rx=18, stroke=O, stroke_width=5))
+    b += [Ln(jx - 8, top + 30 + k * 70, jx - 8, top + 70 + k * 70, '#FFFFFF', 5, opacity='.8') for k in range(6)]
+    for sx in (-1, 1):
+        b.append(Pa(dd('M', jx, top + 6, 'Q', jx + sx * 70, top - 50, jx + sx * 120, top + 40), stroke=O, stroke_width=20, stroke_linecap='round'))
+        b.append(Pa(dd('M', jx, top + 6, 'Q', jx + sx * 70, top - 50, jx + sx * 120, top + 40), stroke=Q['water'], stroke_width=11, stroke_linecap='round'))
+    b += [drop_(jx + dx, top + dy, r) for dx, dy, r in ((-150, 80, 9), (148, 96, 10), (-96, 120, 7), (178, 40, 7), (-40, -30, 8))]
+    for dx, dy, a in ((-80, uf - 40, 20), (96, uf - 64, -30), (-120, uf + 120, 35), (110, uf + 150, -15)):
+        b.append(Pg([(jx + dx - 12, dy - 8), (jx + dx + 14, dy - 10), (jx + dx + 10, dy + 10), (jx + dx - 8, dy + 12)], '#A39C90', stroke=O, stroke_width=3,
+                    transform='rotate(%d %s %s)' % (a, n(jx + dx), n(dy))))
+    # сосед: таз выше пола на длину ног; ведро в опущенной руке, смотрит вниз, в дыру
+    nx, ny, ns = x0 + 450, uf - 18 - 170 * .56, .56
+    b.append(G(figure(nx, ny, ns, shirt='#5E7F5A', pants='#4A4036', hair='bald', mustache=True, arms=((-150, -150), (52, -10)), elbows=((-100, -170), (78, -70)),
+                      look=(-1, 1), brows='up', mouth='o', sleeves=None), filter='url(#dsh)'))
+    bx, by = nx - 150 * ns, ny - 150 * ns + 14
+    b.append(G(Pa(dd('M', bx - 30, by - 4, 'Q', bx - 2, by - 40, bx + 26, by - 4), stroke=O, stroke_width=4) +
+               Pg([(bx - 28, by), (bx + 28, by), (bx + 20, by + 50), (bx - 20, by + 50)], '#B9C2CB', stroke=O, stroke_width=5, stroke_linejoin='round') +
+               E(bx, by, 28, 7, '#7E8892', stroke=O, stroke_width=4), filter='url(#dsh)'))
+    return b
+
+
+def scene_hose(x0, y0, w, h):
+    """Кв. 7 «Брандспойт»: струя только что потушила сигарету; жилец мокрый, невозмутимо закуривает новую."""
+    fl = y0 + h - 80
+    b = [R(x0, y0, w, h, 'url(#tpY)'), R(x0, fl, w, 80, '#6B5B4B'), R(x0, y0, w, h, 'url(#vg2)')]
+    rx_, ry_ = x0 + 380, fl - 172
+    my = ry_ - 166                                # уровень рта
+    # брандспойт в стене слева: латунный ствол, с него ещё капает
+    nx, ny = x0 + 40, my - 6
+    b.append(R(x0 - 10, ny - 34, 70, 68, '#B83A2C', rx=10, stroke=O, stroke_width=5))
+    b.append(Pg([(nx + 20, ny - 16), (nx + 96, ny - 9), (nx + 96, ny + 9), (nx + 20, ny + 16)], 'url(#cylGd)', stroke=O, stroke_width=5, stroke_linejoin='round'))
+    b.append(R(nx + 92, ny - 12, 14, 24, '#C99A2E', rx=3, stroke=O, stroke_width=4))
+    b += [drop_(nx + 104, ny + 30 + k * 34, 7 - k) for k in range(2)]
+    # след струи — пунктир капель до того места, где была сигарета
+    b += [drop_(nx + 140 + k * 36, ny + (k - 3) ** 2 * 1.5 - 8, 5) for k in range(4)]
+    b.append(G(figure(rx_, ry_, 1.0, shirt='#F6F4EF', pants='#3D5A8E', hair='bald', mustache=True, arms=((-54, -12), (-14, -150)), elbows=((-80, -70), (40, -60)),
+                      look=(1, .3), brows='flat', mouth='flat'), filter='url(#dsh)'))
+    # мокрая голова: капли с лысины и усов
+    b += [drop_(rx_ + dx, ry_ - 196 + dy, r) for dx, dy, r in ((-52, -10, 7), (50, 10, 6), (-30, 46, 6), (24, 52, 5))]
+    # новая сигарета — одна линия, спичка с огоньком у кончика
+    cx_, cy_ = rx_ - 14, my - 1
+    b.append(Ln(cx_, cy_, cx_ - 44, cy_ + 6, O, 9))
+    b.append(Ln(cx_, cy_, cx_ - 44, cy_ + 6, '#FBF8F0', 5))
+    b.append(Ln(cx_ - 34, cy_ + 4.5, cx_ - 44, cy_ + 6, '#D0703A', 5))
+    mx_, my_ = rx_ - 14, ry_ - 150
+    b.append(Ln(mx_ - 10, my_ + 14, mx_ - 46, my_ + 2, '#D9B57A', 5))
+    b.append(Pa(dd('M', mx_ - 50, my_ + 6, 'Q', mx_ - 62, my_ - 10, mx_ - 50, my_ - 24, 'Q', mx_ - 40, my_ - 8, mx_ - 50, my_ + 6, 'Z'), '#F4B23C', stroke='#C0521F', stroke_width=2))
+    # старая — переломлена, в луже
+    px_, py_ = x0 + 230, fl + 22
+    b.append(E(px_, py_, 70, 12, 'url(#waterG)', stroke=O, stroke_width=3, opacity='.9'))
+    b.append(Pa(dd('M', px_ - 30, py_ - 2, 'L', px_ - 4, py_ - 6, 'L', px_ + 22, py_ - 18), stroke=O, stroke_width=9, stroke_linecap='round', stroke_linejoin='round'))
+    b.append(Pa(dd('M', px_ - 30, py_ - 2, 'L', px_ - 4, py_ - 6, 'L', px_ + 22, py_ - 18), stroke='#E8E2CF', stroke_width=5, stroke_linecap='round', stroke_linejoin='round'))
+    b.append(Ln(px_ + 14, py_ - 14, px_ + 22, py_ - 18, '#5A5048', 5))
+    return b
+
+
+def scene_comb(x0, y0, w, h):
+    """Кв. 8 «Гребёнка»: двое одновременно открыли краны с одной гребёнки — у обоих по капле; немая ссора."""
+    fl = y0 + h - 80
+    b = [R(x0, y0, w, h, 'url(#tpM)'), R(x0, fl, w, 80, '#6B5B4B'), R(x0, y0, w, h, 'url(#vg2)')]
+    gy, ax, bx_ = y0 + 236, x0 + 196, x0 + 384
+    # гребёнка: стояк сверху, коллектор, два отвода с вентилями
+    b.append(R(x0 + 274, y0 - 10, 32, gy - y0 + 10, 'url(#cylGd)', stroke=O, stroke_width=5))
+    b.append(R(ax - 30, gy - 20, bx_ - ax + 60, 40, 'url(#cylGd)', rx=14, stroke=O, stroke_width=5))
+    for k in range(4):
+        b.append(R(ax - 6 + k * (bx_ - ax) / 3, gy - 24, 12, 48, '#C99A2E', rx=3, stroke=O, stroke_width=3))
+    for x in (ax, bx_):
+        b.append(R(x - 13, gy + 16, 26, 74, 'url(#cylGd)', stroke=O, stroke_width=5))
+        b.append(C(x, gy + 52, 24, '#C83E2C', stroke=O, stroke_width=5))
+        b += [Ln(x - 22, gy + 52, x + 22, gy + 52, '#7A231A', 4), Ln(x, gy + 30, x, gy + 74, '#7A231A', 4), C(x, gy + 52, 7, '#C99A2E', stroke=O, stroke_width=2)]
+        b.append(R(x - 16, gy + 88, 32, 16, '#C99A2E', rx=4, stroke=O, stroke_width=4))
+        b.append(drop_(x, gy + 132, 7))
+    # ведро под левым краном, таз под правым — оба сухие
+    b.append(G(Pg([(ax - 44, fl - 70), (ax + 44, fl - 70), (ax + 34, fl + 6), (ax - 34, fl + 6)], '#B9C2CB', stroke=O, stroke_width=5, stroke_linejoin='round')
+               + E(ax, fl - 70, 44, 10, '#6E7781', stroke=O, stroke_width=4), filter='url(#dsh)'))
+    b.append(G(Pa(dd('M', bx_ - 70, fl - 30, 'L', bx_ + 70, fl - 30, 'L', bx_ + 52, fl + 8, 'L', bx_ - 52, fl + 8, 'Z'), '#E2E6DA', stroke=O, stroke_width=5, stroke_linejoin='round')
+               + E(bx_, fl - 30, 70, 10, '#9AA39A', stroke=O, stroke_width=4), filter='url(#dsh)'))
+    # она — слева, он — справа; каждый держит свой вентиль и смотрит на другого
+    sc = .82
+    b.append(G(figure(x0 + 92, fl - 172 * sc, sc, shirt='#D9739A', pants='#5C4A6E', hair='bun', arms=((-54, -10), (128, -232)), elbows=((-80, -70), (110, -120)),
+                      look=(1, 0), brows='angry', mouth='frown', sleeves='#D9739A'), filter='url(#dsh)'))
+    b.append(G(figure(x0 + 488, fl - 172 * sc, sc, shirt='#F6F4EF', pants='#3D5A8E', hair='bald', mustache=True, arms=((-128, -232), (54, -10)),
+                      elbows=((-110, -120), (80, -70)), look=(-1, 0), brows='angry', mouth='grit'), filter='url(#dsh)'))
+    # полотенце на плече у него
+    tx, ty = x0 + 488 + 26 * sc, fl - 172 * sc - 150 * sc
+    b.append(Pa(dd('M', tx - 8, ty - 4, 'L', tx + 26, ty + 2, 'L', tx + 30, ty + 80, 'L', tx + 6, ty + 84, 'Z'), '#F2C14E', stroke=O, stroke_width=4, stroke_linejoin='round'))
+    b.append(bubble(x0 + 110, y0 + 92, 64, 44, x0 + 104, y0 + 160, '!', rot=-6))
+    b.append(bubble(x0 + 470, y0 + 86, 76, 48, x0 + 478, y0 + 160, '!!', rot=5))
+    b += [Ln(x0 + 268 + k * 22, y0 + 84 + (k % 2) * 16, x0 + 280 + k * 22, y0 + 98 - (k % 2) * 16, '#FFFFFF', 5, opacity='.75') for k in range(3)]
+    return b
+
+
+def scene_test(x0, y0, w, h):
+    """Кв. 9 «Опрессовка»: манометр в красной зоне; комиссия с папкой и печатью смотрит на единственную каплю."""
+    fl = y0 + h - 80
+    b = [R(x0, y0, w, h, 'url(#tpB)'), R(x0, fl, w, 80, '#6B5B4B'), R(x0, y0, w, h, 'url(#vg2)')]
+    # труба вдоль стены с манометром
+    py = y0 + 140
+    b.append(R(x0 - 10, py - 18, w + 20, 36, 'url(#cylGd)', stroke=O, stroke_width=5))
+    gx, gy = x0 + 290, py - 64
+    b.append(R(gx - 9, gy + 20, 18, 30, 'url(#cylGd)', stroke=O, stroke_width=4))
+    b.append(C(gx, gy, 46, '#F4F1EA', stroke=O, stroke_width=6))
+    b.append(Pa(dd('M', gx + 30, gy - 18, 'A', 35, 35, 0, 0, 1, gx + 30, gy + 18), stroke='#C83E2C', stroke_width=9))
+    b += [Ln(gx + math.cos(a) * 30, gy + math.sin(a) * 30, gx + math.cos(a) * 38, gy + math.sin(a) * 38, O, 3)
+          for a in [math.pi * (.75 + k * .25) for k in range(7)]]
+    b.append(Ln(gx, gy, gx + 34, gy + 10, '#C83E2C', 5))
+    b.append(C(gx, gy, 6, O))
+    for x in (x0 + 90, x0 + 490):
+        b.append(R(x - 8, py - 22, 16, 44, '#C99A2E', rx=3, stroke=O, stroke_width=3))
+    # капля и крошечная лужица — точно посередине
+    dx_, dy_ = x0 + 290, fl + 30
+    b.append(E(dx_, dy_ + 4, 26, 6, 'url(#waterG)', stroke=O, stroke_width=2.5))
+    b.append(drop_(dx_, dy_ - 14, 10))
+    b.append(Pa(dd('M', dx_ - 12, dy_ - 30, 'L', dx_ - 30, dy_ - 44), stroke='#FFFFFF', stroke_width=4, stroke_linecap='round', opacity='.7'))
+    # комиссия: слева — в шляпе, с раскрытой папкой и ручкой; справа — в очках, печать занесена
+    sc = .9
+    lx, rx_ = x0 + 140, x0 + 446
+    hip = fl - 172 * sc
+    b.append(G(figure(lx, hip, sc, shirt='#6E6A62', pants='#4A4640', hair='hat', arms=((60, -70), (70, -110)), elbows=((10, -40), (100, -70)),
+                      look=(1, 1), brows='flat', mouth='flat', mustache=True, sleeves='#6E6A62', tie='#8C3B32'), filter='url(#dsh)'))
+    fx, fy = lx + 66 * sc, hip - 96 * sc
+    b.append(G(R(fx - 50, fy - 40, 100, 74, '#8C5A32', rx=4, stroke=O, stroke_width=4, transform='rotate(-14 %s %s)' % (n(fx), n(fy)))
+               + R(fx - 42, fy - 34, 84, 62, '#F4EEDC', stroke=O, stroke_width=3, transform='rotate(-14 %s %s)' % (n(fx), n(fy)))
+               + ''.join(Ln(fx - 32, fy - 20 + k * 14, fx + 30, fy - 20 + k * 14, '#9A9480', 3, transform='rotate(-14 %s %s)' % (n(fx), n(fy))) for k in range(4))))
+    b.append(G(figure(rx_, hip, sc, shirt='#4E5A6A', pants='#3A4250', hair='bald', arms=((-60, -60), (40, -300)), elbows=((-90, -50), (90, -220)),
+                      look=(-1, 1), brows='up', mouth='flat', glasses=True, sleeves='#4E5A6A', tie='#2F5E9E'), filter='url(#dsh)'))
+    sx_, sy_ = rx_ + 40 * sc, hip - 300 * sc
+    b.append(G(E(sx_, sy_ - 34, 14, 12, '#8C5A32', stroke=O, stroke_width=4) + R(sx_ - 6, sy_ - 26, 12, 22, '#A8744A', stroke=O, stroke_width=3)
+               + R(sx_ - 26, sy_ + 6, 52, 14, '#2B56B8', rx=3, stroke=O, stroke_width=4) + R(sx_ - 20, sy_ - 6, 40, 14, '#3A3129', stroke=O, stroke_width=3), filter='url(#dsh)'))
+    return b
+
+
+def scenes7_10(page=0):
+    """Немые сцены кв. 6–9 (сюжеты старых кв. 7–10, §10). Те же панели 580×640, что в scenes2(): page 0 — кв. 6, 7, 8; page 1 — кв. 9."""
+    s = [R(0, 0, 1920, 1080, '#171B1E')]
+    clips = ''
+    fns = ((scene_fountain, scene_hose, scene_comb), (scene_test,))[page]
+    for i, fn in enumerate(fns):
+        x0, y0, w, h = 60 + i * 610, 160, 580, 640
+        clips += '<clipPath id="cr%d"><rect x="%d" y="%d" width="%d" height="%d" rx="16"/></clipPath>' % (i, x0, y0, w, h)
+        b = fn(x0, y0, w, h)
+        s.append(G(''.join(b), clip_path='url(#cr%d)' % i))
+        s.append(R(x0, y0, w, h, 'none', rx=16, stroke='#C99A2E', stroke_width=4))
+    return ''.join(s), BASE + clips
+
+
 # ---------------------------------------------------------------- лист элементов
 
 def gallery2():

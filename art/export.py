@@ -84,20 +84,20 @@ for tag, sv, op in (('solved', NL, ()), ('open', (), NL)):
         subprocess.run(['convert', os.path.join(OUT, 'tmp_bld_%s.png' % tag), '-crop', '366x146+%d+%d' % (x0 - 8, y0 - 8), '+repage',
                         os.path.join(OUT, 'apt%d_%s.png' % (apt, tag))], check=True)
     os.remove(os.path.join(OUT, 'tmp_bld_%s.png' % tag))
-body, extra = screens2.scenes2()
-out('tmp_scenes', body, 1920, 1080, extra)
-for i in range(3):
-    subprocess.run(['convert', os.path.join(OUT, 'tmp_scenes.png'), '-crop', '588x648+%d+156' % (56 + i * 610), '+repage', os.path.join(OUT, 'scene%d.png' % (i + 1))], check=True)
-os.remove(os.path.join(OUT, 'tmp_scenes.png'))
-body, extra = screens2.scenes45()
-out('tmp_scenes', body, 1920, 1080, extra)
-for i, apt in enumerate((4, 5)):
-    subprocess.run(['convert', os.path.join(OUT, 'tmp_scenes.png'), '-crop', '588x648+%d+156' % (56 + i * 610), '+repage', os.path.join(OUT, 'scene%d.png' % apt)], check=True)
-os.remove(os.path.join(OUT, 'tmp_scenes.png'))
-body, extra = screens2.scenes6()
-out('tmp_scenes', body, 1920, 1080, extra)
-subprocess.run(['convert', os.path.join(OUT, 'tmp_scenes.png'), '-crop', '588x648+56+156', '+repage', os.path.join(OUT, 'scene6.png')], check=True)
-os.remove(os.path.join(OUT, 'tmp_scenes.png'))
+# немые сцены: панели 588×648 из листов 1920×1080; номера — НОВЫЕ номера квартир (перестановка 02.10)
+def cut_scenes(fn, nums, *args):
+    body, extra = fn(*args)
+    out('tmp_scenes', body, 1920, 1080, extra)
+    for i, apt in enumerate(nums):
+        subprocess.run(['convert', os.path.join(OUT, 'tmp_scenes.png'), '-crop', '588x648+%d+156' % (56 + i * 610), '+repage', os.path.join(OUT, 'scene%d.png' % apt)], check=True)
+    os.remove(os.path.join(OUT, 'tmp_scenes.png'))
+
+
+cut_scenes(screens2.scenes2, (1, 2, 4))         # ванна, унитаз, посуда
+cut_scenes(screens2.scenes45, (5, 3))           # стиралка, носок
+cut_scenes(screens2.scenes6, (10,))             # колонка и ушанка
+cut_scenes(screens2.scenes7_10, (6, 7, 8), 0)   # фонтан, брандспойт, гребёнка
+cut_scenes(screens2.scenes7_10, (9,), 1)        # опрессовка
 note = [R(10, 10, 700, 430, '#FBFAF4', rx=6)] + [Ln(10, 10 + i * 34, 710, 10 + i * 34, '#C4D6EC', 1.5) for i in range(1, 13)]
 note += [Ln(10 + i * 34, 10, 10 + i * 34, 440, '#C4D6EC', 1.5) for i in range(1, 21)] + [Ln(90, 10, 90, 440, '#E28A8A', 2.5), R(290, 0, 140, 46, '#E9DFB8', opacity='.9')]
 out('note', G(''.join(note), filter='url(#dsh)'), 740, 470)
