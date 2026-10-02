@@ -46,6 +46,26 @@
   },
   "03": {
     "moves": [
+      "heel:right",
+      "head:right",
+      "head:right",
+      "head:up",
+      "head:up",
+      "head:up",
+      "head:right",
+      "heel:left",
+      "heel:down",
+      "heel:right",
+      "head:right",
+      "head:right",
+      "head:up",
+      "head:right",
+      "heel:right"
+    ],
+    "name": "Лишний выход"
+  },
+  "04": {
+    "moves": [
       "heel:up",
       "heel:left",
       "heel:up",
@@ -79,7 +99,7 @@
     ],
     "name": "Мыло"
   },
-  "04": {
+  "05": {
     "moves": [
       "head:right",
       "head:up",
@@ -107,55 +127,7 @@
     ],
     "name": "Резьба"
   },
-  "05": {
-    "moves": [
-      "heel:right",
-      "head:right",
-      "head:right",
-      "head:up",
-      "head:up",
-      "head:up",
-      "head:right",
-      "heel:left",
-      "heel:down",
-      "heel:right",
-      "head:right",
-      "head:right",
-      "head:up",
-      "head:right",
-      "heel:right"
-    ],
-    "name": "Лишний выход"
-  },
   "06": {
-    "moves": [
-      "head:left",
-      "heel:left",
-      "heel:up",
-      "heel:left",
-      "head:left",
-      "heel:down",
-      "heel:left",
-      "heel:up",
-      "heel:left",
-      "heel:left",
-      "heel:left",
-      "heel:left",
-      "heel:left",
-      "heel:down",
-      "heel:right",
-      "heel:right",
-      "heel:right",
-      "heel:right",
-      "heel:up",
-      "heel:up",
-      "heel:left",
-      "heel:down",
-      "head:right"
-    ],
-    "name": "Намертво"
-  },
-  "07": {
     "moves": [
       "head:right",
       "head:right",
@@ -180,7 +152,7 @@
     ],
     "name": "Дали напор"
   },
-  "08": {
+  "07": {
     "moves": [
       "head:up",
       "head:up",
@@ -204,7 +176,7 @@
     ],
     "name": "Брандспойт"
   },
-  "09": {
+  "08": {
     "moves": [
       "head:right",
       "head:right",
@@ -232,7 +204,7 @@
     ],
     "name": "Гребёнка"
   },
-  "10": {
+  "09": {
     "moves": [
       "head:right",
       "head:up",
@@ -260,5 +232,33 @@
       "head:down"
     ],
     "name": "Опрессовка"
+  },
+  "10": {
+    "moves": [
+      "head:left",
+      "heel:left",
+      "heel:up",
+      "heel:left",
+      "head:left",
+      "heel:down",
+      "heel:left",
+      "heel:up",
+      "heel:left",
+      "heel:left",
+      "heel:left",
+      "heel:left",
+      "heel:left",
+      "heel:down",
+      "heel:right",
+      "heel:right",
+      "heel:right",
+      "heel:right",
+      "heel:up",
+      "heel:up",
+      "heel:left",
+      "heel:down",
+      "head:right"
+    ],
+    "name": "Намертво"
   }
 }

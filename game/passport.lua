@@ -9,7 +9,7 @@ Passport.__index = Passport
 -- { вкладыш, квартира, открывается только после решения квартиры }
 local PAGES = {
   { "card01", 1 }, { "card01b", 1, true }, { "card01c", 1, true }, { "card03", 3 },
-  { "card04", 4 }, { "card05", 5 }, { "card06", 6 }, { "card07", 7 }, { "card08", 8 }, { "card09", 9 },
+  { "card04", 4 }, { "card05", 5 }, { "card06", 6 }, { "card07", 7 }, { "card08", 8 }, { "card10", 10 },
 }
 
 function Passport.new(app, after)
@@ -35,12 +35,14 @@ function Passport:draw()
   UI.setc(UI.INK); lg.setFont(F.l); lg.print("ПАСПОРТ ИЗДЕЛИЯ", 110, 60)
   lg.setFont(F.m)
   lg.printf("Гофра самоходная «Лапидус». Длина 2–5 клеток. Совместимость с фаянсом: ногами. Гарантия на героя не распространяется.", 110, 146, 1700)
-  local z, cols = 0.78, 4
+  -- до 10 страниц: пять в ряд, два ряда (масштаб под ширину)
+  local cols = 5
+  local z = math.min(0.78, (1800 - 60 - (cols - 1) * 16) / cols / 564)
   local cw, ch = 564 * z, 380 * z
   local gx = (1920 - cols * cw - (cols - 1) * 16) / 2
   for i, p in ipairs(self.pages) do
     local x = gx + ((i - 1) % cols) * (cw + 16)
-    local y = 222 + math.floor((i - 1) / cols) * (ch + 40)
+    local y = 222 + math.floor((i - 1) / cols) * (ch + 56)
     if p.img then
       local zz = math.min(z, ch / p.img:getHeight()) -- высокий вкладыш кв. 7 — в тот же ряд
       lg.setColor(1, 1, 1); lg.draw(p.img, x, y, 0, zz, zz)

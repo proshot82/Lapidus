@@ -320,7 +320,7 @@ def card(num, title, pan, h=356):
 
 
 def card6():
-    return card(6, 'Поднимает, но не носит', pan_crane)
+    return card(10, 'Поднимает, но не носит', pan_crane)
 
 
 def jet2(x1, y1, x2, y2, c):
@@ -409,7 +409,7 @@ def pan_lapjet(px, py):
 
 
 def card7():
-    return card(7, 'Струя толкает и держит', lambda px, py: pan_pressure(px, py) + pan_lapjet(px, py + 336), h=560)
+    return card(6, 'Струя толкает и держит', lambda px, py: pan_pressure(px, py) + pan_lapjet(px, py + 336), h=560)
 
 
 def drops(x, y, k=1.0):
@@ -478,15 +478,15 @@ def card1():
 
 
 def card3():
-    return card(3, 'Фаянс толкают только ноги', pan_soap)
+    return card(4, 'Фаянс толкают только ноги', pan_soap)
 
 
 def card4():
-    return card(4, 'Деталь падает и свинчивается', pan_parts)
+    return card(5, 'Деталь падает и свинчивается', pan_parts)
 
 
 def card5():
-    return card(5, 'Лишний выход — заглушить', pan_tee)
+    return card(3, 'Лишний выход — заглушить', pan_tee)
 
 
 def card_fall():
@@ -570,15 +570,15 @@ def pan_comb(px, py):
 
 
 def card9():
-    return card(9, 'Гребёнка', pan_comb)
+    return card(8, 'Гребёнка', pan_comb)
 
 
 def card8():
-    return card(8, 'Брандспойт', pan_hose)
+    return card(7, 'Брандспойт', pan_hose)
 
 
-CARDS = {'card01': card1, 'card01b': card_fall, 'card01c': card_drain, 'card03': card3, 'card04': card4, 'card05': card5,
-         'card06': card6, 'card07': card7, 'card08': card8, 'card09': card9}
+CARDS = {'card01': card1, 'card01b': card_fall, 'card01c': card_drain, 'card03': card5, 'card04': card3, 'card05': card4,
+         'card06': card7, 'card07': card8, 'card08': card9, 'card10': card6}  # ключ = номер квартиры после перестановки 02.10
 
 
 def passport2():

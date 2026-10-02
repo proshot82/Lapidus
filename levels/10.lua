@@ -1,72 +1,125 @@
--- СТАТУС (решение Lao 02.10): установлен как near-версия (слепой скептик build/l10v/VERIFY.md по o34; o44 = o34 с честной
--- разметкой W+Y и подсказкой-крючком). Долги: дверей второй половины нет (в ядре «конвейер» двери и прогулка — одно и то же:
--- второй ряд воздуха снимает ловушки с пути, один ряд даёт прогулку 9); стойкость 3–5; «ага» родственно кв. 4.
--- Направление с настоящим планом Б второй половины — build/l10a/o46 (угольник, унитаз на тумбе; ширина 7).
--- Кв. 10 «Опрессовка», кандидат o44 = o34 после слепого скептика (build/l10v/VERIFY.md): правило Y в rules10.lua (тройник
--- закрыл колодец, мойка сухая — видимо), правило T убрано, подсказка №1 переписана как крючок. Раскладка o34 без изменений.
--- Устройство — «боковой стояк с конвейером»: стояк в тупике нижнего тоннеля бьёт ВБОК (напор 1); деталь, упавшая в дыру
--- перед ним, струя отгоняет к мойке, и детали встают в порядке падения — первая упавшая ложится дальше всех. Тройник
--- (В–В, Н вверх) — единственная деталь, подходящая к стояку: прикрутившись, он закрывает дыру навсегда, а его верхний
--- выход бьёт из дыры вверх новым фонтаном — к нему сверху заходит голова Лапидуса; ногами он идёт по карнизу к унитазу.
--- Склад двухэтажный: полка (ряд 3; над правой частью — второй ряд, чтобы пройти над деталью) с тремя дырами в полу —
--- левая (6) в колодец над тоннелем, средняя (8) — лесенка, правая (10) — сброс на карниз; карниз (ряд 5) — он же дорога
--- Лапидуса к унитазу. Детали: тройник на полке у левой дыры (всегда «под рукой»), переходник (В–Н) на полке справа,
--- ниппель (Н–Н) на карнизе у лесенки. Ложные планы: «тройник на стояк первым» (детали потом не провести), «ниппель или
--- переходник — к унитазу» (резьба подходит; потом Лапидус нужен в двух местах), «переходник раньше ниппеля» (встанет
--- не по порядку — видно только когда тройник закроет дыру). Решение здесь не пишется.
--- Видимый проигрыш — общая линейка tools/vislib.lua + правила W (резьба в стену/глухой бок; 558 состояний) и Y (мойка
--- замурована тройником) из build/l10a/rules10.lua. Фильтры абляций/контролей — build/l10a/filt10.lua (только для инструментов).
-local okF, F = pcall(dofile, "build/l10a/filt10.lua")
-if not okF then F = {} end
-local okR, RL = pcall(dofile, "build/l10a/rules10.lua")
-if not okR then RL = { RULES = {}, visibleLoss = function() return false end } end
+-- Квартира 10 (бывшая 6) «Намертво» (28.09.2026), ядро «муфтой вперёд» (build/l6c/e_orientation/r9.lua, второй поиск ядра).
+-- Колонка висит под потолком на выступе (вход справа, В); стояк (вход слева, Н) — за двойным сливом.
+-- Одна деталь двойной слив не перейдёт; свинченная пара переходит, но только муфтой вперёд, а ниппель лежит
+-- «не с той стороны» муфты, и с пола его не поднять. Ложный план: ниппель в колонку, муфту в стояк.
+-- Итоги поиска и проверки скептиком — build/l6c/README.md. Решение здесь не пишется.
+
+-- Видимый проигрыш (vis_e ред. 4): свободная деталь (или свинченная пара) лежит на твёрдом там, откуда её уже
+-- не сдвинуть к стояку. Порядок деталей на полу и пару «не той стороной» не помечает — это «ага».
+local function visibleLoss(lvl, st)
+  local W = lvl.W
+  local srcRow, pushDir
+  for q, p in ipairs(lvl.pieces) do
+    if p.source then
+      srcRow = math.floor((p.start - 1) / W) + 1
+      for d = 1, 4 do if p.ports[d] then pushDir = ({ 3, 4, 1, 2 })[d] end end
+    end
+  end
+  local fixedAt = {}
+  for k = 1, #st.pos do if st.pos[k] ~= 0 and st.fixed[k] then fixedAt[st.pos[k]] = true end end
+  local function solid(c) return c == 0 or lvl.cell[c] == 1 or fixedAt[c] end
+  -- клетка, куда может встать толкающий конец: не твёрдая, не слив и есть сосед для шеи (кроме самой детали)
+  local function pusherOK(t, inSet)
+    if solid(t) or lvl.cell[t] == 2 then return false end
+    for d = 1, 4 do local u = lvl.nb[t][d]; if u ~= 0 and not inSet[u] and not solid(u) and lvl.cell[u] ~= 2 then return true end end
+    return false
+  end
+  local asm = {}
+  for q, p in ipairs(lvl.pieces) do
+    local c = st.pos[q]
+    if p.movable and c ~= 0 and not st.fixed[q] then
+      local a = asm[st.asm[q]] or {}; asm[st.asm[q]] = a; a[#a + 1] = c
+    end
+  end
+  for _, cells in pairs(asm) do
+    local inSet = {}
+    for _, c in ipairs(cells) do inSet[c] = true end
+    local onHard, allRow, below, overPit, canUp = false, true, false, false, false
+    local canL, canR = true, true
+    local pushL, pushR = false, false
+    for _, c in ipairs(cells) do
+      local row = math.floor((c - 1) / W) + 1
+      local b = lvl.nb[c][3]
+      if not inSet[b] then
+        if solid(b) then onHard = true; if row > srcRow then below = true end
+        elseif lvl.cell[b] == 2 then overPit = true
+        else canUp = true end
+      end
+      if row ~= srcRow then allRow = false end
+      local l, r = lvl.nb[c][4], lvl.nb[c][2]
+      if not inSet[r] then if solid(r) then canR = false end; if pusherOK(r, inSet) then pushL = true end end
+      if not inSet[l] then if solid(l) then canL = false end; if pusherOK(l, inSet) then pushR = true end end
+    end
+    if onHard then
+      if below then return true end
+      local movable = canUp or (canR and pushR) or (canL and pushL)
+      if not movable then return true end
+      if allRow and pushDir and (pushDir == 2 or pushDir == 4) then
+        if pushDir == 2 and not pushR then return true end
+        if pushDir == 4 and not pushL then return true end
+      end
+    end
+  end
+  return false
+end
+
+-- Абляции РОЛИ приёмов (фильтры ходов, как в levels/05.lua)
+-- «Пара не держит деталь над сливом»: запрещено состояние, где незакреплённая деталь висит над сливом
+-- (держась за свинченную с ней соседку).
+local function noBridge(lvl, st, ns)
+  for q, p in ipairs(lvl.pieces) do
+    local c = ns.pos[q]
+    if p.movable and c ~= 0 and not ns.fixed[q] then
+      local b = lvl.nb[c][3]
+      if b ~= 0 and lvl.cell[b] == 2 then return false end
+    end
+  end
+  return true
+end
+-- «Ниппель не переходит муфту поверху»: запрещено состояние, где свободный ниппель стоит в одном столбце с
+-- незакреплённой муфтой выше неё (перенос через муфту — роль приёма «ниппель — за муфту»).
+local function noOver(lvl, st, ns)
+  local nq, cq
+  for q, p in ipairs(lvl.pieces) do if p.tag == "nip" then nq = q elseif p.tag == "cpl" then cq = q end end
+  local n, c = ns.pos[nq], ns.pos[cq]
+  if n == 0 or c == 0 or ns.fixed[nq] or ns.fixed[cq] then return true end
+  local W = lvl.W
+  if (n - 1) % W == (c - 1) % W and n < c then return false end
+  return true
+end
+
 return {
-  id = 10, flat = 10, name = "Опрессовка",
-  length = { 2, 6 }, pressure = 1, tile = "mustard",
-  target = { moves = { 15, 40 }, states = 3000000, dead = 60, fb = 4 },
-  visibleLoss = RL.visibleLoss, visRules = RL.RULES,
+  visibleLoss = visibleLoss,
+  id = 10, flat = 10, name = "Намертво",
+  length = { 3, 5 }, pressure = 0, tile = "mustard",
+  target = { moves = { 15, 40 }, states = 1000000, dead = 50, fb = 3 },
   grid = {
-    "#############",
-    "#######...###",
-    "#####.....###",
-    "#####.#.#.###",
-    "#####......##",
-    "#####.#######",
-    "##.....######",
-    "#############",
+    "###########",
+    "###.......#",
+    "#.........#",
+    "#.........#",
+    "#######~~##",
   },
   objects = {
-    { kind = "source", at = { 7, 7 }, ports = { left = "N" } },
-    { kind = "fixture", what = "sink", at = { 3, 7 }, ports = { right = "V" } },
-    { kind = "fixture", what = "toilet", at = { 11, 5 }, ports = { left = "V" } },
-    { kind = "fitting", what = "nipple", tag = "nip", at = { 9, 5 }, ports = { left = "N", right = "N" } },
-    { kind = "fitting", what = "tee", tag = "tee", at = { 7, 3 }, ports = { right = "V", left = "V", up = "N" } },
-    { kind = "fitting", what = "adapter", tag = "adp", at = { 9, 3 }, ports = { left = "V", right = "N" } },
-    { kind = "lapidus", cells = { { 6, 5 }, { 7, 5 } }, head = 2 },
+    { kind = "source", at = { 10, 4 }, ports = { left = "N" } },
+    { kind = "fixture", what = "heater", at = { 4, 2 }, ports = { right = "V" } },
+    { kind = "fitting", what = "coupling", tag = "cpl", at = { 4, 4 }, ports = { left = "V", right = "V" } },
+    { kind = "fitting", what = "nipple", tag = "nip", at = { 7, 3 }, ports = { left = "N", right = "N" } },
+    { kind = "lapidus", cells = { { 7, 4 }, { 8, 4 }, { 9, 4 } }, head = 1 },
   },
   ablations = {
-    { name = "без переходника", remove = "adp" },
     { name = "без ниппеля", remove = "nip" },
-    { name = "без напора (конвейера нет)", pressure = 0 },
-  },
-  -- Контроли (должны оставаться решаемыми): запрет каждой ошибки плана — уровень решаем, ловушка снята.
-  controls = {
-    { name = "ниппель не к унитазу", filter = F.notAt and F.notAt("nip", 10, 5) },
-    { name = "переходник не к унитазу", filter = F.notAt and F.notAt("adp", 10, 5) },
-    { name = "переходник не раньше ниппеля", filter = F.notBefore and F.notBefore("adp", "nip") },
-    { name = "тройник не раньше переходника", filter = F.notBefore and F.notBefore("tee", "adp") },
-    -- приёмы, без которых решение есть (решаемы — это не абляции): деталь на теле, деталь в дыре лесенки, ход по тоннелю
-    { name = "тело не держит деталь", filter = F.noCarry },
-    { name = "в дыру лесенки деталь не кладут", filter = F.noPieceAt and F.noPieceAt(8, 4) },
-    { name = "Лапидус не ходит по тоннелю", filter = F.noBodyRow and F.noBodyRow(7) },
+    { name = "без муфты", remove = "cpl" },
+    { name = "пара не держит муфту над сливом", filter = noBridge },
+    { name = "ниппель не переходит муфту поверху", filter = noOver },
   },
   texts = {
-    request = "Опрессовка в четверг. Стояк в подвале бьёт в стенку, мойка сухая, унитаз поставили на тумбу — говорят, так солиднее. Комиссия сказала: ни капли.",
-    card = nil, -- новых правил нет (§6 «Ничего»)
+    request = "Колонка не греет. Хожу дома в ушанке. Под ушанкой — вторая ушанка.",
+    card = "card10", -- вкладыш «6 · Поднимает, но не носит» на экране заявки
     hints = {
-      "Стояк в подвале бьёт вбок, а не вверх. Прежде чем что-то туда ронять, подумай, куда струя это унесёт — и кто из деталей рискует закрыть дыру раньше времени.",
-      "Ваш звонок очень важен для нас. Уточните, что именно вы прикрутили к унитазу и кто теперь будет стоять у мойки.",
-      "Мастер выехал. Говорит: с полки в подвал ведёт одна дыра, на карниз — другая, а третья — лесенка; кто упал первым, тот и у мойки.",
+      "Ниппель — не в колонку, а за спину муфте: через двойной слив они пройдут только парой, муфтой вперёд.",
+      "Ваш звонок очень важен для нас. Проверяем, той ли стороной у вас свинчено.",
+      "Мастер выехал. Шапку он снимает, не наклоняясь.",
     },
   },
 }

@@ -369,8 +369,12 @@ function Play:drawRequest()
   lg.push(); lg.translate(card and 600 or 960, 520); lg.rotate(-0.035)
   local note = Board.img("note")
   lg.setColor(1, 1, 1); if note then lg.draw(note, -370, -235) end
-  lg.setFont(F.handL); setc(BLUE)
+  setc(BLUE)
   local text = (self.def.texts and self.def.texts.request) or ""
+  -- длинная заявка не должна вылезать за записку: шрифт подбирается по числу строк (не больше 5 строк по 560 px)
+  local font = F.handL
+  if select(2, F.handL:getWrap(text, 560)) and #select(2, F.handL:getWrap(text, 560)) > 4 then font = F.hand end
+  lg.setFont(font)
   lg.printf(text, -250, -150, 560, "left")
   lg.setFont(F.hand); lg.printf("— жилец кв. " .. tostring(self.def.flat or self.index), -330, 150, 640, "right")
   lg.pop()

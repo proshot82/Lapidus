@@ -48,4 +48,4 @@ for lv in screens2.L:
 for cname, fn in screens2.CARDS.items():  # вкладыши новых правил на экране заявки (card01b/c — страницы паспорта кв. 1)
     if int(cname[4:6]) in IDS:
         body, extra = fn()
-        out(cname, body, 564, 584 if cname == 'card07' else 380, extra)
+        out(cname, body, 564, 584 if cname == 'card06' else 380, extra)
