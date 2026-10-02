@@ -1,0 +1,25 @@
+-- l2j/f4: «Не той стороной свинтил», доводка f3: стояк отодвинут от края (ниппель слева от муфты остаётся подвижным —
+-- ошибка скрыта), ванна на кронштейне без тумбы, путь ног единственный.
+return {
+  id = 2, flat = 2, name = "Не той стороной",
+  length = { 2, 4 }, pressure = 0, tile = "blue",
+  target = { moves = { 15, 40 }, states = 50000, dead = 25, fb = 0 },
+  grid = {
+    "#########",
+    "#.......#",
+    "#.......#",
+    "#.......#",
+    "#..##...#",
+    "#.......#",
+    "#########",
+  },
+  objects = {
+    { kind = "source", at = { 2, 6 }, ports = { right = "N" } },
+    { kind = "fixture", what = "bath", at = { 8, 5 }, ports = { left = "V" } },
+    { kind = "fitting", what = "coupling", tag = "cpl", at = { 5, 6 }, ports = { left = "V", right = "V" } },
+    { kind = "fitting", what = "nipple", tag = "nip", at = { 4, 4 }, ports = { left = "N", right = "N" } },
+    { kind = "lapidus", cells = { { 5, 4 }, { 5, 3 } }, head = 2 },
+  },
+  ablations = { { name = "без муфты", remove = "cpl" }, { name = "без ниппеля", remove = "nip" } },
+  texts = { request = "", hints = { "", "", "" } },
+}
