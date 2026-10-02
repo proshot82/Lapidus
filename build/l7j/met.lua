@@ -39,7 +39,7 @@ function M.eval(def, cap)
   local h1, h2 = 0, 0
   for k = 1, #m.path - 1 do
     local s = m.path[k]
-    for e = ES[s - 1], ES[s] - 1 do if m.hidden[E[e]] then if (k - 1) < (#m.path - 1) / 2 then h1 = h1 + 1 else h2 = h2 + 1 end break end end
+    for e = ES[s - 1], ES[s] - 1 do if m.hidden[E[e]] then res.doorSteps = (res.doorSteps or "") .. (k - 1) .. " "; if (k - 1) < (#m.path - 1) / 2 then h1 = h1 + 1 else h2 = h2 + 1 end break end end
   end
   res.d1, res.d2 = h1, h2
   local streak, maxs, ev, stepOn = 0, 0, 0, 0
