@@ -1,162 +1,70 @@
--- СТАТУС (решение Lao 02.10): установлен как near-версия (слепой скептик build/l9v2/VERIFY.md). Долги: вторая ошибка плана
--- в первой половине; гребёнка (M10) не несущая — уровень держат «фонтан держит / вдавить / стопка» (контроль «один выход
--- вверх» решаем за 18); честная доля 30 % по букве и 18–19 % по смыслу; риск на пути 1,5 % ходов. Полные ворота — кв. 10.
--- Кв. 9 «Гребёнка», кандидат g18 (раунд 2, 02.10.2026) — итог раунда 2 по вердикту слепого скептика build/l9v/VERIFY.md
--- (build/l9a/REPORT.md, раздел «Раунд 2»; журнал — LOG.md).
--- Устройство: гребёнка — две клетки трубы на полу с выходами вверх (два фонтана при напоре 2) и вправо; стояк под ней
--- через зазор, в зазор из подвала входит ниппель — «дали воду». Лапидус стартует в подвале у ниппеля: «собрать всухую» —
--- осознанный поход на карниз до воды, не первый ход. На карнизе (высота второй клетки струи) подряд тройник и заглушка;
--- под краем карниза — глухой отвод (Н вправо): тройник, схваченный сухим ближним выходом, смотрит боковой резьбой в него,
--- а не в стену. Над столбами глухой потолок; ванна слева на уровне верхней «губы» (ряд 3); справа от второго гребня —
--- губа над глухой стеной, за ней шахта на площадку между трубами (под ней отвод Н вверх), дальше труба и унитаз.
--- «Ага» (M10 + M9 + M5): тройник нужно поднять на губу выше гребней — его поднимает второй фонтан, когда под него подводят
--- заглушку: заглушку придерживают в ближнем столбе и толкают вбок, стопка едет лифтом. По дороге две ловушки плана:
--- придержанную заглушку вдавить до конца («заткнуть первый фонтан» — скрыто досягаемостью ванны) и собрать всухую (сухая
--- гребёнка хватает тройник намертво). Ближний фонтан — для головы Лапидуса. Решение здесь не пишется.
--- Поле 14×10 (ряд 2 пустой), длина 3–6 (§6), напор 2, деталей 3. Видимый проигрыш — общая линейка tools/vislib.lua плюс
--- правила §7 ниже: «резьба явно никуда не ведёт» (W), «порт сети занят навсегда» (T), «лежит там, где нечем поднять»
--- (пол подвала), «не с той стороны» (S: деталь на однорядном карнизе, Лапидус целиком за ней; прецедент levels/06.lua).
-
--- Фильтры абляций и контролей нужны только инструментам (luajit из корня репозитория); в собранную игру build/ не входит.
-local okF, F = pcall(dofile, "build/l9a/filt.lua")
-if not okF then F = {} end
-local okF2, F2 = pcall(dofile, "build/l9a/filt2.lua")
-if not okF2 then F2 = {} end
+-- Квартира 8 «Гусеница» — финалист раунда l8j (q4, 02.10.2026), слепой скептик: ядро принято, повторы и карман убраны в раунде q.
+-- Сменила напорную «Гребёнка» (build/l9a/installed_g18_level8.lua, резерв). Источник: build/l8j/final.lua.
+-- Квартира 8 «Гусеница» — финалист раунда l8j (02.10.2026), раунд q: раскладка q4 (прежний финалист — final_p2.lua). Сменяет напорную «Гребёнку».
+-- Проверка: luajit build/l6b/check.lua build/l8j/final.lua; отчёт — build/l8j/REPORT.md. Решение здесь не пишется.
+-- Видимый проигрыш: общая линейка tools/vislib.lua + build/l8j/vis.lua (washOk: мыло уходит в слив по замыслу).
+local okV, vis = pcall(dofile, "build/l8j/vis.lua")
 local R = require("core.rules")
-
--- Правила §7 уровня (мерка новичка), по отдельности — для инструментов (build/l9a/rules9.lua проверяет, что ни одно
--- не помечает живых состояний). visibleLoss — их объединение.
-local RULES = {}
-local function occupancy(st)
-  local occ = {}
-  for q = 1, #st.pos do if st.pos[q] ~= 0 then occ[st.pos[q]] = q end end
-  return occ
-end
--- W: у закреплённой детали резьба смотрит в стену или в глухой бок закреплённого — вечная течь, как только сеть намокнет
-RULES.W = function(lvl, st)
-  local occ, P = occupancy(st), lvl.pieces
-  for q, p in ipairs(P) do
-    local c = st.pos[q]
-    if c ~= 0 and st.fixed[q] and p.movable then
-      for d = 1, 4 do
-        if p.ports[d] then
-          local t = lvl.nb[c][d]
-          if t == 0 or lvl.cell[t] == R.WALL then return true end
-          local r = occ[t]
-          if r and st.fixed[r] and not R.match(p.ports[d], P[r].ports[R.OPP[d]]) then return true end
-        end
-      end
-    end
-  end
+local function tagOf(lvl, tag) for q, p in ipairs(lvl.pieces) do if p.tag == tag then return q end end end
+local function onBody(st, c)
+  for _, b in ipairs(st.body) do if b == c then return true end end
   return false
 end
--- T: порт мокрой сети (гребёнка, труба к прибору) занят навсегда закреплённой деталью без ответной резьбы
-RULES.T = function(lvl, st)
-  local occ, P = occupancy(st), lvl.pieces
-  local w = R.water(lvl, st, occ, true)
-  for q, p in ipairs(P) do
-    local c = st.pos[q]
-    if c ~= 0 and not p.movable and not p.fixture and w.wet[q] then
-      for d = 1, 4 do
-        if p.ports[d] then
-          local t = lvl.nb[c][d]
-          local r = t ~= 0 and occ[t] or nil
-          if r and st.fixed[r] and P[r].movable and not R.match(p.ports[d], P[r].ports[R.OPP[d]]) then return true end
-        end
-      end
-    end
-  end
-  return false
+-- «везти на спине нельзя»: запрещён ход, который сдвигает муфту вбок, пока она лежит на Лапидусе
+local function noConveyor(lvl, st, ns)
+  local q = tagOf(lvl, "cpl")
+  local a, b = st.pos[q], ns.pos[q]
+  if a == 0 or b == 0 or st.fixed[q] then return true end
+  local ax, ay = R.xy(lvl, a)
+  local bx, by = R.xy(lvl, b)
+  if ax ~= bx and onBody(st, lvl.nb[a][R.DOWN]) then return false end
+  return true
 end
--- Пол подвала: деталь с карниза, упавшая в подвал, лежит там, где её нечем поднять (§7; прецедент levels/07.lua)
-RULES.floor = function(lvl, st)
-  for q, p in ipairs(lvl.pieces) do
-    local c = st.pos[q]
-    if c ~= 0 and p.movable and not st.fixed[q] and p.tag ~= "nip" then
-      local _, y = R.xy(lvl, c)
-      if y == lvl.H - 2 then return true end
-    end
-  end
-  return false
+-- «мимо стояка — только верхом»: муфта не опускается ниже ряда 4 правее старта
+local function noDip(lvl, st, ns)
+  local q = tagOf(lvl, "cpl")
+  local c = ns.pos[q]
+  if c == 0 or ns.fixed[q] then return true end
+  local x, y = R.xy(lvl, c)
+  return not (x >= 5 and y >= 5)
 end
--- S: свободная нужная деталь на однорядном карнизе (ряд 5, x ≤ 6), а Лапидус целиком за ней (правее/выше), не в жёлобе
--- и не в подвале — обойти деталь нельзя, толкать её можно только к жёлобу (сокобан; прецедент levels/06.lua)
-RULES.S = function(lvl, st)
-  for q, p in ipairs(lvl.pieces) do
-    local c = st.pos[q]
-    if c ~= 0 and p.movable and not st.fixed[q] and p.tag ~= "nip" then
-      local x, y = R.xy(lvl, c)
-      if y == 5 and x <= 6 then
-        local leftSide = false
-        for _, b in ipairs(st.body) do
-          local bx, by = R.xy(lvl, b)
-          if (by == 5 and bx < x) or (bx == 2 and by >= 6) or by == lvl.H - 2 then leftSide = true break end
-        end
-        if not leftSide then return true end
-      end
-    end
-  end
-  return false
-end
-local function visibleLoss(lvl, st)
-  for _, f in pairs(RULES) do if f(lvl, st) then return true end end
-  return false
-end
-
 return {
-  id = 8, flat = 8, name = "Гребёнка",
-  length = { 3, 6 }, pressure = 2, tile = "mustard",
-  target = { moves = { 15, 40 }, states = 1000000, dead = 60, fb = 4 },
-  visibleLoss = visibleLoss, visRules = RULES,
+  visibleLoss = okV and vis or nil,
+  washOk = true,
+  mustLift = { "cpl" },
+  id = 8, flat = 8, name = "Гусеница",
+  length = { 2, 5 }, pressure = 0, tile = "blue",
+  target = { moves = { 15, 40 }, states = 100000, dead = 25, fb = 2 },
   grid = {
-    "##############",
-    "##############",
-    "###.......####",
-    "#####...#.####",
-    "#.......#.####",
-    "#.###...#.####",
-    "#.####......##",
-    "#......##.####",
-    "######.#######",
-    "##############",
+    "##########",
+    "########.#",
+    "######.#.#",
+    "##.......#",
+    "#........#",
+    "####....##",
+    "####.#####",
+    "####~#####",
   },
   objects = {
-    { kind = "source", at = { 7, 9 }, ports = { up = "V" } },
-    { kind = "pipe", what = "comb", tag = "m1", at = { 7, 7 }, ports = { down = "V", up = "N", right = "N" } },
-    { kind = "pipe", what = "comb", tag = "m2", at = { 8, 7 }, ports = { left = "V", up = "N", right = "N" } },
-    { kind = "pipe", what = "pipe", tag = "p1", at = { 9, 7 }, ports = { left = "V", right = "N" } },
-    { kind = "stub", tag = "stubT", at = { 10, 8 }, ports = { up = "N" } },
-    { kind = "pipe", what = "pipe", tag = "p2", at = { 11, 7 }, ports = { left = "N", right = "N" } },
-    { kind = "fixture", what = "toilet", at = { 12, 7 }, ports = { left = "V" } },
-    { kind = "fixture", what = "bath", at = { 4, 3 }, ports = { right = "V" } },
-    { kind = "stub", tag = "stubL", at = { 6, 6 }, ports = { right = "N" } },
-    { kind = "fitting", what = "nipple", tag = "nip", at = { 5, 8 }, ports = { up = "N", down = "N" } },
-    { kind = "fitting", what = "plug", tag = "plug", at = { 5, 5 }, ports = { down = "V" } },
-    { kind = "fitting", what = "tee", tag = "tee", at = { 6, 5 }, ports = { down = "V", left = "V", right = "V" } },
-    { kind = "lapidus", cells = { { 2, 6 }, { 2, 7 }, { 2, 8 }, { 3, 8 }, { 4, 8 } }, head = 5 },
+    { kind = "fixture", what = "heater", at = { 9, 2 }, ports = { down = "N" } },
+    { kind = "source", at = { 7, 3 }, ports = { down = "N" } },
+    { kind = "fitting", what = "coupling", tag = "cpl", at = { 4, 4 }, ports = { up = "V", down = "V" } },
+    { kind = "porcelain", tag = "soap", at = { 4, 5 } },
+    { kind = "lapidus", cells = { { 3, 5 }, { 2, 5 } }, head = 2 },
   },
   ablations = {
-    { name = "без заглушки", remove = "plug" },
-    { name = "без тройника", remove = "tee" },
-    { name = "фонтан не держит деталь", filter = F.noHover },
-    { name = "деталь не вдавить сверху", filter = F.noPushDown },
-    { name = "стопки нет: деталь не стоит на детали в столбе", filter = F2.noStack },
-  },
-  controls = {
-    { name = "детали не трогают всухую", filter = F.dryHandsOff },
-    { name = "заглушка не в ближний фонтан", filter = F.notAt and F.notAt("plug", 7, 6) },
-    { name = "тройник не в фонтаны", filter = F.notAt and function(lvl, st, ns) return F.notAt("tee", 7, 6)(lvl, st, ns) and F.notAt("tee", 8, 6)(lvl, st, ns) end },
-    -- не абляции (решаемы, см. REPORT «Раунд 2»): «у гребёнки один выход вверх» (Лапидус сам поднимает тройник из столба,
-    -- тело — мост над вторым гребнем), «с гребня не сдвинуть вбок», «деталь не поднимает другую»
-    { name = "у гребёнки один выход вверх (решаем — несущность M10 не доказана)", mutate = F2.oneOutlet },
-  },
+    { name = "без мыла", remove = "soap" },
+    { name = "без муфты", remove = "cpl" },
+    { name = "везти на спине нельзя", filter = noConveyor },
+    { name = "мимо стояка только верхом", filter = noDip },
+      },
   texts = {
-    request = "Поставили гребёнку на две точки. Мастер сказал «теперь всем хватит», открыл стояк и ушёл. Хватило полу.",
-    card = "card08", -- вкладыш «гребёнка: намокла — каждый открытый выход бьёт; фонтан держит и везёт; сухая — хватает»
+    request = "Колонку повесили под самый потолок, муфту оставили на мыле и ушли. Донести её некому: мастер ничего не носит.",
+    card = "card10", -- вкладыш «Поднимает, но не носит»: здесь он впервые нужен (02.10, перенесён из кв. 10)
     hints = {
-      "Сухая гребёнка хватает первую же деталь намертво — сначала дай воду. Тройнику надо выше, чем держит фонтан: что лежит на фонтане, поднимется, если под него подвести ещё одну деталь.",
-      "Ваш звонок очень важен для нас. Уточните, какой из двух фонтанов вы заткнули — и которым концом собирались входить в ванну.",
-      "Мастер выехал. Говорит: заглушку по дороге не ставить, а придержать и подтолкнуть вбок — она поднимет тройник; а заглушка в первый попавшийся фонтан — как ключ в первую попавшуюся дверь.",
+      "Ничего не носит — но возит: муфта едет на спине, если толкать её своим же концом и подстилать под неё себя. Под стояком — только низом.",
+      "Ваш звонок очень важен для нас. Уточняем, что у вас висит над дорогой.",
+      "Мастер выехал. Говорит: что проехало под стояком поверху, то к стояку и прикипело.",
     },
   },
 }

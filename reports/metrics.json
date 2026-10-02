@@ -345,6 +345,55 @@
   "08": {
     "ablations": [
       {
+        "name": "без мыла",
+        "solvable": false
+      },
+      {
+        "name": "без муфты",
+        "solvable": false
+      },
+      {
+        "name": "везти на спине нельзя",
+        "solvable": false
+      },
+      {
+        "name": "мимо стояка только верхом",
+        "solvable": false
+      }
+    ],
+    "corridor": "широкий коридор решений (8)",
+    "deadPct": 83.2,
+    "falseBranches": 13,
+    "grid": "10×8",
+    "id": 8,
+    "length": [
+      2,
+      5
+    ],
+    "minMoves": 29,
+    "monkey": 0,
+    "name": "Гусеница",
+    "note": "«стопка-лифт» (g18, 02.10, build/l9a; решение Lao: near-версия): 23 хода, честно 30 %; долги — вторая ошибка плана в 1-й половине, гребёнка не несущая",
+    "pressure": 0,
+    "shortest": 120,
+    "shortestWidth": 8,
+    "solvable": true,
+    "states": 8134,
+    "target": {
+      "dead": 25,
+      "fb": 2,
+      "moves": [
+        15,
+        40
+      ],
+      "states": 100000
+    },
+    "unstable": 0,
+    "winStates": 1
+  },
+  "09": {
+    "ablations": [
+      {
         "name": "без заглушки",
         "solvable": false
       },
@@ -353,92 +402,55 @@
         "solvable": false
       },
       {
-        "name": "фонтан не держит деталь",
+        "name": "тройник не поднимают",
         "solvable": false
       },
       {
-        "name": "деталь не вдавить сверху",
+        "name": "заглушку не поднимают",
         "solvable": false
       },
       {
-        "name": "стопки нет: деталь не стоит на детали в столбе",
+        "name": "тройник сразу на стояке",
+        "solvable": false
+      },
+      {
+        "name": "заглушка сразу на тройнике",
+        "solvable": false
+      },
+      {
+        "name": "без лаза",
         "solvable": false
       }
     ],
-    "corridor": "мало ложных веток; выигрышных конфигураций 3",
-    "deadPct": 90,
-    "falseBranches": 1,
-    "grid": "14×10",
-    "id": 8,
+    "corridor": "ok",
+    "deadPct": 80.9,
+    "falseBranches": 12,
+    "grid": "9×9",
+    "id": 9,
     "length": [
       3,
       6
     ],
-    "minMoves": 23,
-    "monkey": 0.02,
-    "name": "Гребёнка",
-    "note": "«стопка-лифт» (g18, 02.10, build/l9a; решение Lao: near-версия): 23 хода, честно 30 %; долги — вторая ошибка плана в 1-й половине, гребёнка не несущая",
-    "pressure": 2,
+    "minMoves": 32,
+    "monkey": 0,
+    "name": "Домкрат",
+    "note": "«боковой стояк-конвейер» (o44, 02.10, build/l10a; решение Lao: near-версия): 24 хода, честно 41 %; долги — двери 2-й половины, стойкость 3–5, прогулка 9",
+    "pressure": 0,
     "shortest": 4,
     "shortestWidth": 2,
     "solvable": true,
-    "states": 99548,
+    "states": 26288,
     "target": {
-      "dead": 60,
-      "fb": 4,
+      "dead": 40,
+      "fb": 2,
       "moves": [
         15,
-        40
+        45
       ],
-      "states": 1000000
+      "states": 300000
     },
     "unstable": 0,
-    "winStates": 3
-  },
-  "09": {
-    "ablations": [
-      {
-        "name": "без переходника",
-        "solvable": false
-      },
-      {
-        "name": "без ниппеля",
-        "solvable": false
-      },
-      {
-        "name": "без напора (конвейера нет)",
-        "solvable": false
-      }
-    ],
-    "corridor": "выигрышных конфигураций 2",
-    "deadPct": 79.2,
-    "falseBranches": 5,
-    "grid": "13×8",
-    "id": 9,
-    "length": [
-      2,
-      6
-    ],
-    "minMoves": 24,
-    "monkey": 0,
-    "name": "Опрессовка",
-    "note": "«боковой стояк-конвейер» (o44, 02.10, build/l10a; решение Lao: near-версия): 24 хода, честно 41 %; долги — двери 2-й половины, стойкость 3–5, прогулка 9",
-    "pressure": 1,
-    "shortest": 3,
-    "shortestWidth": 3,
-    "solvable": true,
-    "states": 49332,
-    "target": {
-      "dead": 60,
-      "fb": 4,
-      "moves": [
-        15,
-        40
-      ],
-      "states": 3000000
-    },
-    "unstable": 0,
-    "winStates": 2
+    "winStates": 1
   },
   "10": {
     "ablations": [
