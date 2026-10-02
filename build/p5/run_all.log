@@ -1,10 +1,10 @@
 01 «Не той стороной»: states=211 solvable=true minMoves=15 deadPct=38.4 falseBranches=0 winStates=1 unstable=0 time=0.0s | коридор: мало ложных веток
-02 «Вешалка»: states=1116 solvable=true minMoves=19 deadPct=53.4 falseBranches=2 winStates=1 unstable=0 time=0.0s | коридор: абляция «без крюка hook» решаема
-03 «Лишний выход»: states=1682 solvable=true minMoves=15 deadPct=41.7 falseBranches=1 winStates=1 unstable=0 time=0.1s | коридор: ok
+02 «Вешалка»: states=1116 solvable=true minMoves=19 deadPct=53.4 falseBranches=2 winStates=1 unstable=0 time=0.1s | коридор: абляция «без крюка hook» решаема
+03 «Лишний выход»: states=1682 solvable=true minMoves=15 deadPct=41.7 falseBranches=1 winStates=1 unstable=0 time=0.2s | коридор: ok
 04 «Мыло»: states=4034 solvable=true minMoves=30 deadPct=82.3 falseBranches=6 winStates=1 unstable=0 time=0.2s | коридор: ok
-05 «Резьба»: states=9539 solvable=true minMoves=23 deadPct=79.6 falseBranches=1 winStates=1 unstable=0 time=0.7s | коридор: мало ложных веток; широкий коридор решений (7)
+05 «Резьба»: states=9539 solvable=true minMoves=23 deadPct=79.6 falseBranches=1 winStates=1 unstable=0 time=0.8s | коридор: мало ложных веток; широкий коридор решений (7)
 06 «Звено»: states=3717 solvable=true minMoves=29 deadPct=61.7 falseBranches=2 winStates=1 unstable=0 time=0.2s | коридор: ok
-07 «Брандспойт»: states=764 solvable=true minMoves=19 deadPct=0.0 falseBranches=0 winStates=1 unstable=0 time=0.1s | коридор: мало тупиков; мало ложных веток
-08 «Гусеница»: states=8134 solvable=true minMoves=29 deadPct=83.2 falseBranches=13 winStates=1 unstable=0 time=0.5s | коридор: широкий коридор решений (8)
-09 «Домкрат»: states=26288 solvable=true minMoves=32 deadPct=80.9 falseBranches=12 winStates=1 unstable=0 time=1.6s | коридор: ok
-10 «Намертво»: states=30969 solvable=true minMoves=23 deadPct=86.2 falseBranches=10 winStates=1 unstable=0 time=2.3s | коридор: ok
+07 «Зазор»: states=14036 solvable=true minMoves=28 deadPct=57.9 falseBranches=1 winStates=1 unstable=0 time=0.9s | коридор: мало ложных веток; широкий коридор решений (4)
+08 «Гусеница»: states=8134 solvable=true minMoves=29 deadPct=83.2 falseBranches=13 winStates=1 unstable=0 time=0.4s | коридор: широкий коридор решений (8)
+09 «Домкрат»: states=26288 solvable=true minMoves=32 deadPct=80.9 falseBranches=12 winStates=1 unstable=0 time=1.8s | коридор: ok
+10 «Намертво»: states=30969 solvable=true minMoves=23 deadPct=86.2 falseBranches=10 winStates=1 unstable=0 time=2.5s | коридор: ok

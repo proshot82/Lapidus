@@ -300,44 +300,48 @@
   "07": {
     "ablations": [
       {
-        "name": "без пробки",
+        "name": "без переходника",
         "solvable": false
       },
       {
-        "name": "брандспойт не бьёт",
+        "name": "без угольника",
         "solvable": false
       },
       {
-        "name": "ванна не крюк",
+        "name": "угольник с самого начала в стояке",
+        "solvable": false
+      },
+      {
+        "name": "угольник с самого начала под мойкой",
         "solvable": false
       }
     ],
-    "corridor": "мало тупиков; мало ложных веток",
-    "deadPct": 0,
-    "falseBranches": 0,
-    "grid": "13×9",
+    "corridor": "мало ложных веток; широкий коридор решений (4)",
+    "deadPct": 57.9,
+    "falseBranches": 1,
+    "grid": "11×9",
     "id": 7,
     "length": [
       2,
       5
     ],
-    "minMoves": 19,
+    "minMoves": 28,
     "monkey": 0,
-    "name": "Брандспойт",
+    "name": "Зазор",
     "note": "ввод брандспойта (b6, 01.10, build/l8a; решение Lao вариант А): 19 ходов, тупиков нет вовсе (одна пробка, один подходящий выход) — мало тупиков и ложных веток по замыслу; кандидат на полные ворота ищется в 16×10 (build/l8b)",
-    "pressure": 2,
-    "shortest": 1,
-    "shortestWidth": 1,
+    "pressure": 0,
+    "shortest": 18,
+    "shortestWidth": 4,
     "solvable": true,
-    "states": 764,
+    "states": 14036,
     "target": {
-      "dead": 55,
-      "fb": 3,
+      "dead": 40,
+      "fb": 2,
       "moves": [
         15,
         40
       ],
-      "states": 50000
+      "states": 100000
     },
     "unstable": 0,
     "winStates": 1
