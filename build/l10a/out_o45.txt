@@ -1,0 +1,2 @@
+warning: initial layout is not at rest
+НЕРЕШАЕМ (состояний 67893, 8 с)

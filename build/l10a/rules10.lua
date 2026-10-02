@@ -1,6 +1,6 @@
 -- build/l10a/rules10.lua — правила видимого проигрыша §7 для кандидатов кв. 10 (мерка новичка, только добавляют к
 -- общей линейке tools/vislib.lua; по образцу levels/09.lua): W — у закреплённой детали резьба смотрит в стену или в
--- глухой бок закреплённого; T — порт сети занят навсегда закреплённой деталью без ответной резьбы.
+-- глухой бок закреплённого; Y — тройник закрыл колодец, а мойка сухая (прибор замурован). Правило T убрано (мёртвое).
 local R = require("core.rules")
 local RULES = {}
 local function occupancy(st)
@@ -25,19 +25,18 @@ RULES.W = function(lvl, st)
   end
   return false
 end
-RULES.T = function(lvl, st)
+-- Y (скептик build/l10v, 02.10): тройник закреплён на стояке (колодец закрыт навсегда), а мойка сухая — прибор в
+-- глухом тоннеле навсегда замурован: ни деталь, ни Лапидус туда больше не попадут. Видимо по мерке новичка.
+RULES.Y = function(lvl, st)
   local occ, P = occupancy(st), lvl.pieces
+  local w = R.water(lvl, st, occ, true)
+  local teeFixed = false
   for q, p in ipairs(P) do
-    local c = st.pos[q]
-    if c ~= 0 and not p.movable then
-      for d = 1, 4 do
-        if p.ports[d] then
-          local t = lvl.nb[c][d]
-          local r = t ~= 0 and occ[t] or nil
-          if r and st.fixed[r] and P[r].movable and not R.match(p.ports[d], P[r].ports[R.OPP[d]]) then return true end
-        end
-      end
-    end
+    if p.tag == "tee" and st.pos[q] ~= 0 and st.fixed[q] and w.wet[q] then teeFixed = true end
+  end
+  if not teeFixed then return false end
+  for q, p in ipairs(P) do
+    if p.fixture and p.what == "sink" and not w.wet[q] then return true end
   end
   return false
 end
