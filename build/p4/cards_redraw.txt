@@ -1,0 +1,10 @@
+card01 380
+card01b 380
+card01c 380
+card03 380
+card04 380
+card05 380
+card06 584
+card07 380
+card08 380
+card10 380

@@ -1,0 +1,33 @@
+-- l7j b9: кандидат кв. 7 (собран build/l7j/mk7.py). Решение не пишется.
+local okV, vis = pcall(dofile, "build/l6j/vis.lua")
+return {
+  visibleLoss = okV and vis or nil,
+  id = 7, flat = 7, name = "b9",
+  length = { 2, 5 }, pressure = 0, tile = "mint",
+  target = { moves = { 15, 40 }, states = 100000, dead = 40, fb = 2 },
+  grid = {
+    "##########",
+    "#........#",
+    "#.#..#...#",
+    "#.....#..#",
+    "#.#......#",
+    "#........#",
+    "#........#",
+    "#.########",
+    "##########",
+  },
+  objects = {
+    { kind = "source", at = { 2, 8 }, ports = { up = "N" } },
+    { kind = "fixture", what = "sink", at = { 6, 4 }, ports = { left = "V" } },
+    { kind = "fitting", what = "adapter", tag = "ada", at = { 3, 2 }, ports = { down = "V", up = "N" } },
+    { kind = "fitting", what = "elbow", tag = "elb", at = { 3, 4 }, ports = { down = "V", right = "N" } },
+    { kind = "lapidus", cells = { { 6, 7 }, { 7, 7 } }, head = 1 },
+  },
+  ablations = {
+    { name = "без переходника", remove = "ada" },
+    { name = "без угольника", remove = "elb" },
+  },
+  want = { ada = { 2, 7 }, elb = { 2, 6 } },
+  protect = { {3,6},{4,6},{4,5},{4,4},{5,4},{3,7},{2,2},{2,3},{2,4},{2,5},{2,6},{2,7} },
+  texts = { request = "", hints = { "", "", "" } },
+}

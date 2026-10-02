@@ -1,0 +1,8 @@
+luajit: ./core/rules.lua:137: attempt to index local 't' (a nil value)
+stack traceback:
+	./core/rules.lua:137: in function 'dirBetween'
+	./core/rules.lua:777: in function 'validate'
+	build/l8a/hill.lua:18: in function 'eval'
+	build/l8a/hill.lua:118: in main chunk
+	[C]: at 0x5650db8c4120
+старт: 0 ход 19 n 1897 вывигр 1 СКР 0.0% обез 0.00 двери(≥8) 0/0 брандспойт нужен

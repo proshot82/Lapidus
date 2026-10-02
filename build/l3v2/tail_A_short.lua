@@ -1,0 +1,6 @@
+local d = dofile('build/l3d/s8.lua')
+d.grid[2] = "#####....##"
+d.grid[3] = "######.#.##"
+d.grid[4] = "##...#.#.##"
+for _, o in ipairs(d.objects) do if o.kind == 'source' then o.at = {9,4}; o.ports = {up = 'V'} end if o.kind == 'fixture' then o.at = {6,2}; o.ports = {right = 'N'} end end
+return d

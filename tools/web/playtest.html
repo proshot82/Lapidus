@@ -1,0 +1,167 @@
+<title>Лапидус. Ни капли</title>
+<style>
+  /* Пробная сборка для автора: одна тёмная сцена, как в самой игре (кафель ночью, латунь, вода). */
+  :root {
+    --ground: #171b1e;
+    --ink: #f2efe6;
+    --muted: #9aa4ad;
+    --brass: #c99a2e;
+    --water: #2ec4f1;
+    color-scheme: dark;
+  }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--ink);
+    overflow: hidden;
+    -webkit-user-select: none;
+    user-select: none;
+    touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+    font: 18px/1.4 "PT Sans", "Segoe UI", Roboto, Arial, sans-serif;
+  }
+  #stage {
+    position: fixed;
+    inset: 0;
+    box-sizing: border-box;
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ground);
+  }
+  #canvas { display: block; outline: none; background: var(--ground); max-width: 100%; max-height: 100%; }
+  .overlay {
+    position: fixed;
+    inset: 0;
+    box-sizing: border-box;
+    padding: env(safe-area-inset-top, 0px) 16px env(safe-area-inset-bottom, 0px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    text-align: center;
+    background: var(--ground);
+    color: var(--ink);
+  }
+  .overlay[hidden] { display: none; }
+  .title { font-weight: 700; font-size: 22px; letter-spacing: 0.02em; text-wrap: balance; }
+  .bar { width: min(260px, 70vw); height: 12px; border: 2px solid var(--brass); border-radius: 8px; overflow: hidden; }
+  .bar div { height: 100%; width: 0; background: var(--water); transition: width 0.2s; }
+  .note { font-size: 14px; color: var(--muted); max-width: 32em; }
+  #rotate { display: none; z-index: 10; }
+  #rotate .icon { font-size: 56px; line-height: 1; color: var(--brass); }
+  @media (orientation: portrait) and (pointer: coarse) { #rotate { display: flex; } }
+  @media (prefers-reduced-motion: reduce) { .bar div { transition: none; } }
+</style>
+
+<div id="stage"><canvas id="canvas" tabindex="0"></canvas></div>
+
+<div class="overlay" id="loading">
+  <div class="title">Лапидус собирается…</div>
+  <div class="bar"><div id="bar"></div></div>
+  <div class="note" id="status">скачивание, около 10 МБ</div>
+  <div class="note">Пробная сборка для автора: квартиры 1–6 открыты сразу. Свайп — ход, тап по другому концу — смена конца.</div>
+</div>
+
+<div class="overlay" id="rotate">
+  <div class="icon">⟳</div>
+  <div class="title">Поверните телефон боком</div>
+  <div class="note">Игра идёт в альбомной ориентации.</div>
+</div>
+
+<script>
+  var stage = document.getElementById('stage');
+  var canvas = document.getElementById('canvas');
+  var loadingEl = document.getElementById('loading');
+  var statusEl = document.getElementById('status');
+  var barEl = document.getElementById('bar');
+
+  // холст 16:9 вписывается в экран за вычетом безопасных зон
+  function fit() {
+    var cs = getComputedStyle(stage);
+    var w = stage.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    var h = stage.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    var cw = Math.max(1, Math.min(w, h * 16 / 9));
+    canvas.style.width = Math.floor(cw) + 'px';
+    canvas.style.height = Math.floor(cw * 9 / 16) + 'px';
+  }
+  window.addEventListener('resize', fit);
+  window.addEventListener('orientationchange', function () { setTimeout(fit, 250); });
+  fit();
+
+  canvas.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  // клавиши игры не должны прокручивать страницу
+  window.addEventListener('keydown', function (e) {
+    if ([32, 37, 38, 39, 40, 9, 8].indexOf(e.keyCode) > -1) e.preventDefault();
+  }, false);
+  window.addEventListener('click', function () { try { canvas.focus(); } catch (e) {} });
+
+  // во весь экран и альбомная ориентация по первому касанию — где браузер разрешает
+  stage.addEventListener('touchend', function () {
+    var el = document.documentElement;
+    var rf = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (rf && !document.fullscreenElement && !document.webkitFullscreenElement) {
+      try { var p = rf.call(el, { navigationUI: 'hide' }); if (p && p.catch) p.catch(function () {}); } catch (e) {}
+    }
+    try { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(function () {}); } catch (e) {}
+  }, { passive: true });
+
+  // сохранения love.js лежат в IndexedDB; сбрасываем их регулярно — на телефоне beforeunload часто не приходит
+  var syncing = false;
+  function persist() {
+    var FS = Module.FS;
+    if (!FS || syncing) return;
+    syncing = true;
+    try { FS.syncfs(false, function () { syncing = false; }); } catch (e) { syncing = false; }
+  }
+
+  var Module = {
+    arguments: ['./game.love', '--unlock'],
+    INITIAL_MEMORY: 134217728,
+    printErr: console.error.bind(console),
+    canvas: (function () {
+      canvas.addEventListener('webglcontextlost', function (e) { statusEl.textContent = 'графика потерялась — обновите страницу'; e.preventDefault(); }, false);
+      return canvas;
+    })(),
+    postRun: [function () {
+      fit();
+      setInterval(persist, 3000);
+      document.addEventListener('visibilitychange', function () { if (document.hidden) persist(); });
+      window.addEventListener('pagehide', persist);
+    }],
+    setStatus: function (text) {
+      if (text) {
+        var m = text.match(/\((\d+(\.\d+)?)\/(\d+)\)/);
+        if (m) barEl.style.width = Math.round(100 * m[1] / m[3]) + '%';
+        statusEl.textContent = text.indexOf('Downloading') === 0 ? 'скачивание, около 10 МБ' : (text.indexOf('Preparing') === 0 ? 'подготовка' : 'запуск');
+      } else if (Module.remainingDependencies === 0) {
+        barEl.style.width = '100%';
+        loadingEl.hidden = true;
+        fit();
+        try { canvas.focus(); } catch (e) {}
+      }
+    },
+    totalDependencies: 0,
+    remainingDependencies: 0,
+    monitorRunDependencies: function (left) {
+      this.remainingDependencies = left;
+      this.totalDependencies = Math.max(this.totalDependencies, left);
+      Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies - left) + '/' + this.totalDependencies + ')' : '');
+    }
+  };
+  Module.setStatus('Downloading...');
+  window.addEventListener('error', function () { statusEl.textContent = 'ошибка запуска — обновите страницу; если повторится, напишите мне'; });
+
+  // загрузчик данных, затем движок; без inline-обработчиков в разметке
+  function addScript(src, onload) {
+    var s = document.createElement('script');
+    s.src = src;
+    if (onload) s.onload = onload;
+    s.onerror = function () { statusEl.textContent = 'не загрузился ' + src + ' — обновите страницу'; };
+    document.body.appendChild(s);
+  }
+  addScript('game.js', function () { addScript('love.js', function () { Love(Module); }); });
+</script>

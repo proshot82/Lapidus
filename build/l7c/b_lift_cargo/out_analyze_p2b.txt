@@ -1,0 +1,1 @@
+states=102336 solvable=true minMoves=24 deadPct=97.2 falseBranches=4 winStates=1 unstable=0 time=18.1s

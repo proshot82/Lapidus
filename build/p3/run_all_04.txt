@@ -1,0 +1,11 @@
+01 «Не той стороной»: states=211 solvable=true minMoves=15 deadPct=38.4 falseBranches=0 winStates=1 unstable=0 time=0.0s | коридор: мало ложных веток
+02 «Скалолаз»: states=215 solvable=true minMoves=20 deadPct=70.7 falseBranches=11 winStates=1 unstable=0 time=0.0s | коридор: ok
+03 «Мыло»: states=4017 solvable=true minMoves=32 deadPct=82.6 falseBranches=6 winStates=1 unstable=0 time=0.3s | коридор: ok
+04 «Резьба»: states=9539 solvable=true minMoves=23 deadPct=79.6 falseBranches=1 winStates=1 unstable=0 time=0.9s | коридор: мало ложных веток; широкий коридор решений (7)
+05 «Лишний выход»: states=1682 solvable=true minMoves=15 deadPct=41.7 falseBranches=1 winStates=1 unstable=0 time=0.1s | коридор: ok
+06 «Намертво»: states=30969 solvable=true minMoves=23 deadPct=86.2 falseBranches=10 winStates=1 unstable=0 time=3.0s | коридор: ok
+AUTOPLAY level 04 WIN moves=23
+fit_dNlV
+lvl04
+card04
+done

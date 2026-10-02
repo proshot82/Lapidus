@@ -1,0 +1,10 @@
+luajit: ./tools/vislib.lua:79: attempt to index local 'win' (a nil value)
+stack traceback:
+	./tools/vislib.lua:79: in function 'compute'
+	build/l9a/rules9.lua:17: in main chunk
+	[C]: at 0x55c4a766c120
+luajit: ./tools/vislib.lua:79: attempt to index local 'win' (a nil value)
+stack traceback:
+	./tools/vislib.lua:79: in function 'compute'
+	build/l9a/rules9.lua:17: in main chunk
+	[C]: at 0x55b49ef98120

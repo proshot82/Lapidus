@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#171b1e">
+<title>Лапидус. Ни капли</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #171b1e; overflow: hidden; -webkit-user-select: none; user-select: none; touch-action: none; }
+  #stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: #171b1e; }
+  #canvas { display: block; width: 100vw; height: calc(100vw * 9 / 16); max-height: 100vh; max-width: calc(100vh * 16 / 9); outline: none; background: #171b1e; }
+  #loading { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #f2efe6; font: 20px/1.4 "PT Sans", "Segoe UI", Arial, sans-serif; background: #171b1e; }
+  #loading .bar { width: 260px; height: 12px; border: 2px solid #c99a2e; border-radius: 8px; margin-top: 16px; overflow: hidden; }
+  #loading .bar div { height: 100%; width: 0; background: #2ec4f1; transition: width .2s; }
+  #loading .hint { margin-top: 18px; font-size: 14px; color: #9aa4ad; }
+  #rotate { display: none; position: fixed; inset: 0; z-index: 10; background: #171b1e; color: #f2efe6; align-items: center; justify-content: center; flex-direction: column; font: 22px/1.4 "PT Sans", "Segoe UI", Arial, sans-serif; text-align: center; padding: 24px; }
+  #rotate .icon { font-size: 64px; margin-bottom: 12px; }
+  @media (orientation: portrait) and (pointer: coarse) { #rotate { display: flex; } }
+</style>
+</head>
+<body>
+<div id="stage"><canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex="0"></canvas></div>
+<div id="loading"><div>Лапидус собирается…</div><div class="bar"><div id="bar"></div></div><div class="hint" id="status">загрузка</div></div>
+<div id="rotate"><div class="icon">⟳</div><div>Поверните телефон боком:<br>игра идёт в альбомной ориентации</div></div>
+<script>
+  // Telegram Mini App: на весь экран, без вертикальных свайпов
+  (function () {
+    var tg = window.Telegram && window.Telegram.WebApp;
+    if (!tg || !tg.initData && !tg.platform || tg.platform === 'unknown') return;
+    try { tg.ready(); tg.expand(); } catch (e) {}
+    try { tg.setHeaderColor && tg.setHeaderColor('#171b1e'); tg.setBackgroundColor && tg.setBackgroundColor('#171b1e'); } catch (e) {}
+    try { tg.disableVerticalSwipes && tg.disableVerticalSwipes(); } catch (e) {}
+    try { tg.requestFullscreen && tg.requestFullscreen(); } catch (e) {}
+  })();
+
+  // клавиши игры не должны прокручивать страницу
+  window.addEventListener('keydown', function (e) {
+    if ([32, 37, 38, 39, 40, 9, 8].indexOf(e.keyCode) > -1) e.preventDefault();
+  }, false);
+  window.onload = function () { window.focus(); };
+  window.onclick = function () { window.focus(); };
+
+  // во весь экран по первому касанию (обычный браузер; в Telegram — своё)
+  var stage = document.getElementById('stage');
+  stage.addEventListener('touchend', function () {
+    var el = document.documentElement;
+    var tg = window.Telegram && window.Telegram.WebApp;
+    if (tg && tg.platform && tg.platform !== 'unknown') return;
+    var rf = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (rf && !document.fullscreenElement && !document.webkitFullscreenElement) { try { rf.call(el, { navigationUI: 'hide' }); } catch (e) {} }
+    try { screen.orientation && screen.orientation.lock && screen.orientation.lock('landscape').catch(function () {}); } catch (e) {}
+  }, { passive: true });
+
+  var statusEl = document.getElementById('status'), barEl = document.getElementById('bar');
+  var SAVE_DIR = '/home/web_user/love';
+  var syncing = false;
+  function persist() {
+    var FS = Module.FS;
+    if (!FS || syncing) return;
+    syncing = true;
+    try { FS.syncfs(false, function () { syncing = false; }); } catch (e) { syncing = false; }
+  }
+  var Module = {
+    arguments: ['./game.love'],
+    INITIAL_MEMORY: 134217728,
+    printErr: console.error.bind(console),
+    canvas: (function () {
+      var canvas = document.getElementById('canvas');
+      canvas.addEventListener('webglcontextlost', function (e) { statusEl.textContent = 'WebGL потерян — обновите страницу'; e.preventDefault(); }, false);
+      return canvas;
+    })(),
+    // папку сохранений в IndexedDB монтирует сама love.js (11.5); здесь — только регулярная синхронизация:
+    // штатный сброс идёт по beforeunload, которого на телефоне часто не бывает
+    postRun: [function () {
+      setInterval(persist, 3000);
+      document.addEventListener('visibilitychange', function () { if (document.hidden) persist(); });
+      window.addEventListener('pagehide', persist);
+    }],
+    setStatus: function (text) {
+      if (text) {
+        var m = text.match(/\((\d+(\.\d+)?)\/(\d+)\)/);
+        if (m) barEl.style.width = Math.round(100 * m[1] / m[3]) + '%';
+        statusEl.textContent = text.indexOf('Downloading') === 0 ? 'скачивание' : (text.indexOf('Preparing') === 0 ? 'подготовка' : 'запуск');
+      } else if (Module.remainingDependencies === 0) {
+        barEl.style.width = '100%';
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('canvas').focus();
+      }
+    },
+    totalDependencies: 0, remainingDependencies: 0,
+    monitorRunDependencies: function (left) {
+      this.remainingDependencies = left;
+      this.totalDependencies = Math.max(this.totalDependencies, left);
+      Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies - left) + '/' + this.totalDependencies + ')' : '');
+    }
+  };
+  Module.setStatus('Downloading...');
+  window.onerror = function () { statusEl.textContent = 'ошибка запуска — откройте консоль браузера'; };
+  var applicationLoad = function () { Love(Module); };
+</script>
+<script>
+  // звук: браузер держит AudioContext на паузе до первого касания/клавиши — запоминаем контексты love.js и будим их
+  (function () {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    var ctxs = [];
+    function Wrapped(opts) { var c = opts ? new AC(opts) : new AC(); ctxs.push(c); return c; }
+    Wrapped.prototype = AC.prototype;
+    window.AudioContext = Wrapped;
+    if (window.webkitAudioContext) window.webkitAudioContext = Wrapped;
+    function wake() { ctxs.forEach(function (c) { if (c.state !== 'running') { try { c.resume(); } catch (e) {} } }); }
+    ['pointerdown', 'touchend', 'mousedown', 'keydown'].forEach(function (ev) { window.addEventListener(ev, wake, true); });
+  })();
+</script>
+<script type="text/javascript" src="game.js"></script>
+<script async type="text/javascript" src="love.js" onload="applicationLoad(this)"></script>
+</body>
+</html>

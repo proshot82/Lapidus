@@ -1,0 +1,8 @@
+lvl07
+lvl08
+card07
+card08
+AUTOPLAY level 07 WIN moves=20
+AUTOPLAY level 08 WIN moves=19
+готово спрайтов и фонов: 78
+done

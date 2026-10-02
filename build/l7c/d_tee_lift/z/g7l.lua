@@ -1,0 +1,24 @@
+-- g7l: g7j шире: тройник на клетку правее, Лапидус лежит на трубе
+local MK = dofile("build/l7c/d_tee_lift/mk.lua")
+return MK.build{
+  R = 3,
+  rows = {
+    "############",
+    "####.......#",
+    "####e......#",
+    "####.......#",
+    "##.........#",
+    "#.fq.......#",
+    "#SoH=T.....#",
+    "#######F...#",
+    "########~~~#",
+  },
+  legend = {
+    S = { kind = "source", ports = { right = "V" } },
+    ["="] = { kind = "pipe", what = "pipe", ports = { left = "N", right = "V" } },
+    T = { kind = "pipe", what = "tee", ports = { left = "N", up = "V", right = "V" } },
+    F = { kind = "fixture", what = "bath", ports = { up = "V" } },
+    q = { kind = "fitting", what = "plug", ports = { left = "N" } },
+    e = { kind = "fitting", what = "elbow", ports = { down = "N", right = "N" } },
+  },
+}

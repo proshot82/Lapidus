@@ -1,0 +1,8 @@
+luajit: build/l7c/d_tee_lift/mk.lua:36: нет ног или головы
+stack traceback:
+	[C]: in function 'assert'
+	build/l7c/d_tee_lift/mk.lua:36: in function 'build'
+	build/l7d/cand.lua:57: in function <build/l7d/cand.lua:53>
+	[C]: in function 'dofile'
+	build/l6b/check.lua:10: in main chunk
+	[C]: at 0x563dbc4a6120

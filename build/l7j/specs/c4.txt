@@ -1,0 +1,18 @@
+L=2,5
+##########
+#........#
+#..#.....#
+#........#
+#........#
+#........#
+#........#
+##########
+
+{ kind = "source", at = { 2, 7 }, ports = { right = "N" } }
+{ kind = "fixture", what = "sink", at = { 7, 4 }, ports = { left = "V" } }
+{ kind = "fitting", what = "adapter", tag = "ada", at = { 4, 2 }, ports = { left = "V", right = "N" } }
+{ kind = "fitting", what = "elbow", tag = "elb", at = { 5, 7 }, ports = { left = "V", up = "N" } }
+{ kind = "lapidus", cells = { { 8, 7 }, { 9, 7 } }, head = 1 }
+
+{ name = "без переходника", remove = "ada" }
+{ name = "без угольника", remove = "elb" }

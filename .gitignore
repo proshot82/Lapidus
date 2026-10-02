@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+vendor/*.zip
+vendor/*.apk
+vendor/*.jar
+build/gfx_svg/
+build/shot*.png
+build/web/
+build/ui/
+build/review2/

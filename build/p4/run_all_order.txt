@@ -1,0 +1,22 @@
+01 «Не той стороной»: states=211 solvable=true minMoves=15 deadPct=38.4 falseBranches=0 winStates=1 unstable=0 time=0.0s | коридор: мало ложных веток
+02 «Скалолаз»: states=215 solvable=true minMoves=20 deadPct=70.7 falseBranches=11 winStates=1 unstable=0 time=0.0s | коридор: ok
+03 «Лишний выход»: states=1682 solvable=true minMoves=15 deadPct=41.7 falseBranches=1 winStates=1 unstable=0 time=0.1s | коридор: ok
+04 «Мыло»: states=4034 solvable=true minMoves=30 deadPct=82.3 falseBranches=6 winStates=1 unstable=0 time=0.2s | коридор: ok
+05 «Резьба»: states=9539 solvable=true minMoves=23 deadPct=79.6 falseBranches=1 winStates=1 unstable=0 time=0.7s | коридор: мало ложных веток; широкий коридор решений (7)
+06 «Дали напор»: states=21990 solvable=true minMoves=20 deadPct=89.8 falseBranches=0 winStates=2 unstable=0 time=3.1s | коридор: мало ложных веток; выигрышных конфигураций 2
+07 «Брандспойт»: states=764 solvable=true minMoves=19 deadPct=0.0 falseBranches=0 winStates=1 unstable=0 time=0.1s | коридор: мало тупиков; мало ложных веток
+08 «Гребёнка»: states=99548 solvable=true minMoves=23 deadPct=90.0 falseBranches=1 winStates=3 unstable=0 time=29.5s | коридор: мало ложных веток; выигрышных конфигураций 3
+09 «Опрессовка»: states=49332 solvable=true minMoves=24 deadPct=79.2 falseBranches=5 winStates=2 unstable=0 time=8.8s | коридор: выигрышных конфигураций 2
+10 «Намертво»: states=30969 solvable=true minMoves=23 deadPct=86.2 falseBranches=10 winStates=1 unstable=0 time=2.5s | коридор: ok
+AUTOPLAY level 01 WIN moves=15
+AUTOPLAY level 02 WIN moves=20
+AUTOPLAY level 03 WIN moves=15
+AUTOPLAY level 04 WIN moves=30
+AUTOPLAY level 05 WIN moves=23
+AUTOPLAY level 06 WIN moves=20
+AUTOPLAY level 07 WIN moves=19
+AUTOPLAY level 08 WIN moves=23
+AUTOPLAY level 09 WIN moves=24
+AUTOPLAY level 10 WIN moves=23
+готово спрайтов и фонов: 85
+done
