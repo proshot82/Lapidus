@@ -530,12 +530,55 @@ def pan_hose(px, py):
     return ''.join(s)
 
 
+def pan_comb(px, py):
+    """Кв. 9 «Гребёнка»: 1) мокрая гребёнка бьёт всеми открытыми выходами; 2) сухая резьба хватает деталь сразу и навсегда;
+    3) деталь едет по гребням фонтанов — второй столб поднимает стопку."""
+    cc, s = 36, []
+    fl = py + 312
+    for x0, w in ((px + 24, 150), (px + 196, 150), (px + 372, 146)):
+        s.append(R(x0, fl, w, 18, 'url(#tpY)', rx=6, stroke=O, stroke_width=3))
+    for x0 in (px + 183, px + 359):
+        s.append(Ln(x0, py + 92, x0, fl - 8, '#B9AF98', 2.5, stroke_dasharray='6 8'))
+
+    def comb(x, y, wet):
+        body = (gen2.pipe2(x, y, cc, {'left': 'V', 'up': 'N', 'right': 'N'}) + gen2.pipe2(x + cc, y, cc, {'left': 'V', 'up': 'N', 'right': 'N'}))
+        return body
+    # 1) мокрая гребёнка: два фонтана вверх и струя вбок
+    ax, ay = px + 60, fl - .5 * cc
+    s.append(source2(ax - cc, ay, cc, {'right': 'V'}, ay - .5 * cc, fl + 16, 2))
+    s.append(comb(ax, ay, True))
+    s.append(jet2(ax, ay - .45 * cc, ax, ay - 2.2 * cc, cc) + jet2(ax + cc, ay - .45 * cc, ax + cc, ay - 2.2 * cc, cc))
+    s.append(jet2(ax + 1.5 * cc, ay, ax + 3.0 * cc, ay, cc))
+    s.append(T(px + 30, py + 118, 'намокла — бьёт', 22, INK, weight='bold') + T(px + 30, py + 144, 'всеми выходами', 22, INK, weight='bold'))
+    # 2) сухая гребёнка хватает деталь сразу (пух, крестик)
+    bx, by = px + 240, fl - .5 * cc
+    s.append(comb(bx, by, False))
+    s.append(G(fitting2(bx, by - cc, cc, {'down': 'V', 'left': 'V', 'right': 'V'}), filter='url(#steel)'))
+    s.append(fluff2(bx, by - .5 * cc, cc))
+    s.append(gen.mark(bx + 2.2 * cc, by - 1.6 * cc, False, .55))
+    s.append(T(px + 206, py + 118, 'сухая — хватает', 22, INK, weight='bold') + T(px + 206, py + 144, 'сразу, навсегда', 22, INK, weight='bold'))
+    # 3) стопка едет лифтом: заглушка в столбе, тройник на ней — вверх
+    cx, cy = px + 400, fl - .5 * cc
+    s.append(source2(cx - cc, cy, cc, {'right': 'V'}, cy - .5 * cc, fl + 16, 2))
+    s.append(comb(cx, cy, True))
+    s.append(jet2(cx + cc, cy - .45 * cc, cx + cc, cy - 1.3 * cc, cc))
+    s.append(fitting2(cx + cc, cy - 1.8 * cc, cc, {'down': 'V'}))
+    s.append(fitting2(cx + cc, cy - 2.8 * cc, cc, {'down': 'V', 'left': 'V', 'right': 'V'}))
+    s.append(gen.arrow(cx + 2.4 * cc, cy - 1.6 * cc, cx + 2.4 * cc, cy - 3.2 * cc, '#2F8F4E', 4))
+    s.append(T(px + 382, py + 118, 'стопка в столбе', 22, INK, weight='bold') + T(px + 382, py + 144, 'едет лифтом', 22, INK, weight='bold'))
+    return ''.join(s)
+
+
+def card9():
+    return card(9, 'Гребёнка', pan_comb)
+
+
 def card8():
     return card(8, 'Брандспойт', pan_hose)
 
 
 CARDS = {'card01': card1, 'card01b': card_fall, 'card01c': card_drain, 'card03': card3, 'card04': card4, 'card05': card5,
-         'card06': card6, 'card07': card7, 'card08': card8}
+         'card06': card6, 'card07': card7, 'card08': card8, 'card09': card9}
 
 
 def passport2():

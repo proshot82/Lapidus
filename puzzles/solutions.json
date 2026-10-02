@@ -203,5 +203,33 @@
       "heel:down"
     ],
     "name": "Брандспойт"
+  },
+  "09": {
+    "moves": [
+      "head:right",
+      "head:right",
+      "heel:up",
+      "heel:up",
+      "heel:right",
+      "heel:right",
+      "heel:right",
+      "heel:right",
+      "heel:up",
+      "heel:up",
+      "heel:right",
+      "heel:down",
+      "head:right",
+      "head:right",
+      "heel:up",
+      "heel:right",
+      "heel:down",
+      "heel:down",
+      "head:right",
+      "head:down",
+      "head:down",
+      "heel:left",
+      "heel:left"
+    ],
+    "name": "Гребёнка"
   }
 }

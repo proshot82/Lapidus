@@ -378,5 +378,58 @@
     },
     "unstable": 0,
     "winStates": 1
+  },
+  "09": {
+    "ablations": [
+      {
+        "name": "без заглушки",
+        "solvable": false
+      },
+      {
+        "name": "без тройника",
+        "solvable": false
+      },
+      {
+        "name": "фонтан не держит деталь",
+        "solvable": false
+      },
+      {
+        "name": "деталь не вдавить сверху",
+        "solvable": false
+      },
+      {
+        "name": "стопки нет: деталь не стоит на детали в столбе",
+        "solvable": false
+      }
+    ],
+    "corridor": "мало ложных веток; выигрышных конфигураций 3",
+    "deadPct": 90,
+    "falseBranches": 1,
+    "grid": "14×10",
+    "id": 9,
+    "length": [
+      3,
+      6
+    ],
+    "minMoves": 23,
+    "monkey": 0.02,
+    "name": "Гребёнка",
+    "note": "«стопка-лифт» (g18, 02.10, build/l9a; решение Lao: near-версия): 23 хода, честно 30 %; долги — вторая ошибка плана в 1-й половине, гребёнка не несущая",
+    "pressure": 2,
+    "shortest": 4,
+    "shortestWidth": 2,
+    "solvable": true,
+    "states": 99548,
+    "target": {
+      "dead": 60,
+      "fb": 4,
+      "moves": [
+        15,
+        40
+      ],
+      "states": 1000000
+    },
+    "unstable": 0,
+    "winStates": 3
   }
 }
