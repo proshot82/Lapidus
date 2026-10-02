@@ -1,16 +1,16 @@
--- t
+-- q4: колонка через столбец, яма до 8-го
 local okV, vis = pcall(dofile, "build/l8j/vis.lua")
 return {
   visibleLoss = okV and vis or nil,
   washOk = true,
   mustLift = { "B" },
-  id = 8, flat = 8, name = "qt",
+  id = 8, flat = 8, name = "q4",
   length = { 2, 5 }, pressure = 0, tile = "mint",
   grid = {
     "##########",
     "########.#",
     "######.#.#",
-    "###.#....#",
+    "##.......#",
     "#........#",
     "####....##",
     "####.#####",
