@@ -10,7 +10,7 @@ from gen2 import (Q, frame, headL, heelL, hero, source2, stub2, port2, bath2, to
                   button2, fluff2)
 
 OUT = os.path.join(gen2.ROOT, 'build', 'review2')
-_IDS = [str(i) for i in range(1, 11) if os.path.exists(os.path.join(gen2.ROOT, 'levels', '%02d.lua' % i))]
+_IDS = [str(i) for i in range(1, 11) if os.path.exists(os.path.join(gen2.ROOT, 'levels', '%02d.lua' % i))] + [x for x in os.environ.get('LAP_LEVELS', '').split(',') if x]  # LAP_LEVELS — витрины
 L = json.loads(subprocess.check_output(['luajit', 'tools/dumplevels.lua'] + _IDS, cwd=gen2.ROOT).decode('utf-8'))
 for lv in L:
     for ob in lv['objects']:
