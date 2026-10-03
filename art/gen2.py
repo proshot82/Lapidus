@@ -713,10 +713,17 @@ def frame(lv, moves=0, active='head', no_lap=False, hud=True, skip=()):
     c, ox, oy = gen.geom(lv)  # геометрия поля — одна формула с game/board.lua (Board.geom)
     ml, mt = math.ceil(ox / c) + 1, math.ceil(oy / c) + 1
 
+    # шахта слива уходит вниз до края экрана, даже если слив не в нижнем ряду (03.10, Lao: «стенка под сливом абсурдна»);
+    # клетки стены под сливом недостижимы, так что это только картинка
+    shaft = {x: min(y for y in range(1, H + 1) if grid[y - 1][x - 1] == '~') for x in range(1, W + 1)
+             if any(grid[y - 1][x - 1] == '~' for y in range(1, H + 1))}
+
     def empty(x, y):
+        if x in shaft and y > shaft[x]:
+            return y <= H + mt
         if 1 <= x <= W and 1 <= y <= H:
             return grid[y - 1][x - 1] != '#'
-        return 1 <= x <= W and H < y <= H + mt and grid[H - 1][x - 1] == '~'
+        return False
     room_d = ' '.join(loop_d(simplify(lp), c, ox, oy, .20, .42) for lp in trace(empty, (1 - ml, W + ml), (1 - mt, H + mt)))
     terr_d = 'M -40 -40 H 1960 V 1120 H -40 Z ' + room_d
     extra = defs2(c, ox, oy, lv.get('tile', 'mint')) + ('<clipPath id="cRoom"><path d="%s" clip-rule="evenodd"/></clipPath>'
@@ -731,7 +738,7 @@ def frame(lv, moves=0, active='head', no_lap=False, hud=True, skip=()):
     for y in range(1, H + 1):
         for x in range(1, W + 1):
             if grid[y - 1][x - 1] == '~':      # слив — прежний (решётка в перспективе и воронка), решение Lao 03.10
-                s.append(drain2(ox + (x - .5) * c, oy + (y - .5) * c, c, 1100 if y == H else oy + y * c))
+                s.append(drain2(ox + (x - .5) * c, oy + (y - .5) * c, c, 1100))
     s.append(Pa(room_d, stroke=Q['ol'], stroke_width=.08 * c, stroke_linejoin='round', filter='url(#wob)'))
     wl = lambda x, y: 1 <= x <= W and 1 <= y <= H and grid[y - 1][x - 1] == '#'
 
