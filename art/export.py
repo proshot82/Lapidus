@@ -54,19 +54,8 @@ def fit_box(body, sw=.80, sh=.92):
     return '<g transform="translate(%s %s) scale(%s) translate(%s %s)">%s</g>' % (X, Y, round(k, 4), round(-bx, 2), round(-by, 2), body)
 
 
-fx_dims = {}
-gen2.GAME_SPRITE = True
-for what, fn in (('bath', bath2), ('toilet', toilet2), ('sink', sink2), ('washer', gen2.washer2), ('dryer', gen2.dryer2), ('heater', gen2.heater2)):
-    for wet in (False, True):
-        sprite('fx_%s_%s' % (what, 'wet' if wet else 'dry'), fit_box(fn(X, Y, CR, wet)))
-        fx_dims[what] = FX_SIZES[-1]
-gen2.GAME_SPRITE = False
-# настоящие габариты приборов в клетках (после вписывания в 0.80×0.92) — движку для размещения у стены (Board:fixtureBox)
-with open(os.path.join(gen2.ROOT, 'game', 'fx_sizes.lua'), 'w', encoding='utf-8') as f:
-    f.write('-- Сгенерировано art/export.py: габариты спрайтов приборов (ширина, высота) в долях клетки.\nreturn {\n')
-    for k_, (w_, h_) in sorted(fx_dims.items()):
-        f.write('  %s = { %.3f, %.3f },\n' % (k_, w_, h_))
-    f.write('}\n')
+# Приборы (03.10) рисует Blender: art/blender/fixtures.py → art/fx_compose.py (спрайты fx_*.png и game/fx_sizes.lua).
+# Старые SVG-приборы gen2 (bath2, heater2 …) остаются только для немых сцен.
 sprite('porcelain', porcelain2(X, Y, CR))
 SIG = {'up': 'u', 'right': 'r', 'down': 'd', 'left': 'l'}
 for lv in screens2.L:
