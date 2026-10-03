@@ -16,7 +16,6 @@ from gen import n, R, C, E, Ln, Pg, Pa, G, T, dd, smooth, ribs, dname, TILE, DV,
 import parts
 import gen
 
-FIXTURES_OUT = True  # приборы за полем: клетка прибора — выступ стены (game/board.lua Board:fixtureBox)
 GAME_SPRITE = False  # True — рисуем спрайт прибора для игры (art/export.py): без встроенного штуцера, короткий дымоход
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -714,12 +713,7 @@ def frame(lv, moves=0, active='head', no_lap=False, hud=True, skip=()):
     c, ox, oy = gen.geom(lv)  # геометрия поля — одна формула с game/board.lua (Board.geom)
     ml, mt = math.ceil(ox / c) + 1, math.ceil(oy / c) + 1
 
-    # приборы вынесены ЗА поле (03.10, идея Lao): клетка прибора рисуется выступом стены, сам прибор висит на стене за ней
-    fx_cells = {tuple(ob['at']) for ob in lv['objects'] if ob['kind'] == 'fixture'} if FIXTURES_OUT else set()
-
     def empty(x, y):
-        if (x, y) in fx_cells:
-            return False
         if 1 <= x <= W and 1 <= y <= H:
             return grid[y - 1][x - 1] != '#'
         return 1 <= x <= W and H < y <= H + mt and grid[H - 1][x - 1] == '~'

@@ -132,16 +132,6 @@ function Board:drawPiece(p, cx, cy, wet, alpha, stone)
     local fx, fy, sc = cx, cy, 1
     if pd then
       fx, fy, sc = self:fixtureBox(cx, cy, pd, p.what or "bath")
-      -- стальная труба сквозь стену: от прибора к выступу (дальше её продолжает подводка port_*_fx со стыком)
-      local cs = self.cs
-      local r = 0.18 * cs
-      local x1, y1, x2, y2 = math.min(fx, cx), math.min(fy, cy), math.max(fx, cx), math.max(fy, cy)
-      if pd == 2 or pd == 4 then y1, y2 = cy - r, cy + r; fy = cy else x1, x2 = cx - r, cx + r; fx = cx end
-      lg.setColor(0.169, 0.129, 0.094); lg.rectangle("fill", x1 - 3, y1 - 3, x2 - x1 + 6, y2 - y1 + 6, 4)
-      lg.setColor(0.49, 0.53, 0.56); lg.rectangle("fill", x1, y1, x2 - x1, y2 - y1)
-      lg.setColor(0.70, 0.74, 0.77)
-      if pd == 2 or pd == 4 then lg.rectangle("fill", x1, y1 + r * 0.35, x2 - x1, r * 0.35) else lg.rectangle("fill", x1 + r * 0.35, y1, r * 0.35, y2 - y1) end
-      lg.setColor(1, 1, 1)
       spr(img("port_" .. p.ports[pd] .. "_fx") and ("port_" .. p.ports[pd] .. "_fx") or ("port_" .. p.ports[pd] .. "_fixed"), cx, cy, k, ANG[pd])
     end
     spr(string.format("fx_%s_%s", p.what or "bath", wet and "wet" or "dry"), fx, fy, k * sc, 0, pd == 2 and -1 or 1)
@@ -158,22 +148,29 @@ end
 
 -- Где и каким рисовать прибор: передний край в FRONT клетки от центра в сторону стыка; назад и вбок — до края своей клетки
 -- или дальше, если там стена (прибор «стоит у стены»). Возвращает центр спрайта и множитель масштаба.
-local FX_W, FX_H = 0.80, 0.92
+local FX_W, FX_H, FRONT = 0.80, 0.92, 0.16
 local okS, FXS = pcall(require, "game.fx_sizes")
--- Прибор вынесен ЗА поле (03.10, идея Lao): клетка прибора — выступ стены (фон art/gen2.py frame) с подводкой и стыком,
--- сам прибор висит на стене за ней — центр на клетку дальше от стыка, крупно; не выходит за экран.
-local FX_BIG = 1.45
 function Board:fixtureBox(cx, cy, pd, what)
-  local cs = self.cs
+  local lvl, cs = self.lvl, self.cs
+  local i = self:cellAt(cx, cy)
+  local function wall(c) return c == nil or c == 0 or lvl.cell[c] == R.WALL end
+  local opp = ({ 3, 4, 1, 2 })[pd]
+  local p1, p2 = ({ 2, 3, 4, 1 })[pd], ({ 4, 1, 2, 3 })[pd] -- боковые стороны
+  local nb = i and lvl.nb[i] or {}
+  local back = 0.46 + (wall(nb[opp]) and 0.62 or 0)
+  local s1 = 0.46 + (wall(nb[p1]) and 0.28 or 0)
+  local s2 = 0.46 + (wall(nb[p2]) and 0.28 or 0)
+  local vertical = (pd == 1 or pd == 3)
   local fw, fh = FX_W, FX_H
   if okS and FXS[what] then fw, fh = FXS[what][1], FXS[what][2] end
-  local sc = FX_BIG * math.min(0.92 / math.max(fw, fh), 1.25)
+  local adim, pdim = vertical and fh or fw, vertical and fw or fh
+  local sc = math.max(1, math.min((FRONT + back) / adim, (s1 + s2 - 0.04) / pdim, 1.9))
+  local along = FRONT - adim * sc / 2                     -- центр вдоль оси стыка (+ к стыку)
+  local across = 0
+  if s1 ~= s2 then across = (s1 > s2 and 1 or -1) * math.max(0, math.min(math.abs(s1 - s2) / 2, (pdim * sc - 0.88) / 2)) end
   local ax, ay = DIRV[pd][1], DIRV[pd][2]
-  local fx, fy = cx - ax * 0.85 * cs, cy - ay * 0.85 * cs
-  local hw, hh = fw * sc * cs / 2, fh * sc * cs / 2
-  fx = math.max(Board.FIELD_L + hw, math.min(Board.FIELD_R - hw, fx))  -- не под колонки интерфейса
-  fy = math.max(hh + 4, math.min(1080 - hh - 4, fy))
-  return fx, fy, sc
+  local qx, qy = DIRV[p1][1], DIRV[p1][2]
+  return cx + (ax * along + qx * across) * cs, cy + (ay * along + qy * across) * cs, sc
 end
 
 -- Сглаживание изломов пути (радиус — полклетки), как в генераторе арта.
