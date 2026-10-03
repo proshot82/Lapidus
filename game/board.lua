@@ -257,31 +257,34 @@ function Board:drawLapidus(pts, n, active, wet, screwedHead, screwedFeet, dead, 
     lg.pop()
   end
   stroke(COL.dark, w + 0.09 * cs, 0.05 * cs, 0.08 * cs, 0.35)
-  stroke(COL.ol, w + 0.09 * cs)
-  stroke(COL.hoseSh, w)
-  stroke(COL.hoseMid, w * 0.80, -0.035 * cs, -0.05 * cs)
-  stroke(COL.hose, w * 0.46, -0.06 * cs, -0.10 * cs)
   local L = cumul(flat)
   local per = 4 + 4 * (self.lvl.Lmax - n) / math.max(1, self.lvl.Lmax - self.lvl.Lmin)
-  local hw, o = w * 0.46, 0.035 * cs
-  for s = cs / per * 0.5, L[#L], cs / per do
-    local seg = subpath(flat, L, s, s + 1)
-    if #seg >= 4 then
-      local px, py = seg[1], seg[2]
-      local tx, ty = seg[#seg - 1] - px, seg[#seg] - py
+  -- Гофра (03.10, арт из Blender): бесшовная текстура одного шага ребра (art/blender/hose.py) натянута лентой вдоль тела;
+  -- шаг ребра cs/per растягивается с длиной, как прежде. Поперёк — вся ширина с обводкой (w + 0.09 клетки).
+  local tex = img("hose_tex")
+  if tex then
+    tex:setWrap("repeat", "clamp")
+    local half, step, np2 = (w + 0.09 * cs) / 2, cs / per, #flat / 2
+    local verts = {}
+    for i = 1, np2 do
+      local i0, i1 = math.max(1, i - 1), math.min(np2, i + 1)
+      local tx, ty = flat[2 * i1 - 1] - flat[2 * i0 - 1], flat[2 * i1] - flat[2 * i0]
       local tl = math.sqrt(tx * tx + ty * ty)
-      if tl > 1e-6 then tx, ty = tx / tl, ty / tl end
-      local nearHead = (px - head[1]) ^ 2 + (py - head[2]) ^ 2 < (0.45 * cs) ^ 2
-      local nearFeet = (px - feet[1]) ^ 2 + (py - feet[2]) ^ 2 < (0.40 * cs) ^ 2
-      if not nearHead and not nearFeet then
-        local ax, ay, bx, by = px + ty * hw, py - tx * hw, px - ty * hw, py + tx * hw
-        local mx, my = px + tx * 0.07 * cs, py + ty * 0.07 * cs
-        setc(COL.rib, a); lg.setLineWidth(cs * 0.03)
-        lg.line(ax, ay, (ax + mx) / 2 + tx * 0.02 * cs, (ay + my) / 2 + ty * 0.02 * cs, mx, my, (bx + mx) / 2 + tx * 0.02 * cs, (by + my) / 2 + ty * 0.02 * cs, bx, by)
-        lg.setColor(1, 1, 1, 0.7 * a); lg.setLineWidth(cs * 0.016)
-        lg.line(ax - tx * o, ay - ty * o, mx - tx * o, my - ty * o, bx - tx * o, by - ty * o)
-      end
+      if tl > 1e-6 then tx, ty = tx / tl, ty / tl else tx, ty = 1, 0 end
+      local x, y, u = flat[2 * i - 1], flat[2 * i], L[i] / step
+      verts[#verts + 1] = { x + ty * half, y - tx * half, u, 0, 1, 1, 1, a }
+      verts[#verts + 1] = { x - ty * half, y + tx * half, u, 1, 1, 1, 1, a }
     end
+    if #verts >= 4 then
+      local mesh = lg.newMesh(verts, "strip", "stream")
+      mesh:setTexture(tex)
+      lg.setColor(1, 1, 1, 1)
+      lg.draw(mesh)
+    end
+  else
+    stroke(COL.ol, w + 0.09 * cs)
+    stroke(COL.hoseSh, w)
+    stroke(COL.hose, w * 0.46, -0.06 * cs, -0.10 * cs)
   end
   if wet then
     local total, period = L[#L], cs * 0.32
