@@ -19,6 +19,7 @@ for _, c in ipairs(cellsFree) do
   for _, dv in ipairs({ { 1, 0 }, { 0, -1 } }) do
     local cs, ok = {}, true
     for i = 0, 2 do local x, y = c[1] + dv[1] * i, c[2] + dv[2] * i; if not free(x, y) or not (frame.zone == nil or frame.zone(x, y)) then ok = false end; cs[#cs + 1] = { x, y } end
+    if ok and os.getenv("LAPROW") and (dv[2] ~= 0 or c[2] ~= tonumber(os.getenv("LAPROW"))) then ok = false end
     if ok then laps[#laps + 1] = cs; laps[#laps + 1] = { cs[3], cs[2], cs[1] } end
   end
 end
