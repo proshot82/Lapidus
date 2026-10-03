@@ -150,6 +150,12 @@
   оба открытия найдены. visibleLoss сужен по совету скептика. «Намертво» — build/l10j/installed_namertvo_level10.lua.
 - Открыто: M7 («возит на себе») — три квартиры подряд (8–10); hint 1 кв. 10 смягчён.
 
+## 03.10: игра в сети (решение Lao «выкладывай»)
+- Веб-версия: https://proshot82.github.io/Lapidus/ — ветка gh-pages (5 файлов build/web/site + .nojekyll; Pages включился сам).
+  Обновить: bash tools/build_all.sh → скопировать build/web/site/* в рабочую копию ветки gh-pages → коммит → push.
+- Сборки: tools/build_all.sh → build/dist (APK, Windows, .love, веб). Ключ Android — у Lao (в репозиторий не кладётся).
+- Telegram: бота создаёт Lao через @BotFather (Mini App → адрес выше), инструкция — INSTALL_WEB_RU.md §2.
+
 ## Как продолжить
 1. `mkdir -p /home/claude/lapidus && cd /home/claude && unzip -q /mnt/user-data/uploads/lapidus_checkpoint_phase6a.zip`
    (в архиве папка lapidus/).
