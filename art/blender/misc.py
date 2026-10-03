@@ -173,7 +173,7 @@ if not ONLY or 'porcelain' in ONLY:          # эмалированный ноч
     h = bpy.data.objects.new('h', cu); sc.collection.objects.link(h)
     bpy.context.view_layer.objects.active = h; h.select_set(True)
     bpy.ops.object.convert(target='MESH'); put(bpy.context.object, W)   # ручка-«ухо»
-    AN['porcelain'] = {'chip': anchor(sc, (-.17, -.30, -.12))}
+    AN['porcelain'] = {'chip': anchor(sc, (-.17, -.30, -.12)), 'top': anchor(sc, (0, 0, .36))}
     render(sc, 'porcelain')
 if not ONLY or 'foam' in ONLY:               # пена протечки: клубы-сферы, снизу темнее, сверху светлее
     sc = reset((480, 480), 2.0)
@@ -225,6 +225,102 @@ if not ONLY or 'plate' in ONLY:              # эмалевая табличка
         sphere(.06, (x, -.05, 0), SC, (1, .5, 1))
     AN['plate'] = {'ring': [anchor(sc, (0, -.06, 0)), anchor(sc, (.75, -.06, .45))]}
     render(sc, 'plate')
+
+# ---------- сеть для карточек правил: стояк с вентилем, глухой отвод на кронштейне, решётка слива (как в фоне квартир)
+R_BODY, R_SOCK, R_THR, LIM = .18, .23, .15, .47
+DV = {'right': (1, 0), 'left': (-1, 0), 'up': (0, 1), 'down': (0, -1)}
+
+
+def cylp(r, a, b, mat, verts=40):
+    a, b = Vector(a), Vector(b)
+    d = b - a
+    bpy.ops.mesh.primitive_cylinder_add(vertices=verts, radius=r, depth=d.length)
+    o = bpy.context.object
+    o.rotation_mode = 'QUATERNION'
+    o.rotation_quaternion = Vector((0, 0, 1)).rotation_difference(d.normalized())
+    o.location = (a + b) / 2
+    bpy.ops.object.transform_apply(location=True, rotation=True)
+    return put(o, mat)
+
+
+def P(d, t):
+    return (DV[d][0] * t, 0, DV[d][1] * t)
+
+
+def net_port(d, th, mat):
+    cylp(R_BODY * .97, P(d, .12), P(d, .30), mat)
+    if th == 'N':   # резьба одним проходом: витки — кольца, обводка Freestyle только по силуэту
+        cylp(R_THR, P(d, .26), P(d, LIM), mat)
+        t = .28
+        while t < LIM - .01:
+            bpy.ops.mesh.primitive_torus_add(major_radius=R_THR * .95, minor_radius=R_THR * .12, major_segments=40, minor_segments=6)
+            o = bpy.context.object
+            o.rotation_mode = 'QUATERNION'
+            o.rotation_quaternion = Vector((0, 0, 1)).rotation_difference(Vector((DV[d][0], 0, DV[d][1])))
+            o.location = P(d, t)
+            bpy.ops.object.transform_apply(location=True, rotation=True)
+            put(o, mat)
+            t += .05
+    else:
+        cylp(R_SOCK, P(d, .26), P(d, LIM), mat)
+
+
+def net_mats():
+    return (toon('#3E454C', '#7C868F', '#B3BCC5', '#EEF2F6'), toon('#2C3136', '#4F5760', '#7E8892', '#C9D0D7'),
+            toon('#7E2116', '#C83E2C', '#E2604B', '#F59A83'), toon('#7A5414', '#C9962E', '#EBC260', '#FFF3C2'))
+
+
+if not ONLY or 'net' in ONLY:
+    # стояк: выход вправо (В), вентиль, фланцы, заглушки на концах — холст 2 клетки, стояк по всей высоте
+    for d, th in (('right', 'V'),):
+        sc = reset((480, 480), 2.0)
+        ST, IR, RD, BR = net_mats()
+        cylp(.22, (0, 0, -.90), (0, 0, .90), IR, 48)
+        for zz in (-.90, .90):
+            cylp(.27, (0, 0, zz - .06), (0, 0, zz + .06), IR, 48)
+        for zz in (-.50, .50):
+            cylp(.31, (0, 0, zz - .06), (0, 0, zz + .06), IR, 48)
+            for bx in (-.22, .22):
+                sphere(.035, (bx, -.29, zz), ST, (1, .6, 1))
+        sphere(.27, (0, 0, 0), IR, (1, 1, 1.15))
+        net_port(d, th, ST)
+        cylp(.04, (0, -.2, 0), (0, -.5, 0), ST, 16)
+        bpy.ops.mesh.primitive_torus_add(major_radius=.20, minor_radius=.034, major_segments=64, minor_segments=12,
+                                         location=(0, -.52, 0), rotation=(math.radians(90), 0, 0))
+        put(bpy.context.object, RD)
+        for k in range(4):
+            a = math.pi / 4 + k * math.pi / 2
+            cylp(.024, (0, -.52, 0), (math.cos(a) * .19, -.52, math.sin(a) * .19), RD, 16)
+        sphere(.055, (0, -.54, 0), BR)
+        render(sc, 'src_%s%s' % (d[0], th))
+    # глухой отвод на кронштейне: выход d, крепление к стене m
+    for d, th, m in (('down', 'V', 'up'), ('right', 'V', 'left')):
+        sc = reset((480, 480), 2.0)
+        ST, IR, RD, BR = net_mats()
+        cylp(R_BODY * .97, (0, 0, 0), P(m, .40), ST)
+        bpy.ops.mesh.primitive_cube_add(size=1, location=P(m, .44))
+        o = bpy.context.object
+        o.scale = (.10, .5, .62) if DV[m][0] else (.62, .5, .10)
+        bpy.ops.object.transform_apply(scale=True)
+        md = o.modifiers.new('b', 'BEVEL'); md.width = .025; md.segments = 3
+        bpy.ops.object.modifier_apply(modifier='b')
+        put(o, IR)
+        net_port(d, th, ST)
+        cylp(R_BODY * .97, (0, 0, 0), P(d, .14), ST)
+        render(sc, 'stub_%s%s_%s' % (d[0], th, m[0]))
+    # решётка слива в перспективе (тёмная шахта и вода — слоем в карточке)
+    sc = reset((480, 480), 2.0)
+    GR = toon('#22272C', '#3C434A', '#5C646C', '#8A939B')
+    before = set(sc.objects)
+    bpy.ops.mesh.primitive_torus_add(major_radius=.44, minor_radius=.035, major_segments=64, minor_segments=10)
+    put(bpy.context.object, GR)
+    for k in (-.30, -.15, 0, .15, .30):
+        h = math.sqrt(.44 ** 2 - k ** 2)
+        cylp(.022, (k, -h, 0), (k, h, 0), GR, 12)
+    for o in [o for o in sc.objects if o not in before]:
+        o.data.transform(Matrix.Rotation(math.radians(10), 4, 'X'))
+        o.data.update()
+    render(sc, 'grate')
 with open(AJ, 'w') as f:
     json.dump(AN, f)
 print('MISC done')

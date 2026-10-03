@@ -63,7 +63,7 @@ function Play:start(index)
       if ns then self.state = ns end
     end
     self.active = "head"; self:refresh()
-  elseif demo == "toast" then self.request = false; self:say("Голова по фаянсу скользит: толкай ногами.", 60) end
+  elseif demo == "toast" then self.request = false; self:say("Голова к горшку не полезет — пахнет. Толкай ногами.", 60) end
 end
 
 function Play:refresh()
@@ -119,7 +119,7 @@ function Play:tryMove(dir)
   local trace = {}
   local ns, kind = R.move(self.lvl, self.state, self.active, dir, trace)
   if not ns then
-    local why = { soap = "Голова по фаянсу скользит: толкай ногами.", taut = "Натянут: второй конец прикручен.",
+    local why = { soap = "Голова к горшку не полезет — пахнет. Толкай ногами.", taut = "Натянут: второй конец прикручен.",
                   short = "Короче уже не сжаться.", blocked = "Не сдвинуть: упирается.", fixed = "Закреплено намертво." }
     if why[kind] then self:say(why[kind], 2) end
     local snd = { soap = "squeak", taut = "taut", blocked = "blocked", fixed = "stone", short = "compress" }

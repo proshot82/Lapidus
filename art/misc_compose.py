@@ -39,6 +39,12 @@ def overlay(raw, svg_body, w, h, dst, shadow=(5, 5, 8, .45)):
 from gen import Pa, dd
 x, y = AN['porcelain']['chip']
 s = [Pa(dd('M', x - 7, y - 3, 'L', x - 1, y - 7, 'L', x + 6, y - 4, 'L', x + 8, y + 3, 'L', x + 1, y + 6, 'L', x - 6, y + 4, 'Z'), '#1F262D')]
+# запах (Lao 03.10: «толкают ногами, потому что от него пахнет»): три зелёные волны над крышкой
+tx, ty = AN['porcelain']['top']
+for k, dx in enumerate((-34, 0, 34)):
+    x0, y0 = tx + dx, ty - 14 - (6 if k == 1 else 0)
+    s.append(Pa(dd('M', x0, y0, 'q', -9, -12, 0, -24, 't', 0, -24), stroke='#2B2118', stroke_width=11, stroke_linecap='round', opacity='.55'))
+    s.append(Pa(dd('M', x0, y0, 'q', -9, -12, 0, -24, 't', 0, -24), stroke='#9CC64B', stroke_width=6, stroke_linecap='round'))
 overlay(os.path.join(SRC, 'porcelain_raw.png'), ''.join(s), 480, 480, os.path.join(OUT, 'porcelain.png'))
 overlay(os.path.join(SRC, 'foam_raw.png'), '', 480, 480, os.path.join(OUT, 'foam.png'), shadow=None)
 overlay(os.path.join(SRC, 'drop_raw.png'), '', 120, 120, os.path.join(OUT, 'drop.png'), shadow=None)
@@ -51,3 +57,7 @@ for k in ('undo', 'restart', 'hint', 'menu'):
 (cx, cy), (ex, ey) = AN['plate']['ring']
 overlay(os.path.join(SRC, 'plate_raw.png'), E(cx, cy, abs(ex - cx) * 1.0, abs(ey - cy) * 1.0, 'none', stroke='#FFFFFF', stroke_width=4),
         260, 180, os.path.join(OUT, 'hud_plate.png'))
+# сеть для карточек правил
+for nm in ('src_rV', 'stub_dV_u', 'stub_rV_l', 'grate'):
+    if os.path.exists(os.path.join(SRC, nm + '_raw.png')):
+        overlay(os.path.join(SRC, nm + '_raw.png'), '', 480, 480, os.path.join(OUT, nm + '.png'), shadow=None if nm == 'grate' else (5, 5, 8, .45))

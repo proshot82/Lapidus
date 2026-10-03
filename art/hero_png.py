@@ -86,3 +86,41 @@ def use_in(mod):
     for what in ('washer', 'dryer', 'heater'):
         setattr(g, what + '2', fixture_img(what))
     mod.porcelain2 = lambda x, y, c: sprite_img('porcelain', x, y, c)
+
+    orig_src, orig_stub = mod.source2, mod.stub2
+
+    def source_img(cx, cy, c, ports, top=-20, bot=1100, pressure=0):
+        if ports == {'right': 'V'} and not pressure:
+            return sprite_img('src_rV', cx, cy, c)
+        return orig_src(cx, cy, c, ports, top, bot, pressure)
+
+    def stub_img(cx, cy, c, pd, th, mount):
+        nm = 'stub_%s%s_%s' % (pd[0], th, mount[0])
+        if os.path.exists(os.path.join(GFX, nm + '.png')):
+            return sprite_img(nm, cx, cy, c)
+        return orig_stub(cx, cy, c, pd, th, mount)
+
+    def drain_img(cx, cy, c, bottom=1100):
+        import gen
+        s, x0, top = [], cx - c / 2, cy - c / 2
+        s.append(gen.R(x0, top, c, bottom - top, 'url(#pitG)'))
+        for k in range(4):
+            r = c * (.14 + k * .09)
+            s.append(gen.Pa(gen.dd('M', cx - r, cy + .22 * c, 'A', r, r * .35, 0, 0, 1, cx + r, cy + .22 * c), stroke='#2EC4F1',
+                            stroke_width=c * .035, opacity='%.2f' % (.95 - k * .2), stroke_linecap='round'))
+        return ''.join(s) + sprite_img('grate', cx, top + .08 * c, c)
+    mod.source2, mod.stub2, mod.drain2 = source_img, stub_img, drain_img
+    # плитка карточек — с фасками, как кладка квартир из Blender (светлая сверху-слева, тёмная снизу-справа)
+    import gen
+
+    def tile_pat(pid, c, tile):
+        base, grout, hi = gen.TILE[tile]
+        h = c / 2
+        g, b = c * .022, c * .05
+        return ('<pattern id="%s" patternUnits="userSpaceOnUse" width="%s" height="%s">' % (pid, gen.n(h), gen.n(h))
+                + gen.R(0, 0, h, h, grout)
+                + gen.R(g, g, h - 2 * g, h - 2 * g, '#%02X%02X%02X' % tuple(int(int(base[i:i + 2], 16) * .72) for i in (1, 3, 5)))  # тёмная фаска
+                + gen.Pg([(g, g), (h - g, g), (h - g - b, g + b), (g + b, g + b), (g + b, h - g - b), (g, h - g)], hi)
+                + gen.R(g + b, g + b, h - 2 * g - 2 * b, h - 2 * g - 2 * b, base) + '</pattern>')
+    mod.tile_pat = tile_pat
+    mod.BASE = mod.STEEL + gen2.defs2(120, 0, 0, 'mint') + tile_pat('tpM', 120, 'mint') + tile_pat('tpB', 120, 'blue') + tile_pat('tpY', 120, 'mustard')

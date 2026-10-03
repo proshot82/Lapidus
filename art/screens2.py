@@ -271,7 +271,8 @@ def pan_soap(px, py):
     s.append(porcelain2(px + 318, y1, cc) + gen.arrow(px + 362, y1, px + 420, y1) + gen.mark(px + 474, y1, True, .8))
     s.append(hero([(px + 122, y2), (px + 186, y2), (px + 250, y2)], cc, 2, 5, ring=False))
     s.append(porcelain2(px + 318, y2, cc) + gen.mark(px + 474, y2, False, .8))
-    s += [C(px + bx, y2 + by, br, '#FFFFFF', stroke=O, stroke_width=2) for bx, by, br in ((290, -34, 9), (300, -16, 6), (282, 6, 7))]
+    for k, bx in enumerate((276, 296, 316)):   # голове пахнет: зелёные волны от горшка к носу
+        s.append(Pa(dd('M', px + bx + 16, y2 - 40, 'q', -6, -8, 0, -16, 't', 0, -16), stroke='#7BA23F', stroke_width=4, stroke_linecap='round', opacity='.9'))
     s.append(T(px + 30, y1 - 44, 'ноги', 28, INK, weight='bold') + T(px + 30, y2 - 44, 'голова', 28, INK, weight='bold'))
     return ''.join(s)
 
@@ -320,7 +321,7 @@ def card(num, title, pan, h=356):
 
 
 def card6():
-    return card(10, 'Поднимает, но не носит', pan_crane)
+    return card(8, 'Поднимает, но не носит', pan_crane)
 
 
 def jet2(x1, y1, x2, y2, c):
@@ -478,11 +479,11 @@ def card1():
 
 
 def card3():
-    return card(4, 'Фаянс толкают только ноги', pan_soap)
+    return card(7, 'Горшок — только ногами: пахнет', pan_soap)
 
 
 def card4():
-    return card(5, 'Деталь падает и свинчивается', pan_parts)
+    return card(4, 'Деталь падает и свинчивается', pan_parts)
 
 
 def card5():
