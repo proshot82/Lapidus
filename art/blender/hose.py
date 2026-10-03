@@ -100,6 +100,6 @@ sc.render.filepath = tmp
 bpy.ops.render.render(write_still=True)
 # средний шаг — бесшовный кусок; верх и низ кадра — край ленты
 subprocess.run(['convert', '-size', '%dx%d' % (PX, H), 'xc:#2B2118', '(', tmp, '-crop', '%dx%d+%d+0' % (PX, H, PX), '+repage', ')',
-                '-composite', '-define', 'png:exclude-chunks=date', OUT], check=True)
+                '-composite', '-depth', '8', '-define', 'png:exclude-chunks=date', 'PNG32:' + OUT], check=True)  # 8 бит: WebGL не берёт rgba16
 os.remove(tmp)
 print('HOSE', OUT)
