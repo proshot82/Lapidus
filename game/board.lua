@@ -129,8 +129,9 @@ function Board:drawPiece(p, cx, cy, wet, alpha, stone)
     -- прибор вписан в 0.80×0.92 клетки (art/export.py fit_box) и отодвинут от входа: подводка на свободном краю клетки
     local ox, oy = 0, 0
     if pd then ox, oy = -DIRV[pd][1] * 0.07 * self.cs, -DIRV[pd][2] * 0.07 * self.cs end
-    spr(string.format("fx_%s_%s", p.what or "bath", wet and "wet" or "dry"), cx + ox, cy + oy, k, 0, pd == 2 and -1 or 1)
+    -- подводка (стальная труба от центра к стыку) рисуется ПОД прибором: её начало прячется за изделием
     if pd then spr(img("port_" .. p.ports[pd] .. "_fx") and ("port_" .. p.ports[pd] .. "_fx") or ("port_" .. p.ports[pd] .. "_fixed"), cx, cy, k, ANG[pd]) end
+    spr(string.format("fx_%s_%s", p.what or "bath", wet and "wet" or "dry"), cx + ox, cy + oy, k, 0, pd == 2 and -1 or 1)
   elseif p.kind == "porcelain" then
     spr("porcelain", cx, cy, k)
   elseif p.kind == "fitting" then

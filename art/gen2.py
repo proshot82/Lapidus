@@ -332,12 +332,13 @@ def heel2(pt, dr, c, active, screwed):
             s.append(E(tx, cy + .405 * c, .022 * c, .016 * c, '#FFE9DE'))
         else:
             s.append(E(tx + .01 * c, cy + .31 * c, .04 * c, .04 * c, Q['skin'], stroke=o, stroke_width=c * .03))
-    s.append(R(cx - .24 * c, cy - .31 * c, .26 * c, .62 * c, 'url(#nutG)', rx=.07 * c, stroke=o, stroke_width=c * .045))
-    s.append(R(cx + .01 * c, cy - .20 * c, .45 * c, .40 * c, 'url(#cylG)', rx=.08 * c, stroke=o, stroke_width=c * .04))
-    for i in range(5):
-        x = cx + .08 * c + i * .07 * c
-        s.append(Ln(x, cy - .185 * c, x + .05 * c, cy + .185 * c, '#5E4410', c * .028))
-        s.append(Ln(x + .025 * c, cy - .17 * c, x + .065 * c, cy + .12 * c, '#FBE7A6', c * .013, opacity='.8'))
+    # стандарт стыка (03.10): резьба Ø0.30 до границы клетки (0.47), воротник — по высоте раструба Ø0.46
+    s.append(R(cx - .24 * c, cy - .25 * c, .26 * c, .50 * c, 'url(#nutG)', rx=.06 * c, stroke=o, stroke_width=c * .04))
+    s.append(R(cx + .01 * c, cy - .15 * c, .46 * c, .30 * c, 'url(#cylG)', rx=.04 * c, stroke=o, stroke_width=c * .035))
+    for i in range(7):
+        x = cx + .06 * c + i * .056 * c
+        s.append(Ln(x, cy - .14 * c, x + .035 * c, cy + .14 * c, '#5E4410', c * .022))
+        s.append(Ln(x + .018 * c, cy - .13 * c, x + .045 * c, cy + .09 * c, '#FBE7A6', c * .011, opacity='.8'))
     if screwed:
         s.append(fluff2(cx + .47 * c, cy, c))
     return orient(''.join(s), dr, cx, cy)

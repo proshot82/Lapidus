@@ -7,11 +7,13 @@ from mathutils import Vector, Matrix
 
 argv = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else []
 OUT = argv[0] if argv else '/tmp/fit'
-ONLY = set(argv[1:]) - {'levels'}
+ONLY = set(argv[1:]) - {'levels', 'ports'}
 os.makedirs(OUT, exist_ok=True)
 
 LIM = .47
-R_BODY, R_SOCK, R_THR, R_HEX = .18, .225, .145, .25  # крупнее (03.10): поле выросло, детали должны читаться
+# Единый стандарт стыка (03.10, замечание Lao «у стыкующихся частей разные размеры»): одинаков для латуни, стали сети,
+# подводки приборов и ног Лапидуса (art/parts.py, art/gen2.py heelL): резьба Ø0.30, раструб Ø0.46, труба Ø0.36 клетки.
+R_BODY, R_SOCK, R_THR, R_HEX = .18, .23, .15, .25
 
 
 def reset():
@@ -89,12 +91,16 @@ def lin(c):  # sRGB hex → линейный
 
 BRASS = None
 DARKM = None
+STEEL = None
 
 
-def mats():
-    global BRASS, DARKM
+def mats(steel=False):
+    global BRASS, DARKM, STEEL
     BRASS = toon('brass', lin('#7A5414'), lin('#C9962E'), lin('#EBC260'), lin('#FFF3C2'))
     DARKM = toon('bore', lin('#1E150B'), lin('#2E2112'), lin('#3B2B17'), lin('#4A3720'))
+    STEEL = toon('steel', lin('#3E454C'), lin('#7C868F'), lin('#B3BCC5'), lin('#EEF2F6'))
+    if steel:                      # сталь сети: тот же рендер, другой материал
+        BRASS = STEEL
 
 
 def cyl(r, x0, x1, axis='X', verts=48, mat=None):
@@ -236,6 +242,13 @@ def level_sigs():
     return out
 
 
+def fixture_port(th):
+    """Подводка прибора (сталь): труба от центра клетки к её краю и стык стандарта. Рисуется ПОД прибором —
+    её начало прячется за изделием, поэтому она не висит в воздухе и не перекрывает его."""
+    cyl(R_BODY * .97, -.05, .30)
+    port((1, 0), th, .26)
+
+
 SET = level_sigs() if 'levels' in argv else {
     'fit_rVlV': {'right': 'V', 'left': 'V'},
     'fit_rNlN': {'right': 'N', 'left': 'N'},
@@ -246,10 +259,18 @@ SET = level_sigs() if 'levels' in argv else {
     'fit_rVdV': {'right': 'V', 'down': 'V'},
     'fit_uNdN': {'up': 'N', 'down': 'N'},
 }
-for name, ports in SET.items():
+JOBS = [(n, p, False) for n, p in SET.items()]
+if 'ports' in argv:
+    JOBS = [('port_N_fx', 'N', True), ('port_V_fx', 'V', True)]
+ONLY.discard('ports')
+for name, ports, steel in JOBS:
     if ONLY and name not in ONLY:
         continue
-    reset(); mats(); build(ports)
+    reset(); mats(steel)
+    if steel:
+        fixture_port(ports)
+    else:
+        build(ports)
     sc = bpy.context.scene
     th, px = bpy.data.collections['threads'], bpy.data.collections['proxy']
     a, b = os.path.join(OUT, '_a.png'), os.path.join(OUT, '_b.png')

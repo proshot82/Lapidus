@@ -64,7 +64,7 @@ for lv in screens2.L:
 for th in ('N', 'V'):
     sprite('port_%s' % th, port2(X, Y, CR, 'right', th, False))
     sprite('port_%s_fixed' % th, port2(X, Y, CR, 'right', th, True))
-    sprite('port_%s_fx' % th, parts.port(X, Y, CR, 'right', th, True, .36))  # короткая подводка прибора (не залезает на прибор)
+    pass  # port_N_fx / port_V_fx (подводка приборов) рендерит Blender: art/blender/fittings.py ports
 out('foam', parts.foam(X, Y, CR), 2 * CR, 2 * CR)  # протечка — пена у открытой резьбы: центр пены — центр холста
 # герой: голова и ноги во всех направлениях, активные и спящие
 for dr in ('right', 'left', 'up', 'down'):
