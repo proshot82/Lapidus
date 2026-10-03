@@ -1,0 +1,1 @@
+head:right head:up heel:left head:left head:left head:up head:up head:right heel:up heel:right heel:up heel:left heel:left head:left head:left heel:left heel:right heel:down head:left heel:left heel:up heel:left head:up head:up head:right head:up head:left heel:left heel:left head:left head:left heel:down heel:left heel:left heel:left heel:left heel:left head:left

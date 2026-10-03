@@ -467,46 +467,50 @@
   "10": {
     "ablations": [
       {
-        "name": "без ниппеля",
-        "solvable": false
-      },
-      {
         "name": "без муфты",
         "solvable": false
       },
       {
-        "name": "пара не держит муфту над сливом",
+        "name": "без ниппеля",
         "solvable": false
       },
       {
-        "name": "ниппель не переходит муфту поверху",
+        "name": "только парой",
+        "solvable": false
+      },
+      {
+        "name": "ниппель не спускается на Лапидусе",
+        "solvable": false
+      },
+      {
+        "name": "ниппель не лежит на муфте",
         "solvable": false
       }
     ],
-    "corridor": "ok",
-    "deadPct": 86.2,
-    "falseBranches": 10,
-    "grid": "11×5",
+    "corridor": "широкий коридор решений (6)",
+    "deadPct": 91.7,
+    "falseBranches": 12,
+    "grid": "14×7",
     "id": 10,
     "length": [
-      3,
-      5
+      2,
+      6
     ],
-    "minMoves": 23,
+    "minMoves": 34,
     "monkey": 0,
-    "name": "Намертво",
+    "name": "За собой",
     "note": "ядро «муфтой вперёд» 11×5 (второй поиск 28.09, build/l6c): 23 хода в коридоре; «ага» доказана абляциями «пара не держит муфту над сливом» и «ниппель не переходит муфту поверху»",
     "pressure": 0,
-    "shortest": 2,
-    "shortestWidth": 2,
+    "shortest": 18,
+    "shortestWidth": 6,
     "solvable": true,
-    "states": 30969,
+    "states": 50911,
     "target": {
       "dead": 50,
       "fb": 3,
       "moves": [
-        15,
-        40
+        25,
+        45
       ],
       "states": 1000000
     },
