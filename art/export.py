@@ -107,11 +107,7 @@ def cut_scenes(fn, nums, *args):
     os.remove(os.path.join(OUT, 'tmp_scenes.png'))
 
 
-cut_scenes(screens2.scenes2, (1, 2, 7))         # ванна, унитаз, посуда (посуда — «Мыло», с 03.10 кв. 7)
-cut_scenes(screens2.scenes45, (4, 3))           # стиралка («Резьба», с 03.10 кв. 4), носок
-cut_scenes(screens2.scenes6, (10,))             # колонка и ушанка
-cut_scenes(screens2.scenes7_10, (5, 6, 8), 0)   # фонтан, брандспойт, гребёнка (заглушки: кв. 5, 6, 8 переделаны 02–03.10)
-cut_scenes(screens2.scenes7_10, (9,), 1)        # опрессовка
+# немые сцены 1–10 — art/scenes3.py (приборы из Blender, люди — рисунок)
 note = [R(10, 10, 700, 430, '#FBFAF4', rx=6)] + [Ln(10, 10 + i * 34, 710, 10 + i * 34, '#C4D6EC', 1.5) for i in range(1, 13)]
 note += [Ln(10 + i * 34, 10, 10 + i * 34, 440, '#C4D6EC', 1.5) for i in range(1, 21)] + [Ln(90, 10, 90, 440, '#E28A8A', 2.5), R(290, 0, 140, 46, '#E9DFB8', opacity='.9')]
 out('note', G(''.join(note), filter='url(#dsh)'), 740, 470)

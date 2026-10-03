@@ -13,13 +13,14 @@ OUT = argv[0] if argv else '/tmp/fx3d'
 ONLY = set(argv[1:])
 os.makedirs(OUT, exist_ok=True)
 TILT = math.radians(14)  # камера чуть сверху
+RES = int(os.environ.get('FX_RES', '480'))  # 960 — крупные приборы для немых сцен
 
 
 def reset():
     bpy.ops.wm.read_factory_settings(use_empty=True)
     sc = bpy.context.scene
     sc.render.engine = 'BLENDER_EEVEE'
-    sc.render.resolution_x = sc.render.resolution_y = 480
+    sc.render.resolution_x = sc.render.resolution_y = RES
     sc.render.film_transparent = True
     sc.view_settings.view_transform = 'Standard'
     sc.render.use_freestyle = True
@@ -35,7 +36,7 @@ def reset():
     if ls.linestyle is None:
         ls.linestyle = bpy.data.linestyles.new('ol')
     ls.linestyle.color = (0.043, 0.027, 0.016)
-    ls.linestyle.thickness = 4.5
+    ls.linestyle.thickness = 4.5 * RES / 480
     for other in vl.freestyle_settings.linesets:
         if other.linestyle is None:
             other.linestyle = ls.linestyle
@@ -307,7 +308,7 @@ for what, fn in FIX.items():
         px = {}
         for k, p in an.items():
             u = world_to_camera_view(sc, sc.camera, Vector(p))
-            px[k] = (round(u.x * 480, 1), round((1 - u.y) * 480, 1))
+            px[k] = (round(u.x * RES, 1), round((1 - u.y) * RES, 1))
         anchors['%s_%s' % (what, 'wet' if wet else 'dry')] = px
         sc.render.filepath = os.path.join(OUT, '%s_%s.png' % (what, 'wet' if wet else 'dry'))
         bpy.ops.render.render(write_still=True)

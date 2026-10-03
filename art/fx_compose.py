@@ -12,9 +12,10 @@ from gen2 import Q, face2, defs2
 
 ROOT = gen2.ROOT
 SRC = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ROOT, 'build', 'fx3d')
-OUT = os.path.join(ROOT, 'assets', 'gfx')
+OUT = os.environ.get('FX_OUT') or os.path.join(ROOT, 'assets', 'gfx')  # FX_OUT — крупные для сцен, без fx_sizes
 DEFS = gen.DEFS + defs2(120, 0, 0, 'mint')
-CELL = 240                       # px на клетку и в рендере, и в спрайтах (холст 480 = 2 клетки)
+RES = int(os.environ.get('FX_RES', '480'))
+CELL = RES // 2                  # px на клетку и в рендере, и в спрайтах (холст RES = 2 клетки)
 SW, SH = .80, .92
 AN = json.load(open(os.path.join(SRC, 'anchors.json')))
 o = Q['ol']
@@ -129,20 +130,20 @@ for what in ('bath', 'toilet', 'sink', 'washer', 'dryer', 'heater'):
         key = '%s_%s' % (what, 'wet' if wet else 'dry')
         svg = os.path.join(tmp, key + '.svg')
         with open(svg, 'w', encoding='utf-8') as f:
-            f.write('<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="480" height="480"><defs>%s</defs>%s</svg>'
-                    % (DEFS, overlay(what, wet, AN[key])))
+            f.write('<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="%d" height="%d"><defs>%s</defs>%s</svg>'
+                    % (RES, RES, DEFS, overlay(what, wet, AN[key])))
         ov = os.path.join(tmp, key + '_ov.png')
-        run('rsvg-convert', '-w', '480', '-h', '480', '-o', ov, svg)
+        run('rsvg-convert', '-w', str(RES), '-h', str(RES), '-o', ov, svg)
         comp = os.path.join(tmp, key + '_c.png')
         run('convert', os.path.join(SRC, key + '.png'), ov, '-composite', comp)
         # вписать: масштаб k вокруг центра габарита сухого корпуса → центр холста; затем тень, как у латуни
         dst = os.path.join(OUT, 'fx_' + key + '.png')
         run('convert', comp, '-background', 'none', '-virtual-pixel', 'transparent', '-distort', 'SRT',
-            '%.2f,%.2f %.5f 0 240,240' % (cx, cy, k), '+repage', fit := os.path.join(tmp, key + '_f.png'))
+            '%.2f,%.2f %.5f 0 %d,%d' % (cx, cy, k, CELL, CELL), '+repage', fit := os.path.join(tmp, key + '_f.png'))
         run('convert', fit, '(', '+clone', '-fill', 'black', '-colorize', '100', '-channel', 'A', '-evaluate', 'multiply', '.45', '+channel',
-            '-blur', '0x5', '-roll', '+5+8', ')', '+swap', '-background', 'none', '-composite', dst)
+            '-blur', '0x%d' % (5 * RES // 480), '-roll', '+%d+%d' % (5 * RES // 480, 8 * RES // 480), ')', '+swap', '-background', 'none', '-composite', dst)
         print('fx_' + key, 'k=%.3f' % k)
-with open(os.path.join(ROOT, 'game', 'fx_sizes.lua'), 'w', encoding='utf-8') as f:
+with open(os.path.join(ROOT, 'game', 'fx_sizes.lua') if not os.environ.get('FX_OUT') else os.devnull, 'w', encoding='utf-8') as f:
     f.write('-- Сгенерировано art/fx_compose.py: габариты спрайтов приборов (ширина, высота) в долях клетки.\nreturn {\n')
     for k_, (w_, h_) in sorted(sizes.items()):
         f.write('  %s = { %.3f, %.3f },\n' % (k_, w_, h_))
