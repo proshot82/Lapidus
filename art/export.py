@@ -74,7 +74,7 @@ out('foam', parts.foam(X, Y, CR), 2 * CR, 2 * CR)  # протечка — пен
 for dr in ('right', 'left', 'up', 'down'):
     for act in (True, False):
         sprite('head_%s_%s' % (dr, 'on' if act else 'off'), headL((X, Y), dr, CR, act, False))
-        sprite('feet_%s_%s' % (dr, 'on' if act else 'off'), heelL((X, Y), dr, CR, act, False))
+        # ноги рисует Blender: blender -b -P art/blender/fittings.py -- assets/gfx feet
 out('fluff', fluff2(X, Y, CR), 2 * CR, 2 * CR)
 out('drop', gen.drop(60, 70, 26), 120, 120)
 for k in ('undo', 'restart', 'hint', 'menu'):
