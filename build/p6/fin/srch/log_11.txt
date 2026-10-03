@@ -1,0 +1,4 @@
+build/p6/fin/srch/s11_43.lua ходов 26 состояний 12474
+build/p6/fin/srch/s11_115.lua ходов 28 состояний 17401
+build/p6/fin/srch/s11_177.lua ходов 25 состояний 13952
+build/p6/fin/srch/s11_192.lua ходов 26 состояний 22062
