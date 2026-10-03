@@ -62,7 +62,8 @@ for lv in screens2.L:
     for ob in lv['objects']:
         if ob['kind'] == 'fitting':
             sig = ''.join(SIG[d] + ob['ports'][d] for d in ('up', 'right', 'down', 'left') if d in ob['ports'])
-            if 'fit_' + sig not in made:
+            # латунь рисует Blender (art/blender/fittings.py); векторная — только для новой детали, которой ещё нет
+            if 'fit_' + sig not in made and not os.path.exists(os.path.join(OUT, 'fit_%s.png' % sig)):
                 sprite('fit_' + sig, gen2.fitting2(X, Y, CR, ob['ports']))
 for th in ('N', 'V'):
     sprite('port_%s' % th, port2(X, Y, CR, 'right', th, False))

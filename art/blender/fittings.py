@@ -25,7 +25,7 @@ def reset():
     sc.view_settings.view_transform = 'Standard'
     sc.render.use_freestyle = True
     sc.render.line_thickness_mode = 'ABSOLUTE'
-    sc.render.line_thickness = 4.5
+    sc.render.line_thickness = 1.0   # общий множитель; толщину задаёт стиль линии (иначе 4.5×4.5 — «брусок»)
     vl = sc.view_layers[0]
     ls = vl.freestyle_settings.linesets.new('ol')
     ls.select_by_visibility = True
@@ -239,6 +239,11 @@ def level_sigs():
             ports = dict(re.findall(r'(up|right|down|left) = "([NV])"', m.group(1)))
             sig = ''.join(d[0] + ports[d] for d in ('up', 'right', 'down', 'left') if d in ports)
             out['fit_' + sig] = ports
+    # и все детали, что уже есть в ресурсах (витрины, сцены): иначе они остаются старыми векторными
+    names = {'u': 'up', 'r': 'right', 'd': 'down', 'l': 'left'}
+    for f in glob.glob(os.path.join(root, 'assets', 'gfx', 'fit_*.png')):
+        sig = os.path.basename(f)[4:-4]
+        out.setdefault('fit_' + sig, {names[sig[i]]: sig[i + 1] for i in range(0, len(sig), 2)})
     return out
 
 
