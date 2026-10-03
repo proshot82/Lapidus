@@ -9,7 +9,7 @@ Passport.__index = Passport
 -- { вкладыш, квартира, открывается только после решения квартиры }
 local PAGES = {
   { "card01", 1 }, { "card01b", 1, true }, { "card01c", 1, true }, { "card03", 3 },
-  { "card05", 5 }, { "card04", 7 }, { "card10", 8 },
+  { "card05", 4 }, { "card04", 7 }, { "card10", 8 },
 }
 
 function Passport.new(app, after)

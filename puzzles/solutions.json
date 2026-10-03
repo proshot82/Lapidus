@@ -65,39 +65,6 @@
   },
   "04": {
     "moves": [
-      "head:left",
-      "head:left",
-      "head:up",
-      "head:left",
-      "head:up",
-      "head:up",
-      "head:right",
-      "heel:right",
-      "heel:right",
-      "heel:down",
-      "heel:left",
-      "heel:left",
-      "heel:left",
-      "heel:up",
-      "heel:up",
-      "heel:left",
-      "heel:up",
-      "head:left",
-      "heel:up",
-      "heel:up",
-      "heel:up",
-      "heel:left",
-      "head:left",
-      "head:down",
-      "heel:down",
-      "heel:down",
-      "heel:right",
-      "heel:up"
-    ],
-    "name": "Зазор"
-  },
-  "05": {
-    "moves": [
       "head:right",
       "head:up",
       "head:right",
@@ -124,7 +91,7 @@
     ],
     "name": "Резьба"
   },
-  "06": {
+  "05": {
     "moves": [
       "head:up",
       "head:right",
@@ -157,6 +124,34 @@
       "heel:right"
     ],
     "name": "Звено"
+  },
+  "06": {
+    "moves": [
+      "head:left",
+      "head:left",
+      "head:down",
+      "head:left",
+      "head:left",
+      "head:up",
+      "head:right",
+      "heel:down",
+      "head:right",
+      "head:right",
+      "head:right",
+      "head:up",
+      "head:up",
+      "head:left",
+      "head:left",
+      "heel:left",
+      "heel:left",
+      "heel:left",
+      "heel:up",
+      "heel:up",
+      "heel:right",
+      "heel:right",
+      "heel:right"
+    ],
+    "name": "Кругом!"
   },
   "07": {
     "moves": [
