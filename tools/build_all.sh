@@ -60,8 +60,12 @@ y = y.replace('renameManifestPackage: null', 'renameManifestPackage: io.github.p
 y = re.sub(r'versionCode: \d+', 'versionCode: 1', y).replace('versionName: 11.5a', 'versionName: 1.0')
 open(d + '/apktool.yml', 'w', encoding='utf-8').write(y)
 PY
+# иконка: голова Лапидуса на эмалевой синей плашке в латунной рамке
+convert assets/gfx/head_right_on.png -trim +repage "$D/_head.png"
+convert -size 512x512 xc:none -fill '#2B2118' -draw "roundrectangle 8,8 504,504 96,96" -fill '#C9962E' -draw "roundrectangle 22,22 490,490 84,84" \
+  -fill '#1F4E97' -draw "roundrectangle 40,40 472,472 70,70" \( "$D/_head.png" -resize 400x400 \) -gravity center -geometry -10+10 -composite "$D/icon512.png"
 for p in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
-  convert build/dist/icon512.png -resize "${p#*:}x${p#*:}" "$A/dec/res/drawable-${p%%:*}/love.png"
+  convert "$D/icon512.png" -resize "${p#*:}x${p#*:}" "$A/dec/res/drawable-${p%%:*}/love.png"
 done
 java -jar vendor/apktool_2.9.3.jar b -o "$A/unsigned.apk" "$A/dec" >/dev/null
 KS=${LAP_KEYSTORE:-build/keys/lapidus.jks}
