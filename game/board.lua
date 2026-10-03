@@ -231,14 +231,14 @@ local function dirOf(p, q)
 end
 
 -- pts — точки от ног к голове (центры клеток, конец может быть в пути); n — длина тела в клетках.
-function Board:drawLapidus(pts, n, active, wet, screwedHead, screwedFeet, dead, t)
+function Board:drawLapidus(pts, n, active, wet, screwedHead, screwedFeet, dead, t, noRing)
   local cs, k, np = self.cs, self.k, #pts
   if np < 2 then return end
   local a = dead and 0.45 or 1
   t = t or 0
   local head, feet = pts[np], pts[1]
   local hd, fd = dirOf(head, pts[np - 1]), dirOf(feet, pts[2])
-  if active and not dead then
+  if active and not dead and not noRing then
     local e = (active == "head") and head or feet
     for i = 1, 6 do setc(COL.glow, 0.05); lg.circle("fill", e[1], e[2], cs * (0.3 + i * 0.08)) end
     setc(COL.water, 0.85); lg.setLineWidth(cs * 0.035)

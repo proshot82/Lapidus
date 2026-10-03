@@ -285,6 +285,11 @@ SET = level_sigs() if 'levels' in argv else {
     'fit_rVdV': {'right': 'V', 'down': 'V'},
     'fit_uNdN': {'up': 'N', 'down': 'N'},
 }
+_NM = {'u': 'up', 'r': 'right', 'd': 'down', 'l': 'left'}
+for nm in ONLY:                      # любая деталь по имени: fit_uVrVlN и т. п. (карточки правил)
+    if nm.startswith('fit_') and nm not in SET:
+        sg = nm[4:]
+        SET[nm] = {_NM[sg[i]]: sg[i + 1] for i in range(0, len(sg), 2)}
 JOBS = [(n, p, False) for n, p in SET.items()]
 if 'ports' in argv:
     JOBS = [('port_N_fx', 'N', True), ('port_V_fx', 'V', True)]
