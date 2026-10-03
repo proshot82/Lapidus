@@ -97,7 +97,20 @@ def put(o, mat, smooth=True):
     return o
 
 
-def lathe(profile, mat, segs=64):
+def smooth_prof(pts, k=6):
+    """Сгладить профиль (Катмулл — Ром): иначе ступенчатая заливка рисует грани."""
+    out = []
+    P = [pts[0]] + pts + [pts[-1]]
+    for i in range(1, len(P) - 2):
+        p0, p1, p2, p3 = P[i - 1], P[i], P[i + 1], P[i + 2]
+        for j in range(k):
+            t = j / k
+            out.append(tuple(.5 * (2 * p1[d] + (-p0[d] + p2[d]) * t + (2 * p0[d] - 5 * p1[d] + 4 * p2[d] - p3[d]) * t * t
+                                   + (-p0[d] + 3 * p1[d] - 3 * p2[d] + p3[d]) * t ** 3) for d in (0, 1)))
+    return out + [pts[-1]]
+
+
+def lathe(profile, mat, segs=96):
     """Тело вращения вокруг оси Z по профилю [(r, z)]."""
     bm = bmesh.new()
     rings = [[bm.verts.new((r * math.cos(2 * math.pi * j / segs), r * math.sin(2 * math.pi * j / segs), z)) for j in range(segs)] for r, z in profile]
@@ -139,15 +152,28 @@ def shadow(src, dst, blur=5, dx=5, dy=8, op=.45):
 
 AJ = os.path.join(OUT, 'misc_anchors.json')
 AN = json.load(open(AJ)) if os.path.exists(AJ) else {}  # частичный прогон дополняет
-if not ONLY or 'porcelain' in ONLY:          # фаянсовый горшок с крышкой (канон: белый, синий узор)
-    sc = reset((480, 480), 2.0, tilt=14)
+if not ONLY or 'porcelain' in ONLY:          # эмалированный ночной горшок (фото Lao 03.10): широкая отогнутая кромка
+    sc = reset((480, 480), 2.0, tilt=14)       # с тёмным кантом, крышка с петлёй, боковая ручка-«ухо»
     W = toon('#9FAAB6', '#DDE3EA', '#F4F7FA', '#FFFFFF')
-    prof = [(0, -.36), (.30, -.36), (.36, -.32), (.38, -.24), (.38, .16), (.36, .22), (.33, .25)]
-    lathe(prof, W)
-    lathe([(.30, .24), (.40, .25), (.42, .29), (.40, .33), (.12, .35), (0, .35)], W)
-    sphere(.07, (0, 0, .39), W, (1, 1, .8))
-    AN['porcelain'] = {'band1': anchor(sc, (0, -.39, .08)), 'band2': anchor(sc, (0, -.39, -.18)), 'mid': anchor(sc, (0, -.39, -.05)),
-                       'left': anchor(sc, (-.30, -.39, -.05)), 'right': anchor(sc, (.30, -.39, -.05))}
+    K = toon('#0E1216', '#1F262D', '#2E3740', '#46525E')
+    body = [(0, -.34), (.20, -.34), (.27, -.32), (.31, -.27), (.33, -.18), (.335, -.05), (.33, .08), (.325, .14),
+            (.34, .17), (.39, .19), (.44, .205), (.46, .215)]
+    lathe(smooth_prof(body), W)
+    bpy.ops.mesh.primitive_torus_add(major_radius=.46, minor_radius=.013, major_segments=96, minor_segments=8, location=(0, 0, .215))
+    put(bpy.context.object, K)                                  # чёрный кант по кромке
+    lathe(smooth_prof([(.43, .225), (.44, .235), (.40, .25), (.30, .275), (.16, .29), (0, .295)]), W)   # крышка
+    bpy.ops.mesh.primitive_torus_add(major_radius=.065, minor_radius=.022, major_segments=48, minor_segments=12,
+                                     location=(0, 0, .33), rotation=(math.radians(90), 0, 0))
+    put(bpy.context.object, W)                                  # петля на крышке
+    cu = bpy.data.curves.new('h', 'CURVE'); cu.dimensions = '3D'; cu.bevel_depth = .03; cu.bevel_resolution = 6
+    sp = cu.splines.new('BEZIER'); pts = [(.31, 0, .10), (.46, 0, .10), (.49, 0, -.02), (.45, 0, -.14), (.32, 0, -.15)]
+    sp.bezier_points.add(len(pts) - 1)
+    for bp, p in zip(sp.bezier_points, pts):
+        bp.co = p; bp.handle_left_type = bp.handle_right_type = 'AUTO'
+    h = bpy.data.objects.new('h', cu); sc.collection.objects.link(h)
+    bpy.context.view_layer.objects.active = h; h.select_set(True)
+    bpy.ops.object.convert(target='MESH'); put(bpy.context.object, W)   # ручка-«ухо»
+    AN['porcelain'] = {'chip': anchor(sc, (-.17, -.30, -.12))}
     render(sc, 'porcelain')
 if not ONLY or 'foam' in ONLY:               # пена протечки: клубы-сферы, снизу темнее, сверху светлее
     sc = reset((480, 480), 2.0)

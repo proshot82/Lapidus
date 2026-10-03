@@ -35,20 +35,10 @@ def overlay(raw, svg_body, w, h, dst, shadow=(5, 5, 8, .45)):
     print(os.path.basename(dst))
 
 
-# фаянс: синие полосы и цветочки (гжель), как в каноне
-a = AN['porcelain']
-BL = '#2F5E9E'
-s = []
-(lx, _), (rx, _) = a['left'], a['right']
-for key in ('band1', 'band2'):
-    x, y = a[key]
-    s.append(Ln(lx + 6, y, rx - 6, y, BL, 5))
-x, y = a['mid']
-for i in range(5):
-    fx = lx + (rx - lx) * (i + .5) / 5
-    for ang in (0, 90):
-        s.append(E(fx, y, 10, 4, BL, transform='rotate(%d %s %s)' % (ang + 45, n(fx), n(y))))
-    s.append(C(fx, y, 3, '#FFFFFF'))
+# горшок: маленький скол эмали (чёрный металл под эмалью) — для правды и юмора
+from gen import Pa, dd
+x, y = AN['porcelain']['chip']
+s = [Pa(dd('M', x - 7, y - 3, 'L', x - 1, y - 7, 'L', x + 6, y - 4, 'L', x + 8, y + 3, 'L', x + 1, y + 6, 'L', x - 6, y + 4, 'Z'), '#1F262D')]
 overlay(os.path.join(SRC, 'porcelain_raw.png'), ''.join(s), 480, 480, os.path.join(OUT, 'porcelain.png'))
 overlay(os.path.join(SRC, 'foam_raw.png'), '', 480, 480, os.path.join(OUT, 'foam.png'), shadow=None)
 overlay(os.path.join(SRC, 'drop_raw.png'), '', 120, 120, os.path.join(OUT, 'drop.png'), shadow=None)
