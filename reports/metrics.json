@@ -10,8 +10,8 @@
         "solvable": false
       }
     ],
-    "corridor": "мало ложных веток",
-    "deadPct": 38.4,
+    "corridor": "мало ложных веток; проходим наобум (1.18 %)",
+    "deadPct": 37.8,
     "falseBranches": 0,
     "grid": "9×7",
     "id": 1,
@@ -20,14 +20,14 @@
       4
     ],
     "minMoves": 15,
-    "monkey": 0.76,
+    "monkey": 1.18,
     "name": "Не той стороной",
     "note": "ложных веток 0: на 211 состояниях областей ≥ 50 не бывает, ошибки здесь наказываются сразу (слив), а не тихим тупиком",
     "pressure": 0,
     "shortest": 3,
     "shortestWidth": 3,
     "solvable": true,
-    "states": 211,
+    "states": 209,
     "target": {
       "dead": 25,
       "fb": 1,
