@@ -56,7 +56,7 @@ def fit_box(body, sw=.80, sh=.92):
 
 # Приборы (03.10) рисует Blender: art/blender/fixtures.py → art/fx_compose.py (спрайты fx_*.png и game/fx_sizes.lua).
 # Старые SVG-приборы gen2 (bath2, heater2 …) остаются только для немых сцен.
-sprite('porcelain', porcelain2(X, Y, CR))
+# porcelain, foam, drop, btn_*, hud_plate рисует Blender: art/blender/misc.py → art/misc_compose.py
 SIG = {'up': 'u', 'right': 'r', 'down': 'd', 'left': 'l'}
 for lv in screens2.L:
     for ob in lv['objects']:
@@ -69,19 +69,12 @@ for th in ('N', 'V'):
     sprite('port_%s' % th, port2(X, Y, CR, 'right', th, False))
     sprite('port_%s_fixed' % th, port2(X, Y, CR, 'right', th, True))
     pass  # port_N_fx / port_V_fx (подводка приборов) рендерит Blender: art/blender/fittings.py ports
-out('foam', parts.foam(X, Y, CR), 2 * CR, 2 * CR)  # протечка — пена у открытой резьбы: центр пены — центр холста
 # герой: голова и ноги во всех направлениях, активные и спящие
 for dr in ('right', 'left', 'up', 'down'):
     for act in (True, False):
         sprite('head_%s_%s' % (dr, 'on' if act else 'off'), headL((X, Y), dr, CR, act, False))
         # ноги рисует Blender: blender -b -P art/blender/fittings.py -- assets/gfx feet
 out('fluff', fluff2(X, Y, CR), 2 * CR, 2 * CR)
-out('drop', gen.drop(60, 70, 26), 120, 120)
-for k in ('undo', 'restart', 'hint', 'menu'):
-    out('btn_%s' % k, button2(k, 72, 72), 144, 144)
-out('hud_plate', G(gen.E(130, 90, 112, 76, '#EFEADF', stroke=Q['ol'], stroke_width=5) + gen.E(130, 90, 98, 62, '#1F4E97')
-                   + gen.E(130, 90, 90, 54, 'none', stroke='#FFFFFF', stroke_width=4) + C(30, 90, 7, '#B8B2A2', stroke=Q['ol'], stroke_width=2)
-                   + C(230, 90, 7, '#B8B2A2', stroke=Q['ol'], stroke_width=2), filter='url(#dsh)'), 260, 180)
 out('hud_tag', G(R(10, 24, 300, 76, '#F4EEDC', rx=4, stroke='#B9AF98', stroke_width=2) + R(124, 12, 72, 26, '#E6DDB4', opacity='.85'), filter='url(#dsh)'), 320, 120)
 # фоны квартир: кладка, комната, сливы, стояк, крючья (приборы, фаянс, герой — спрайтами)
 for lv in screens2.L:

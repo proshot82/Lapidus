@@ -1,0 +1,204 @@
+# art/blender/misc.py — мелкие спрайты в стиле Blender-арта: фаянсовый горшок, пена протечки, капля, круглые кнопки HUD,
+# эмалевая табличка с номером квартиры. Тот же мультяшный рендер (ступенчатая заливка, обводка Freestyle).
+# Рисунок на фаянсе и значки на кнопках — слоем поверх (SVG из art/gen2.py, art/gen.py).
+# Запуск: blender -b -P art/blender/misc.py -- <папка> [porcelain foam drop buttons plate]
+import bpy, bmesh, math, sys, os, subprocess, json
+from mathutils import Vector, Matrix
+from bpy_extras.object_utils import world_to_camera_view
+
+argv = sys.argv[sys.argv.index('--') + 1:]
+OUT = argv[0]
+ONLY = set(argv[1:])
+os.makedirs(OUT, exist_ok=True)
+
+
+def lin(c):
+    c = c.lstrip('#'); v = [int(c[i:i + 2], 16) / 255 for i in (0, 2, 4)]
+    return tuple(x / 12.92 if x <= 0.04045 else ((x + 0.055) / 1.055) ** 2.4 for x in v)
+
+
+def reset(res, scale, tilt=0.0, line=4.5):
+    """res — (ширина, высота) px; scale — ширина кадра в единицах сцены; tilt — наклон камеры сверху (градусы)."""
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    sc = bpy.context.scene
+    sc.render.engine = 'BLENDER_EEVEE'
+    sc.render.resolution_x, sc.render.resolution_y = res
+    sc.render.film_transparent = True
+    sc.view_settings.view_transform = 'Standard'
+    sc.render.use_freestyle = True
+    sc.render.line_thickness_mode = 'ABSOLUTE'
+    sc.render.line_thickness = 1.0
+    vl = sc.view_layers[0]
+    ls = vl.freestyle_settings.linesets.new('ol')
+    ls.select_by_visibility = True
+    ls.select_by_edge_types = True
+    ls.select_silhouette = True
+    ls.select_border = False
+    ls.select_crease = False
+    ls.select_external_contour = True
+    ls.linestyle = bpy.data.linestyles.new('ol')
+    ls.linestyle.color = (0.024, 0.016, 0.010)
+    ls.linestyle.thickness = line
+    for other in vl.freestyle_settings.linesets:
+        if other.linestyle is None:
+            other.linestyle = ls.linestyle
+    t = math.radians(tilt)
+    cam = bpy.data.objects.new('cam', bpy.data.cameras.new('cam'))
+    cam.data.type = 'ORTHO'
+    cam.data.ortho_scale = scale
+    cam.location = (0, -10 * math.cos(t), 10 * math.sin(t))
+    cam.rotation_euler = (math.radians(90) - t, 0, 0)
+    sc.collection.objects.link(cam)
+    sc.camera = cam
+    sun = bpy.data.objects.new('sun', bpy.data.lights.new('sun', 'SUN'))
+    sun.data.energy = 3.0
+    sun.rotation_euler = (math.radians(50), math.radians(-35), math.radians(-25))
+    sc.collection.objects.link(sun)
+    sc.world = bpy.data.worlds.new('w')
+    sc.world.use_nodes = True
+    sc.world.node_tree.nodes['Background'].inputs[1].default_value = 0.0
+    return sc
+
+
+def toon(dark, mid, light, spec):
+    m = bpy.data.materials.new('t'); m.use_nodes = True
+    nt = m.node_tree; nt.nodes.clear()
+    out = nt.nodes.new('ShaderNodeOutputMaterial')
+    dif = nt.nodes.new('ShaderNodeBsdfDiffuse')
+    s2r = nt.nodes.new('ShaderNodeShaderToRGB')
+    ramp = nt.nodes.new('ShaderNodeValToRGB')
+    emi = nt.nodes.new('ShaderNodeEmission')
+    cr = ramp.color_ramp
+    cr.interpolation = 'CONSTANT'
+    cr.elements[0].position, cr.elements[0].color = 0.0, (*lin(dark), 1)
+    cr.elements[1].position, cr.elements[1].color = 0.18, (*lin(mid), 1)
+    e = cr.elements.new(0.55); e.color = (*lin(light), 1)
+    e = cr.elements.new(0.92); e.color = (*lin(spec), 1)
+    nt.links.new(dif.outputs[0], s2r.inputs[0])
+    nt.links.new(s2r.outputs[0], ramp.inputs[0])
+    nt.links.new(ramp.outputs[0], emi.inputs[0])
+    nt.links.new(emi.outputs[0], out.inputs[0])
+    return m
+
+
+def flat(col):
+    m = bpy.data.materials.new('f'); m.use_nodes = True
+    nt = m.node_tree; nt.nodes.clear()
+    out = nt.nodes.new('ShaderNodeOutputMaterial')
+    emi = nt.nodes.new('ShaderNodeEmission'); emi.inputs[0].default_value = (*lin(col), 1)
+    nt.links.new(emi.outputs[0], out.inputs[0])
+    return m
+
+
+def put(o, mat, smooth=True):
+    if smooth:
+        for p in o.data.polygons: p.use_smooth = True
+    o.data.materials.append(mat)
+    return o
+
+
+def lathe(profile, mat, segs=64):
+    """Тело вращения вокруг оси Z по профилю [(r, z)]."""
+    bm = bmesh.new()
+    rings = [[bm.verts.new((r * math.cos(2 * math.pi * j / segs), r * math.sin(2 * math.pi * j / segs), z)) for j in range(segs)] for r, z in profile]
+    for a, b in zip(rings, rings[1:]):
+        for j in range(segs):
+            bm.faces.new((a[j], a[(j + 1) % segs], b[(j + 1) % segs], b[j]))
+    for ring, top in ((rings[0], False), (rings[-1], True)):
+        if profile[0 if not top else -1][0] > 1e-4:
+            f = bm.faces.new(ring if top else list(reversed(ring)))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    me = bpy.data.meshes.new('l'); bm.to_mesh(me); bm.free()
+    o = bpy.data.objects.new('l', me); bpy.context.scene.collection.objects.link(o)
+    return put(o, mat)
+
+
+def sphere(r, p, mat, scale=(1, 1, 1)):
+    bpy.ops.mesh.primitive_uv_sphere_add(radius=r, location=p, segments=48, ring_count=24)
+    o = bpy.context.object; o.scale = scale
+    bpy.ops.object.transform_apply(scale=True)
+    return put(o, mat)
+
+
+def anchor(sc, p):
+    u = world_to_camera_view(sc, sc.camera, Vector(p))
+    return u.x * sc.render.resolution_x, (1 - u.y) * sc.render.resolution_y
+
+
+def render(sc, name):
+    path = os.path.join(OUT, name + '_raw.png')
+    sc.render.filepath = path
+    bpy.ops.render.render(write_still=True)
+    return path
+
+
+def shadow(src, dst, blur=5, dx=5, dy=8, op=.45):
+    subprocess.run(['convert', src, '(', '+clone', '-fill', 'black', '-colorize', '100', '-channel', 'A', '-evaluate', 'multiply', str(op),
+                    '+channel', '-blur', '0x%s' % blur, '-roll', '+%d+%d' % (dx, dy), ')', '+swap', '-background', 'none', '-composite', dst], check=True)
+
+
+AJ = os.path.join(OUT, 'misc_anchors.json')
+AN = json.load(open(AJ)) if os.path.exists(AJ) else {}  # частичный прогон дополняет
+if not ONLY or 'porcelain' in ONLY:          # фаянсовый горшок с крышкой (канон: белый, синий узор)
+    sc = reset((480, 480), 2.0, tilt=14)
+    W = toon('#9FAAB6', '#DDE3EA', '#F4F7FA', '#FFFFFF')
+    prof = [(0, -.36), (.30, -.36), (.36, -.32), (.38, -.24), (.38, .16), (.36, .22), (.33, .25)]
+    lathe(prof, W)
+    lathe([(.30, .24), (.40, .25), (.42, .29), (.40, .33), (.12, .35), (0, .35)], W)
+    sphere(.07, (0, 0, .39), W, (1, 1, .8))
+    AN['porcelain'] = {'band1': anchor(sc, (0, -.39, .08)), 'band2': anchor(sc, (0, -.39, -.18)), 'mid': anchor(sc, (0, -.39, -.05)),
+                       'left': anchor(sc, (-.30, -.39, -.05)), 'right': anchor(sc, (.30, -.39, -.05))}
+    render(sc, 'porcelain')
+if not ONLY or 'foam' in ONLY:               # пена протечки: клубы-сферы, снизу темнее, сверху светлее
+    sc = reset((480, 480), 2.0)
+    LO = toon('#0F4E78', '#1E8DCB', '#3FAEE5', '#9FE0FA')
+    HI = toon('#1E8DCB', '#45BDF0', '#8ADAF8', '#E4F8FF')
+    for x, z, r in ((-.20, -.07, .085), (-.07, -.10, .09), (.07, -.10, .09), (.20, -.07, .085)):
+        sphere(r, (x, .05, z), LO)
+    for x, z, r in ((-.15, .04, .095), (0, .07, .11), (.15, .04, .095), (-.06, -.02, .09), (.08, -.02, .09)):
+        sphere(r, (x, 0, z), HI)
+    for x, z, r in ((-.24, .12, .028), (.25, .10, .022), (.03, .21, .025), (-.10, .19, .016)):
+        sphere(r, (x, -.05, z), HI)
+    render(sc, 'foam')
+if not ONLY or 'drop' in ONLY:               # капля
+    sc = reset((120, 120), 2.0, line=3.0)
+    D = toon('#0F6E9E', '#2EC4F1', '#7FDDF8', '#E4F8FF')
+    # профиль капли: шар снизу (r .30 с центром на -.10), конус к острию на +.62
+    prof = []
+    for i in range(0, 13):
+        a = -math.pi / 2 + i / 12 * (math.pi / 2 + .52)
+        prof.append((.30 * math.cos(a), -.10 + .30 * math.sin(a)))
+    x0, z0 = prof[-1]
+    for i in range(1, 9):
+        t = i / 8
+        prof.append((x0 * (1 - t), z0 + (.62 - z0) * t))
+    lathe(prof, D)
+    render(sc, 'drop')
+if not ONLY or 'buttons' in ONLY:            # кнопки HUD: латунный ободок, тёмное поле (значок — слоем поверх)
+    sc = reset((144, 144), 144 / 60, line=4.0)
+    B = toon('#7A5414', '#C9962E', '#EBC260', '#FFF3C2')
+    K = toon('#151210', '#2A2622', '#3A342E', '#4A433B')
+    bpy.ops.mesh.primitive_torus_add(major_radius=.88, minor_radius=.12, major_segments=96, minor_segments=24, rotation=(math.radians(90), 0, 0))
+    put(bpy.context.object, B)
+    bpy.ops.mesh.primitive_cylinder_add(vertices=96, radius=.80, depth=.10, rotation=(math.radians(90), 0, 0), location=(0, .02, 0))
+    put(bpy.context.object, K, smooth=False)
+    render(sc, 'button')
+if not ONLY or 'plate' in ONLY:              # эмалевая табличка с номером квартиры (номер пишет движок)
+    sc = reset((260, 180), 260 / 120, line=4.0)
+    WH = toon('#A9A394', '#E3DED2', '#F2EEE4', '#FFFFFF')
+    BL = toon('#122E5C', '#1F4E97', '#2E66B8', '#6E9AD8')
+    SC = toon('#5E6770', '#A3ADB7', '#D3DAE1', '#FFFFFF')
+    bpy.ops.mesh.primitive_cylinder_add(vertices=128, radius=1, depth=.08, rotation=(math.radians(90), 0, 0))
+    o = bpy.context.object; o.scale = (.93, .63, 1); bpy.ops.object.transform_apply(scale=True)
+    md = o.modifiers.new('b', 'BEVEL'); md.width = .03; md.segments = 4; bpy.ops.object.modifier_apply(modifier='b')
+    put(o, WH)
+    bpy.ops.mesh.primitive_cylinder_add(vertices=128, radius=1, depth=.04, rotation=(math.radians(90), 0, 0), location=(0, -.03, 0))
+    o = bpy.context.object; o.scale = (.81, .51, 1); bpy.ops.object.transform_apply(scale=True)
+    put(o, BL, smooth=False)
+    for x in (-.83, .83):
+        sphere(.06, (x, -.05, 0), SC, (1, .5, 1))
+    AN['plate'] = {'ring': [anchor(sc, (0, -.06, 0)), anchor(sc, (.75, -.06, .45))]}
+    render(sc, 'plate')
+with open(AJ, 'w') as f:
+    json.dump(AN, f)
+print('MISC done')
