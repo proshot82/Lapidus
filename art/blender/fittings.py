@@ -99,8 +99,6 @@ def mats(steel=False):
     BRASS = toon('brass', lin('#7A5414'), lin('#C9962E'), lin('#EBC260'), lin('#FFF3C2'))
     DARKM = toon('bore', lin('#1E150B'), lin('#2E2112'), lin('#3B2B17'), lin('#4A3720'))
     STEEL = toon('steel', lin('#3E454C'), lin('#7C868F'), lin('#B3BCC5'), lin('#EEF2F6'))
-    global SKIN
-    SKIN = toon('skin', lin('#C77F64'), lin('#F2B49A'), lin('#FAD0BC'), lin('#FFE9DE'))
     if steel:                      # сталь сети: тот же рендер, другой материал
         BRASS = STEEL
 
@@ -233,21 +231,12 @@ def build(ports):
 
 
 def heel(dr, active):
-    """Ноги Лапидуса: латунный шестигранник и наружная резьба стандарта стыка (как у фитингов), под гайкой — пальцы ног.
-    Строится для выхода вправо, затем поворачивается (вверх/вниз) или отражается (влево), чтобы пальцы оставались снизу."""
+    """Ноги Лапидуса: латунный шестигранник и наружная резьба стандарта стыка (как у фитингов). Пальцев нет (03.10, Lao:
+    «creepy»); активный конец показывает кольцо в игре, поэтому on и off одинаковы.
+    Строится для выхода вправо, затем поворачивается (вверх/вниз) или отражается (влево)."""
     before = set(bpy.context.scene.objects)
     o = hexp(.29, -.24, .02)
     port((1, 0), 'N', .02)
-    toes = ((-.205, .050), (-.135, .044), (-.070, .040), (-.010, .036), (.045, .032))
-    for i, (tx, r) in enumerate(toes):
-        if active:   # растопырены: вытянутые, чуть веером
-            bpy.ops.mesh.primitive_uv_sphere_add(radius=r, location=(tx, -.10, -.335 - r * .4))
-            t = bpy.context.object; t.scale = (1, 1, 1.45); t.rotation_euler = (0, math.radians((i - 2) * 9), 0)
-        else:        # поджаты: круглые
-            bpy.ops.mesh.primitive_uv_sphere_add(radius=r * .9, location=(tx + .01, -.10, -.30))
-            t = bpy.context.object
-        bpy.ops.object.transform_apply(scale=True, rotation=True)
-        bpy.ops.object.shade_smooth(); t.data.materials.append(SKIN)
     new = [o for o in bpy.context.scene.objects if o not in before and o.type == 'MESH']
     if dr == 'left':
         M_ = Matrix.Scale(-1, 4, (1, 0, 0))
