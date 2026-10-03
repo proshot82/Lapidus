@@ -28,8 +28,24 @@ def out(name, body, w, h, extra='', jpeg=False):
     print(name)
 
 
-body, extra = screens2.menu2(items=False)
-out('scr_menu', body, 1920, 1080, extra, jpeg=True)
+# меню: фон — Blender (art/blender/menu.py: стена, трубы, стояк, вентиль, лампа), поверх — луч, бирка, Лапидус, логотип
+import base64, math
+from gen import G, R, C, T, Ln, Pg
+from gen2 import Q
+bg = os.path.join(gen2.ROOT, 'build', 'menu', 'menu_bg.png')
+if not os.path.exists(bg):
+    os.makedirs(os.path.dirname(bg), exist_ok=True)
+    subprocess.run(['xvfb-run', '-a', 'blender', '-b', '-P', os.path.join(gen2.ROOT, 'art', 'blender', 'menu.py'), '--', bg], check=True, capture_output=True)
+O = Q['ol']
+m = ['<image x="0" y="0" width="1920" height="1080" xlink:href="data:image/png;base64,%s"/>' % base64.b64encode(open(bg, 'rb').read()).decode(),
+     Pg([(960, 60), (470, 1080), (1450, 1080)], 'url(#bulb)'),
+     Ln(520, 520, 600, 626, '#8A8A8A', 3),
+     G(R(560, 620, 260, 104, '#E9DFB8', rx=8, stroke=O, stroke_width=3) + T(690, 664, 'ГЛАВНЫЙ', 34, O, weight='bold', anchor='middle')
+       + T(690, 704, 'ВЕНТИЛЬ ДОМА', 32, O, weight='bold', anchor='middle'), filter='url(#dsh)', transform='rotate(6 690 672)'),
+     screens2.hero([(472, 990), (612, 990), (612, 850), (752, 850)], 140, 2, 5, active='head', ring=False),
+     gen.logo(522, 300, 1.12),
+     T(960, 548, 'НИ КАПЛИ', 76, Q['cream'], weight='bold', anchor='middle', letter_spacing='14', stroke=O, stroke_width=3, paint_order='stroke')]
+out('scr_menu', ''.join(m), 1920, 1080, screens2.BASE, jpeg=True)
 for cname, fn in screens2.CARDS.items():
     body, extra = fn()
     out(cname, body, 564, 584 if cname == 'card06' else 380, extra)
