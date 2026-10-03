@@ -16,6 +16,8 @@ from gen import n, R, C, E, Ln, Pg, Pa, G, T, dd, smooth, ribs, dname, TILE, DV,
 import parts
 import gen
 
+GAME_SPRITE = False  # True — рисуем спрайт прибора для игры (art/export.py): без встроенного штуцера, короткий дымоход
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'build', 'review2')
 os.makedirs(OUT, exist_ok=True)
@@ -296,7 +298,8 @@ def bath2(cx, cy, c, wet=False):
     s.append(R(bx - .62 * c, cy - .23 * c, 1.24 * c, .13 * c, 'url(#enam)', rx=.065 * c, stroke=o, stroke_width=c * .045))
     s.append(Ln(bx - .52 * c, cy - .205 * c, bx + .30 * c, cy - .205 * c, '#FFFFFF', c * .025, opacity='.95'))
     s.append(face2(bx, cy + .10 * c, c, 'happy' if wet else 'grumpy', look=(-1, 0)))
-    s.append(R(cx - .24 * c, cy - .10 * c, .22 * c, .16 * c, 'url(#cylGd)', stroke=o, stroke_width=c * .035))
+    if not GAME_SPRITE:  # встроенный штуцер старого канона (вход слева); в игре подводку даёт труба стандарта port_*_fx
+        s.append(R(cx - .24 * c, cy - .10 * c, .22 * c, .16 * c, 'url(#cylGd)', stroke=o, stroke_width=c * .035))
     return ''.join(s)
 
 
@@ -463,7 +466,8 @@ def toilet2(cx, cy, c, wet=False):
     if wet:
         s.append(Pa(dd('M', cx + .02 * c, cy - .16 * c, 'q', .09 * c, -.12 * c, .18 * c, 0, 't', .18 * c, 0), stroke=Q['water'], stroke_width=c * .045, stroke_linecap='round'))
     s.append(face2(cx + .20 * c, cy + .14 * c, c * .9, 'happy' if wet else 'grumpy', look=(-1, 0)))
-    s.append(R(cx - .56 * c, cy - .12 * c, .14 * c, .16 * c, 'url(#cylGd)', stroke=o, stroke_width=c * .035))
+    if not GAME_SPRITE:  # встроенный штуцер старого канона (вход слева); в игре подводку даёт труба стандарта port_*_fx
+        s.append(R(cx - .56 * c, cy - .12 * c, .14 * c, .16 * c, 'url(#cylGd)', stroke=o, stroke_width=c * .035))
     return ''.join(s)
 
 
@@ -487,7 +491,8 @@ def sink2(cx, cy, c, wet=False):
                 'url(#steelG)', stroke=o, stroke_width=c * .04, stroke_linejoin='round'))
     s.append(Ln(cx - .30 * c, cy - .07 * c, cx + .40 * c, cy - .07 * c, '#FFFFFF', c * .02, opacity='.85'))
     s.append(face2(cx - .07 * c, cy + .27 * c, c * .85, 'happy' if wet else 'grumpy', look=(-1, 0)))
-    s.append(R(cx - .56 * c, cy - .08 * c, .20 * c, .14 * c, 'url(#cylGd)', stroke=o, stroke_width=c * .035))
+    if not GAME_SPRITE:  # встроенный штуцер старого канона (вход слева); в игре подводку даёт труба стандарта port_*_fx
+        s.append(R(cx - .56 * c, cy - .08 * c, .20 * c, .14 * c, 'url(#cylGd)', stroke=o, stroke_width=c * .035))
     return ''.join(s)
 
 
@@ -592,7 +597,8 @@ def dryer2(cx, cy, c, wet=False, socks=0):
             yy = sy0 + (.05 + k * .08) * c
             s.append(Ln(sx0 - .07 * c, yy, sx0 + .07 * c, yy, '#F4EEDC', c * .03))
         s.append(R(sx0 - .09 * c, sy0 - .05 * c, .18 * c, .07 * c, '#C0413A', rx=.02 * c, stroke=o, stroke_width=c * .025))
-    s.append(R(cx - .24 * c, cy - .10 * c, bx - xr - cx + .26 * c, .16 * c, 'url(#cylGd)', stroke=o, stroke_width=c * .035))
+    if not GAME_SPRITE:  # встроенный штуцер старого канона (вход слева); в игре подводку даёт труба стандарта port_*_fx
+        s.append(R(cx - .24 * c, cy - .10 * c, bx - xr - cx + .26 * c, .16 * c, 'url(#cylGd)', stroke=o, stroke_width=c * .035))
     return ''.join(s)
 
 
@@ -618,7 +624,8 @@ def washer2(cx, cy, c, wet=False):
             s.append(E(ex, ey, .05 * c, .055 * c, '#FFFFFF', stroke=o, stroke_width=c * .025))
             s.append(C(ex - .012 * c, ey + .01 * c, .025 * c, o))
             s.append(Ln(ex + sx * .06 * c, ey - .085 * c, ex - sx * .04 * c, ey - .06 * c, o, c * .03))
-    s.append(R(cx - .56 * c, cy - .10 * c, .20 * c, .15 * c, 'url(#cylGd)', stroke=o, stroke_width=c * .035))
+    if not GAME_SPRITE:  # встроенный штуцер старого канона (вход слева); в игре подводку даёт труба стандарта port_*_fx
+        s.append(R(cx - .56 * c, cy - .10 * c, .20 * c, .15 * c, 'url(#cylGd)', stroke=o, stroke_width=c * .035))
     return ''.join(s)
 
 
@@ -630,6 +637,8 @@ def heater2(cx, cy, c, wet=False, big=False):
     bw, top, bot = .40 * c, cy - .66 * c, cy + .14 * c
     # дымоход: алюминиевая гофра вверх, в потолок
     ft = cy - (.86 if big else 1.02) * c
+    if GAME_SPRITE:  # в игре дымоход короткий: иначе колонка при вписывании в клетку становится крошечной
+        ft = top - .20 * c
     s.append(R(cx - .15 * c, ft, .30 * c, top - ft + .04 * c, 'url(#steelG)', stroke=o, stroke_width=c * .035))
     k = ft + .06 * c
     while k < top - .02 * c:
@@ -638,7 +647,7 @@ def heater2(cx, cy, c, wet=False, big=False):
         k += .07 * c
     s.append(R(cx - .19 * c, top - .08 * c, .38 * c, .10 * c, 'url(#steelG)', rx=.03 * c, stroke=o, stroke_width=c * .03))
     # подводка воды снизу — к порту
-    if not big:
+    if not big and not GAME_SPRITE:
         s.append(R(cx - .075 * c, bot - .04 * c, .15 * c, .22 * c, 'url(#cylGd)', stroke=o, stroke_width=c * .035))
     # излив горячей воды справа снизу
     s.append(Pa(dd('M', cx + bw - .04 * c, bot - .10 * c, 'L', cx + bw + .12 * c, bot - .10 * c, 'Q', cx + bw + .20 * c, bot - .10 * c, cx + bw + .20 * c, bot - .02 * c,

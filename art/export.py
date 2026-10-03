@@ -35,6 +35,9 @@ def sprite(name, body):
 
 X = Y = CR
 # приборы (порт слева, как в каноне; сам порт — отдельным спрайтом), фаянс
+FX_SIZES = []
+
+
 def fit_box(body, sw=.80, sh=.92):
     """Прибор целиком в прямоугольник sw×sh клетки вокруг центра (03.10: приборы шире клетки залезали на стены и на свою же
     подводку). Габарит меряется по отрисовке; движок затем сдвигает прибор от входа на 0.07 клетки."""
@@ -47,12 +50,23 @@ def fit_box(body, sw=.80, sh=.92):
     w, h, x, y = map(int, subprocess.run(['convert', png, '-trim', '-format', '%w %h %X %Y', 'info:'], capture_output=True, text=True).stdout.replace('+', ' ').split())
     bx, by = x - CR + w / 2, y - CR + h / 2                      # центр габарита относительно (X, Y)
     k = min(sw * CR / w, sh * CR / h, 1.0)
+    FX_SIZES.append((w * k / CR, h * k / CR))
     return '<g transform="translate(%s %s) scale(%s) translate(%s %s)">%s</g>' % (X, Y, round(k, 4), round(-bx, 2), round(-by, 2), body)
 
 
+fx_dims = {}
+gen2.GAME_SPRITE = True
 for what, fn in (('bath', bath2), ('toilet', toilet2), ('sink', sink2), ('washer', gen2.washer2), ('dryer', gen2.dryer2), ('heater', gen2.heater2)):
     for wet in (False, True):
         sprite('fx_%s_%s' % (what, 'wet' if wet else 'dry'), fit_box(fn(X, Y, CR, wet)))
+        fx_dims[what] = FX_SIZES[-1]
+gen2.GAME_SPRITE = False
+# настоящие габариты приборов в клетках (после вписывания в 0.80×0.92) — движку для размещения у стены (Board:fixtureBox)
+with open(os.path.join(gen2.ROOT, 'game', 'fx_sizes.lua'), 'w', encoding='utf-8') as f:
+    f.write('-- Сгенерировано art/export.py: габариты спрайтов приборов (ширина, высота) в долях клетки.\nreturn {\n')
+    for k_, (w_, h_) in sorted(fx_dims.items()):
+        f.write('  %s = { %.3f, %.3f },\n' % (k_, w_, h_))
+    f.write('}\n')
 sprite('porcelain', porcelain2(X, Y, CR))
 SIG = {'up': 'u', 'right': 'r', 'down': 'd', 'left': 'l'}
 for lv in screens2.L:

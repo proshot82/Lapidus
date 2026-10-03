@@ -126,12 +126,15 @@ function Board:drawPiece(p, cx, cy, wet, alpha, stone)
   if p.kind == "fixture" then
     local pd
     for d = 1, 4 do if p.ports[d] then pd = d end end
-    -- прибор вписан в 0.80×0.92 клетки (art/export.py fit_box) и отодвинут от входа: подводка на свободном краю клетки
-    local ox, oy = 0, 0
-    if pd then ox, oy = -DIRV[pd][1] * 0.07 * self.cs, -DIRV[pd][2] * 0.07 * self.cs end
-    -- подводка (стальная труба от центра к стыку) рисуется ПОД прибором: её начало прячется за изделием
-    if pd then spr(img("port_" .. p.ports[pd] .. "_fx") and ("port_" .. p.ports[pd] .. "_fx") or ("port_" .. p.ports[pd] .. "_fixed"), cx, cy, k, ANG[pd]) end
-    spr(string.format("fx_%s_%s", p.what or "bath", wet and "wet" or "dry"), cx + ox, cy + oy, k, 0, pd == 2 and -1 or 1)
+    -- Прибор (03.10, «приборы мелкие, фитинги прилеплены нелепо»): растёт в соседние клетки-СТЕНЫ (сзади и по бокам),
+    -- никогда не заходит в свободные клетки поля; передний край — у стыка, от него к границе клетки идёт подводка
+    -- (стальная труба port_*_fx, рисуется ПОД прибором). Спрайт прибора вписан в 0.80×0.92 клетки (art/export.py fit_box).
+    local fx, fy, sc = cx, cy, 1
+    if pd then
+      fx, fy, sc = self:fixtureBox(cx, cy, pd, p.what or "bath")
+      spr(img("port_" .. p.ports[pd] .. "_fx") and ("port_" .. p.ports[pd] .. "_fx") or ("port_" .. p.ports[pd] .. "_fixed"), cx, cy, k, ANG[pd])
+    end
+    spr(string.format("fx_%s_%s", p.what or "bath", wet and "wet" or "dry"), fx, fy, k * sc, 0, pd == 2 and -1 or 1)
   elseif p.kind == "porcelain" then
     spr("porcelain", cx, cy, k)
   elseif p.kind == "fitting" then
@@ -141,6 +144,33 @@ function Board:drawPiece(p, cx, cy, wet, alpha, stone)
     else for d = 1, 4 do if p.ports[d] then spr("port_" .. p.ports[d], cx, cy, k, ANG[d]) end end end
   end
   if sh then lg.setShader() end
+end
+
+-- Где и каким рисовать прибор: передний край в FRONT клетки от центра в сторону стыка; назад и вбок — до края своей клетки
+-- или дальше, если там стена (прибор «стоит у стены»). Возвращает центр спрайта и множитель масштаба.
+local FX_W, FX_H, FRONT = 0.80, 0.92, 0.16
+local okS, FXS = pcall(require, "game.fx_sizes")
+function Board:fixtureBox(cx, cy, pd, what)
+  local lvl, cs = self.lvl, self.cs
+  local i = self:cellAt(cx, cy)
+  local function wall(c) return c == nil or c == 0 or lvl.cell[c] == R.WALL end
+  local opp = ({ 3, 4, 1, 2 })[pd]
+  local p1, p2 = ({ 2, 3, 4, 1 })[pd], ({ 4, 1, 2, 3 })[pd] -- боковые стороны
+  local nb = i and lvl.nb[i] or {}
+  local back = 0.46 + (wall(nb[opp]) and 0.62 or 0)
+  local s1 = 0.46 + (wall(nb[p1]) and 0.28 or 0)
+  local s2 = 0.46 + (wall(nb[p2]) and 0.28 or 0)
+  local vertical = (pd == 1 or pd == 3)
+  local fw, fh = FX_W, FX_H
+  if okS and FXS[what] then fw, fh = FXS[what][1], FXS[what][2] end
+  local adim, pdim = vertical and fh or fw, vertical and fw or fh
+  local sc = math.max(1, math.min((FRONT + back) / adim, (s1 + s2 - 0.04) / pdim, 1.9))
+  local along = FRONT - adim * sc / 2                     -- центр вдоль оси стыка (+ к стыку)
+  local across = 0
+  if s1 ~= s2 then across = (s1 > s2 and 1 or -1) * math.max(0, math.min(math.abs(s1 - s2) / 2, (pdim * sc - 0.88) / 2)) end
+  local ax, ay = DIRV[pd][1], DIRV[pd][2]
+  local qx, qy = DIRV[p1][1], DIRV[p1][2]
+  return cx + (ax * along + qx * across) * cs, cy + (ay * along + qy * across) * cs, sc
 end
 
 -- Сглаживание изломов пути (радиус — полклетки), как в генераторе арта.
