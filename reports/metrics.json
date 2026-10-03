@@ -349,10 +349,6 @@
   "08": {
     "ablations": [
       {
-        "name": "без мыла",
-        "solvable": false
-      },
-      {
         "name": "без муфты",
         "solvable": false
       },
@@ -363,26 +359,30 @@
       {
         "name": "мимо стояка только верхом",
         "solvable": false
+      },
+      {
+        "name": "пересадки нет",
+        "solvable": false
       }
     ],
-    "corridor": "широкий коридор решений (8)",
-    "deadPct": 83.2,
-    "falseBranches": 13,
-    "grid": "10×8",
+    "corridor": "широкий коридор решений (5)",
+    "deadPct": 76.7,
+    "falseBranches": 14,
+    "grid": "10×7",
     "id": 8,
     "length": [
       2,
       5
     ],
-    "minMoves": 29,
+    "minMoves": 22,
     "monkey": 0,
     "name": "Гусеница",
     "note": "«стопка-лифт» (g18, 02.10, build/l9a; решение Lao: near-версия): 23 хода, честно 30 %; долги — вторая ошибка плана в 1-й половине, гребёнка не несущая",
     "pressure": 0,
-    "shortest": 120,
-    "shortestWidth": 8,
+    "shortest": 15,
+    "shortestWidth": 5,
     "solvable": true,
-    "states": 8134,
+    "states": 4953,
     "target": {
       "dead": 25,
       "fb": 2,

@@ -1,8 +1,8 @@
--- Квартира 8 «Гусеница» — финалист раунда r (r13, 03.10.2026), слепой скептик: принять (тексты поправлены).
--- Прежняя версия с мылом — build/l8j/installed_q4_level8.lua. Источник: build/l8j/final.lua.
--- Квартира 8 «Гусеница» — финалист раунда l8j (02.10.2026), раунд r: раскладка r13 (прежние — final_q4.lua, final_p2.lua). Сменяет напорную «Гребёнку».
+-- Квартира 8 «Гусеница» — финалист раунда l8j (q4, 02.10.2026), слепой скептик: ядро принято, повторы и карман убраны в раунде q.
+-- Сменила напорную «Гребёнка» (build/l9a/installed_g18_level8.lua, резерв). Источник: build/l8j/final.lua.
+-- Квартира 8 «Гусеница» — финалист раунда l8j (02.10.2026), раунд q: раскладка q4 (прежний финалист — final_p2.lua). Сменяет напорную «Гребёнку».
 -- Проверка: luajit build/l6b/check.lua build/l8j/final.lua; отчёт — build/l8j/REPORT.md. Решение здесь не пишется.
--- Видимый проигрыш: общая линейка tools/vislib.lua + build/l8j/vis.lua.
+-- Видимый проигрыш: общая линейка tools/vislib.lua + build/l8j/vis.lua (washOk: мыло уходит в слив по замыслу).
 local okV, vis = pcall(dofile, "build/l8j/vis.lua")
 local R = require("core.rules")
 local function tagOf(lvl, tag) for q, p in ipairs(lvl.pieces) do if p.tag == tag then return q end end end
@@ -26,22 +26,11 @@ local function noDip(lvl, st, ns)
   local c = ns.pos[q]
   if c == 0 or ns.fixed[q] then return true end
   local x, y = R.xy(lvl, c)
-  return not (x >= 6 and y >= 5)
-end
--- «пересадки нет»: муфта у колонки (столбцы 8–9, ряд 4) не может лежать на середине тела — только на конце
-local function noHandover(lvl, st, ns)
-  local q = tagOf(lvl, "cpl")
-  local c = ns.pos[q]
-  if c == 0 or ns.fixed[q] then return true end
-  local x, y = R.xy(lvl, c)
-  if y ~= 4 or x < 8 then return true end
-  local b = lvl.nb[c][R.DOWN]
-  local body = ns.body
-  for k = 2, #body - 1 do if body[k] == b then return false end end
-  return true
+  return not (x >= 5 and y >= 5)
 end
 return {
   visibleLoss = okV and vis or nil,
+  washOk = true,
   mustLift = { "cpl" },
   id = 8, flat = 8, name = "Гусеница",
   length = { 2, 5 }, pressure = 0, tile = "blue",
@@ -50,26 +39,28 @@ return {
     "##########",
     "########.#",
     "######.#.#",
-    "###......#",
     "##.......#",
+    "#........#",
     "####....##",
-    "##########",
+    "####.#####",
+    "####~#####",
   },
   objects = {
     { kind = "fixture", what = "heater", at = { 9, 2 }, ports = { down = "N" } },
     { kind = "source", at = { 7, 3 }, ports = { down = "N" } },
-    { kind = "fitting", what = "coupling", tag = "cpl", at = { 5, 4 }, ports = { up = "V", down = "V" } },
-    { kind = "lapidus", cells = { { 3, 5 }, { 4, 5 }, { 5, 5 } }, head = 3 },
+    { kind = "fitting", what = "coupling", tag = "cpl", at = { 4, 4 }, ports = { up = "V", down = "V" } },
+    { kind = "porcelain", tag = "soap", at = { 4, 5 } },
+    { kind = "lapidus", cells = { { 3, 5 }, { 2, 5 } }, head = 2 },
   },
   ablations = {
-        { name = "без муфты", remove = "cpl" },
+    { name = "без мыла", remove = "soap" },
+    { name = "без муфты", remove = "cpl" },
     { name = "везти на спине нельзя", filter = noConveyor },
     { name = "мимо стояка только верхом", filter = noDip },
-    { name = "пересадки нет", filter = noHandover },
       },
   texts = {
-    request = "Колонку повесили под самый потолок, муфту положили мастеру на голову и ушли. Донести её он не может: ничего не носит.",
-    card = "card10", -- вкладыш «Поднимает, но не носит»: здесь он впервые нужен
+    request = "Колонку повесили под самый потолок, муфту оставили на мыле и ушли. Донести её некому: мастер ничего не носит.",
+    card = "card10", -- вкладыш «Поднимает, но не носит»: здесь он впервые нужен (02.10, перенесён из кв. 10)
     hints = {
       "Донести муфту некому. Но если под ней лежите вы — она поедет, куда поползёте. Смотрите, что висит над дорогой.",
       "Ваш звонок очень важен для нас. Уточняем, что у вас висит над дорогой.",
