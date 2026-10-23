@@ -49,7 +49,7 @@ overlay(os.path.join(SRC, 'porcelain_raw.png'), ''.join(s), 480, 480, os.path.jo
 overlay(os.path.join(SRC, 'foam_raw.png'), '', 480, 480, os.path.join(OUT, 'foam.png'), shadow=None)
 overlay(os.path.join(SRC, 'drop_raw.png'), '', 120, 120, os.path.join(OUT, 'drop.png'), shadow=None)
 # кнопки: значок из прежнего рисунка (без трёх кругов — тени, ободка и поля)
-for k in ('undo', 'restart', 'hint', 'menu'):
+for k in ('undo', 'restart', 'hint', 'menu', 'sound_on', 'sound_off'):
     body = button2(k, 72, 72)
     body = re.sub(r'<circle[^>]*/>', '', body, count=3)
     overlay(os.path.join(SRC, 'button_raw.png'), body, 144, 144, os.path.join(OUT, 'btn_%s.png' % k), shadow=(3, 3, 6, .4))

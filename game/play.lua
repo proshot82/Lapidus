@@ -12,7 +12,7 @@ local Play = {}
 Play.__index = Play
 local STEP_MOVE, STEP_SETTLE = 0.10, 0.07
 local DIRKEY = { up = 1, w = 1, right = 2, d = 2, down = 3, s = 3, left = 4, a = 4 }
-local BUTTONS = { { id = "undo" }, { id = "restart" }, { id = "hint" }, { id = "menu" } }
+local BUTTONS = { { id = "undo" }, { id = "restart" }, { id = "hint" }, { id = "menu" }, { id = "sound" } }
 local INK, CREAM, BLUE, GOLD = UI.INK, UI.CREAM, UI.BLUE, UI.GOLD
 local setc = UI.setc
 local WASHED = {
@@ -78,6 +78,10 @@ function Play:refresh()
 end
 
 function Play:say(text, dur) self.toast = { text = text, t = dur or 3 } end
+function Play:soundChanged(on)
+  local hint = self.app.lastInput == "key" and (on and " Клавиша M — выключить." or " Клавиша M — включить.") or ""
+  self:say((on and "Звук включён." or "Звук выключен.") .. hint, 2)
+end
 function Play:keyName() local d = self.app.lastInput; return d == "pad" and "B" or (d == "touch" and "кнопка ↶" or "Z") end
 
 -- Звук сегмента анимации (§9): ход, толчок, свинчивание, «окаменение», падение (звук — на приземлении), смыв.
@@ -349,7 +353,7 @@ function Play:drawHud()
   lg.pop()
   for i, b in ipairs(BUTTONS) do
     b.cx, b.cy = (1920 + Board.FIELD_R) / 2, 150 + (i - 1) * 130
-    local bi = Board.img("btn_" .. b.id)
+    local bi = Board.img("btn_" .. (b.id == "sound" and (self.app.audio.on and "sound_on" or "sound_off") or b.id))
     lg.setColor(1, 1, 1); if bi then lg.draw(bi, b.cx, b.cy, 0, HUD_K, HUD_K, 72, 72) end
   end
 end
@@ -520,6 +524,7 @@ function Play:action(a, arg)
   elseif a == "restart" then self:restart()
   elseif a == "hint" then if self.hotline then self.hotline = nil else self:openHotline() end
   elseif a == "menu" then self:leave()
+  elseif a == "sound" then self.app.toggleSound()
   elseif a == "next" then if self.index < #self.app.levels then self:start(self.index + 1) end
   elseif a == "prev" then if self.index > 1 then self:start(self.index - 1) end end
 end

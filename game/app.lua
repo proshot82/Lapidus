@@ -71,6 +71,17 @@ function App.play(index)
   App.go("play", index) -- паспорт перед игрой не показывается: правила вводятся вкладышами по квартирам (§5)
 end
 
+-- звук вкл/выкл: пункт меню, кнопка в квартире, клавиша M на любом экране; выбор хранится в сохранении
+function App.toggleSound()
+  local on = App.audio.toggle()
+  App.save.settings = App.save.settings or {}
+  App.save.settings.sound = on
+  require("game.save").write(App.save)
+  App.audio.play("click", 0.7)
+  if App.scene and App.scene.soundChanged then App.scene:soundChanged(on) end
+  return on
+end
+
 function App.availability()
   local st, open = {}, 0
   for i = 1, #App.levels do
@@ -120,7 +131,11 @@ function App.draw()
   love.graphics.pop()
 end
 
-function App.key(k) App.lastInput = "key"; if App.scene and App.scene.key then App.scene:key(k) end end
+function App.key(k)
+  App.lastInput = "key"
+  if k == "m" then return App.toggleSound() end
+  if App.scene and App.scene.key then App.scene:key(k) end
+end
 function App.pad(b) App.lastInput = "pad"; if App.scene and App.scene.pad then App.scene:pad(b) end end
 function App.pointer(kind, x, y)
   App.lastInput = "touch"
