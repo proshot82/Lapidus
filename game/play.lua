@@ -63,7 +63,7 @@ function Play:start(index)
       if ns then self.state = ns end
     end
     self.active = "head"; self:refresh()
-  elseif demo == "toast" then self.request = false; self:say("Голова по фаянсу скользит: толкай ногами.", 60) end
+  elseif demo == "toast" then self.request = false; self:say("Голова к горшку не полезет — пахнет. Толкай ногами.", 60) end
 end
 
 function Play:refresh()
@@ -123,7 +123,7 @@ function Play:tryMove(dir)
   local trace = {}
   local ns, kind = R.move(self.lvl, self.state, self.active, dir, trace)
   if not ns then
-    local why = { soap = "Голова по фаянсу скользит: толкай ногами.", taut = "Натянут: второй конец прикручен.",
+    local why = { soap = "Голова к горшку не полезет — пахнет. Толкай ногами.", taut = "Натянут: второй конец прикручен.",
                   short = "Короче уже не сжаться.", blocked = "Не сдвинуть: упирается.", fixed = "Закреплено намертво." }
     if why[kind] then self:say(why[kind], 2) end
     local snd = { soap = "squeak", taut = "taut", blocked = "blocked", fixed = "stone", short = "compress" }
@@ -321,9 +321,11 @@ end
 
 -- ---------------------------------------------------------------- рисование
 
+local HUD_K = 0.85 -- HUD ужат и стоит в колонках по краям (Board.FIELD_L/FIELD_R): поле получает остальной экран
 function Play:drawHud()
   local F, B = self.app.font, self.board
-  local px = B.x0 / 2
+  lg.push(); lg.scale(HUD_K)
+  local px = Board.FIELD_L / 2 / HUD_K
   lg.setColor(1, 1, 1)
   local im = Board.img("hud_plate")
   if im then lg.draw(im, px - 130, 22) end
@@ -348,10 +350,11 @@ function Play:drawHud()
   Board.spr(self.active == "head" and "head_right_on" or "feet_right_on", px - 64, 572, 76 / Board.CR)
   lg.setFont(F.xs); lg.setColor(0.75, 0.71, 0.635); lg.printf(self.active == "head" and "ходит" or "ходят", px - 16, 530, 130, "center")
   lg.setFont(F.b); setc(CREAM); lg.printf(self.active == "head" and "голова" or "ноги", px - 16, 566, 130, "center")
+  lg.pop()
   for i, b in ipairs(BUTTONS) do
-    b.cx, b.cy = 1920 - B.x0 / 2, 170 + (i - 1) * 150
+    b.cx, b.cy = (1920 + Board.FIELD_R) / 2, 150 + (i - 1) * 130
     local bi = Board.img("btn_" .. (b.id == "sound" and (self.app.audio.on and "sound_on" or "sound_off") or b.id))
-    lg.setColor(1, 1, 1); if bi then lg.draw(bi, b.cx - 72, b.cy - 72) end
+    lg.setColor(1, 1, 1); if bi then lg.draw(bi, b.cx, b.cy, 0, HUD_K, HUD_K, 72, 72) end
   end
 end
 
@@ -578,7 +581,7 @@ function Play:pointer(kind, x, y)
     return
   end
   for _, b in ipairs(BUTTONS) do
-    if b.cx and (x - b.cx) ^ 2 + (y - b.cy) ^ 2 <= 64 * 64 then return self:action(b.id) end
+    if b.cx and (x - b.cx) ^ 2 + (y - b.cy) ^ 2 <= 58 * 58 then return self:action(b.id) end
   end
   local c = self.board:cellAt(x, y)
   local body = self.state.body

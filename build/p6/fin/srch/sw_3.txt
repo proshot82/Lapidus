@@ -1,0 +1,7 @@
+/tmp/claude-0/-home-user-Lapidus/f7fc12fa-0751-5e4b-a0e7-5bf7b77a74f6/scratchpad/fin/srch/w3_60.lua 26 28288
+/tmp/claude-0/-home-user-Lapidus/f7fc12fa-0751-5e4b-a0e7-5bf7b77a74f6/scratchpad/fin/srch/w3_78.lua 25 51013
+/tmp/claude-0/-home-user-Lapidus/f7fc12fa-0751-5e4b-a0e7-5bf7b77a74f6/scratchpad/fin/srch/w3_79.lua 26 18167
+/tmp/claude-0/-home-user-Lapidus/f7fc12fa-0751-5e4b-a0e7-5bf7b77a74f6/scratchpad/fin/srch/w3_279.lua 25 58230
+/tmp/claude-0/-home-user-Lapidus/f7fc12fa-0751-5e4b-a0e7-5bf7b77a74f6/scratchpad/fin/srch/w3_380.lua 24 56343
+/tmp/claude-0/-home-user-Lapidus/f7fc12fa-0751-5e4b-a0e7-5bf7b77a74f6/scratchpad/fin/srch/w3_435.lua 25 27619
+/tmp/claude-0/-home-user-Lapidus/f7fc12fa-0751-5e4b-a0e7-5bf7b77a74f6/scratchpad/fin/srch/w3_448.lua 25 51013

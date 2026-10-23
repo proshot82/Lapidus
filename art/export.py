@@ -35,6 +35,9 @@ def sprite(name, body):
 
 X = Y = CR
 # приборы (порт слева, как в каноне; сам порт — отдельным спрайтом), фаянс
+FX_SIZES = []
+
+
 def fit_box(body, sw=.80, sh=.92):
     """Прибор целиком в прямоугольник sw×sh клетки вокруг центра (03.10: приборы шире клетки залезали на стены и на свою же
     подводку). Габарит меряется по отрисовке; движок затем сдвигает прибор от входа на 0.07 клетки."""
@@ -47,37 +50,31 @@ def fit_box(body, sw=.80, sh=.92):
     w, h, x, y = map(int, subprocess.run(['convert', png, '-trim', '-format', '%w %h %X %Y', 'info:'], capture_output=True, text=True).stdout.replace('+', ' ').split())
     bx, by = x - CR + w / 2, y - CR + h / 2                      # центр габарита относительно (X, Y)
     k = min(sw * CR / w, sh * CR / h, 1.0)
+    FX_SIZES.append((w * k / CR, h * k / CR))
     return '<g transform="translate(%s %s) scale(%s) translate(%s %s)">%s</g>' % (X, Y, round(k, 4), round(-bx, 2), round(-by, 2), body)
 
 
-for what, fn in (('bath', bath2), ('toilet', toilet2), ('sink', sink2), ('washer', gen2.washer2), ('dryer', gen2.dryer2), ('heater', gen2.heater2)):
-    for wet in (False, True):
-        sprite('fx_%s_%s' % (what, 'wet' if wet else 'dry'), fit_box(fn(X, Y, CR, wet)))
-sprite('porcelain', porcelain2(X, Y, CR))
+# Приборы (03.10) рисует Blender: art/blender/fixtures.py → art/fx_compose.py (спрайты fx_*.png и game/fx_sizes.lua).
+# Старые SVG-приборы gen2 (bath2, heater2 …) остаются только для немых сцен.
+# porcelain, foam, drop, btn_*, hud_plate рисует Blender: art/blender/misc.py → art/misc_compose.py
 SIG = {'up': 'u', 'right': 'r', 'down': 'd', 'left': 'l'}
 for lv in screens2.L:
     for ob in lv['objects']:
         if ob['kind'] == 'fitting':
             sig = ''.join(SIG[d] + ob['ports'][d] for d in ('up', 'right', 'down', 'left') if d in ob['ports'])
-            if 'fit_' + sig not in made:
+            # латунь рисует Blender (art/blender/fittings.py); векторная — только для новой детали, которой ещё нет
+            if 'fit_' + sig not in made and not os.path.exists(os.path.join(OUT, 'fit_%s.png' % sig)):
                 sprite('fit_' + sig, gen2.fitting2(X, Y, CR, ob['ports']))
 for th in ('N', 'V'):
     sprite('port_%s' % th, port2(X, Y, CR, 'right', th, False))
     sprite('port_%s_fixed' % th, port2(X, Y, CR, 'right', th, True))
-    sprite('port_%s_fx' % th, parts.port(X, Y, CR, 'right', th, True, .36))  # короткая подводка прибора (не залезает на прибор)
-out('foam', parts.foam(X, Y, CR), 2 * CR, 2 * CR)  # протечка — пена у открытой резьбы: центр пены — центр холста
+    pass  # port_N_fx / port_V_fx (подводка приборов) рендерит Blender: art/blender/fittings.py ports
 # герой: голова и ноги во всех направлениях, активные и спящие
 for dr in ('right', 'left', 'up', 'down'):
     for act in (True, False):
         sprite('head_%s_%s' % (dr, 'on' if act else 'off'), headL((X, Y), dr, CR, act, False))
-        sprite('feet_%s_%s' % (dr, 'on' if act else 'off'), heelL((X, Y), dr, CR, act, False))
+        # ноги рисует Blender: blender -b -P art/blender/fittings.py -- assets/gfx feet
 out('fluff', fluff2(X, Y, CR), 2 * CR, 2 * CR)
-out('drop', gen.drop(60, 70, 26), 120, 120)
-for k in ('undo', 'restart', 'hint', 'menu', 'sound_on', 'sound_off'):
-    out('btn_%s' % k, button2(k, 72, 72), 144, 144)
-out('hud_plate', G(gen.E(130, 90, 112, 76, '#EFEADF', stroke=Q['ol'], stroke_width=5) + gen.E(130, 90, 98, 62, '#1F4E97')
-                   + gen.E(130, 90, 90, 54, 'none', stroke='#FFFFFF', stroke_width=4) + C(30, 90, 7, '#B8B2A2', stroke=Q['ol'], stroke_width=2)
-                   + C(230, 90, 7, '#B8B2A2', stroke=Q['ol'], stroke_width=2), filter='url(#dsh)'), 260, 180)
 out('hud_tag', G(R(10, 24, 300, 76, '#F4EEDC', rx=4, stroke='#B9AF98', stroke_width=2) + R(124, 12, 72, 26, '#E6DDB4', opacity='.85'), filter='url(#dsh)'), 320, 120)
 # фоны квартир: кладка, комната, сливы, стояк, крючья (приборы, фаянс, герой — спрайтами)
 for lv in screens2.L:
@@ -110,11 +107,7 @@ def cut_scenes(fn, nums, *args):
     os.remove(os.path.join(OUT, 'tmp_scenes.png'))
 
 
-cut_scenes(screens2.scenes2, (1, 2, 4))         # ванна, унитаз, посуда
-cut_scenes(screens2.scenes45, (5, 3))           # стиралка, носок
-cut_scenes(screens2.scenes6, (10,))             # колонка и ушанка
-cut_scenes(screens2.scenes7_10, (6, 7, 8), 0)   # фонтан, брандспойт, гребёнка
-cut_scenes(screens2.scenes7_10, (9,), 1)        # опрессовка
+# немые сцены 1–10 — art/scenes3.py (приборы из Blender, люди — рисунок)
 note = [R(10, 10, 700, 430, '#FBFAF4', rx=6)] + [Ln(10, 10 + i * 34, 710, 10 + i * 34, '#C4D6EC', 1.5) for i in range(1, 13)]
 note += [Ln(10 + i * 34, 10, 10 + i * 34, 440, '#C4D6EC', 1.5) for i in range(1, 21)] + [Ln(90, 10, 90, 440, '#E28A8A', 2.5), R(290, 0, 140, 46, '#E9DFB8', opacity='.9')]
 out('note', G(''.join(note), filter='url(#dsh)'), 740, 470)

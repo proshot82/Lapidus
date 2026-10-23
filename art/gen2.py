@@ -14,6 +14,9 @@ import json, math, os, random, subprocess, sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from gen import n, R, C, E, Ln, Pg, Pa, G, T, dd, smooth, ribs, dname, TILE, DV, OPP, HAND
 import parts
+import gen
+
+GAME_SPRITE = False  # True — рисуем спрайт прибора для игры (art/export.py): без встроенного штуцера, короткий дымоход
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'build', 'review2')
@@ -295,7 +298,8 @@ def bath2(cx, cy, c, wet=False):
     s.append(R(bx - .62 * c, cy - .23 * c, 1.24 * c, .13 * c, 'url(#enam)', rx=.065 * c, stroke=o, stroke_width=c * .045))
     s.append(Ln(bx - .52 * c, cy - .205 * c, bx + .30 * c, cy - .205 * c, '#FFFFFF', c * .025, opacity='.95'))
     s.append(face2(bx, cy + .10 * c, c, 'happy' if wet else 'grumpy', look=(-1, 0)))
-    s.append(R(cx - .24 * c, cy - .10 * c, .22 * c, .16 * c, 'url(#cylGd)', stroke=o, stroke_width=c * .035))
+    if not GAME_SPRITE:  # встроенный штуцер старого канона (вход слева); в игре подводку даёт труба стандарта port_*_fx
+        s.append(R(cx - .24 * c, cy - .10 * c, .22 * c, .16 * c, 'url(#cylGd)', stroke=o, stroke_width=c * .035))
     return ''.join(s)
 
 
@@ -331,12 +335,13 @@ def heel2(pt, dr, c, active, screwed):
             s.append(E(tx, cy + .405 * c, .022 * c, .016 * c, '#FFE9DE'))
         else:
             s.append(E(tx + .01 * c, cy + .31 * c, .04 * c, .04 * c, Q['skin'], stroke=o, stroke_width=c * .03))
-    s.append(R(cx - .24 * c, cy - .31 * c, .26 * c, .62 * c, 'url(#nutG)', rx=.07 * c, stroke=o, stroke_width=c * .045))
-    s.append(R(cx + .01 * c, cy - .20 * c, .45 * c, .40 * c, 'url(#cylG)', rx=.08 * c, stroke=o, stroke_width=c * .04))
-    for i in range(5):
-        x = cx + .08 * c + i * .07 * c
-        s.append(Ln(x, cy - .185 * c, x + .05 * c, cy + .185 * c, '#5E4410', c * .028))
-        s.append(Ln(x + .025 * c, cy - .17 * c, x + .065 * c, cy + .12 * c, '#FBE7A6', c * .013, opacity='.8'))
+    # стандарт стыка (03.10): резьба Ø0.30 до границы клетки (0.47), воротник — по высоте раструба Ø0.46
+    s.append(R(cx - .24 * c, cy - .25 * c, .26 * c, .50 * c, 'url(#nutG)', rx=.06 * c, stroke=o, stroke_width=c * .04))
+    s.append(R(cx + .01 * c, cy - .15 * c, .46 * c, .30 * c, 'url(#cylG)', rx=.04 * c, stroke=o, stroke_width=c * .035))
+    for i in range(7):
+        x = cx + .06 * c + i * .056 * c
+        s.append(Ln(x, cy - .14 * c, x + .035 * c, cy + .14 * c, '#5E4410', c * .022))
+        s.append(Ln(x + .018 * c, cy - .13 * c, x + .045 * c, cy + .09 * c, '#FBE7A6', c * .011, opacity='.8'))
     if screwed:
         s.append(fluff2(cx + .47 * c, cy, c))
     return orient(''.join(s), dr, cx, cy)
@@ -469,7 +474,8 @@ def toilet2(cx, cy, c, wet=False):
     if wet:
         s.append(Pa(dd('M', cx + .02 * c, cy - .16 * c, 'q', .09 * c, -.12 * c, .18 * c, 0, 't', .18 * c, 0), stroke=Q['water'], stroke_width=c * .045, stroke_linecap='round'))
     s.append(face2(cx + .20 * c, cy + .14 * c, c * .9, 'happy' if wet else 'grumpy', look=(-1, 0)))
-    s.append(R(cx - .56 * c, cy - .12 * c, .14 * c, .16 * c, 'url(#cylGd)', stroke=o, stroke_width=c * .035))
+    if not GAME_SPRITE:  # встроенный штуцер старого канона (вход слева); в игре подводку даёт труба стандарта port_*_fx
+        s.append(R(cx - .56 * c, cy - .12 * c, .14 * c, .16 * c, 'url(#cylGd)', stroke=o, stroke_width=c * .035))
     return ''.join(s)
 
 
@@ -493,7 +499,8 @@ def sink2(cx, cy, c, wet=False):
                 'url(#steelG)', stroke=o, stroke_width=c * .04, stroke_linejoin='round'))
     s.append(Ln(cx - .30 * c, cy - .07 * c, cx + .40 * c, cy - .07 * c, '#FFFFFF', c * .02, opacity='.85'))
     s.append(face2(cx - .07 * c, cy + .27 * c, c * .85, 'happy' if wet else 'grumpy', look=(-1, 0)))
-    s.append(R(cx - .56 * c, cy - .08 * c, .20 * c, .14 * c, 'url(#cylGd)', stroke=o, stroke_width=c * .035))
+    if not GAME_SPRITE:  # встроенный штуцер старого канона (вход слева); в игре подводку даёт труба стандарта port_*_fx
+        s.append(R(cx - .56 * c, cy - .08 * c, .20 * c, .14 * c, 'url(#cylGd)', stroke=o, stroke_width=c * .035))
     return ''.join(s)
 
 
@@ -598,7 +605,8 @@ def dryer2(cx, cy, c, wet=False, socks=0):
             yy = sy0 + (.05 + k * .08) * c
             s.append(Ln(sx0 - .07 * c, yy, sx0 + .07 * c, yy, '#F4EEDC', c * .03))
         s.append(R(sx0 - .09 * c, sy0 - .05 * c, .18 * c, .07 * c, '#C0413A', rx=.02 * c, stroke=o, stroke_width=c * .025))
-    s.append(R(cx - .24 * c, cy - .10 * c, bx - xr - cx + .26 * c, .16 * c, 'url(#cylGd)', stroke=o, stroke_width=c * .035))
+    if not GAME_SPRITE:  # встроенный штуцер старого канона (вход слева); в игре подводку даёт труба стандарта port_*_fx
+        s.append(R(cx - .24 * c, cy - .10 * c, bx - xr - cx + .26 * c, .16 * c, 'url(#cylGd)', stroke=o, stroke_width=c * .035))
     return ''.join(s)
 
 
@@ -624,7 +632,8 @@ def washer2(cx, cy, c, wet=False):
             s.append(E(ex, ey, .05 * c, .055 * c, '#FFFFFF', stroke=o, stroke_width=c * .025))
             s.append(C(ex - .012 * c, ey + .01 * c, .025 * c, o))
             s.append(Ln(ex + sx * .06 * c, ey - .085 * c, ex - sx * .04 * c, ey - .06 * c, o, c * .03))
-    s.append(R(cx - .56 * c, cy - .10 * c, .20 * c, .15 * c, 'url(#cylGd)', stroke=o, stroke_width=c * .035))
+    if not GAME_SPRITE:  # встроенный штуцер старого канона (вход слева); в игре подводку даёт труба стандарта port_*_fx
+        s.append(R(cx - .56 * c, cy - .10 * c, .20 * c, .15 * c, 'url(#cylGd)', stroke=o, stroke_width=c * .035))
     return ''.join(s)
 
 
@@ -636,6 +645,8 @@ def heater2(cx, cy, c, wet=False, big=False):
     bw, top, bot = .40 * c, cy - .66 * c, cy + .14 * c
     # дымоход: алюминиевая гофра вверх, в потолок
     ft = cy - (.86 if big else 1.02) * c
+    if GAME_SPRITE:  # в игре дымоход короткий: иначе колонка при вписывании в клетку становится крошечной
+        ft = top - .20 * c
     s.append(R(cx - .15 * c, ft, .30 * c, top - ft + .04 * c, 'url(#steelG)', stroke=o, stroke_width=c * .035))
     k = ft + .06 * c
     while k < top - .02 * c:
@@ -644,7 +655,7 @@ def heater2(cx, cy, c, wet=False, big=False):
         k += .07 * c
     s.append(R(cx - .19 * c, top - .08 * c, .38 * c, .10 * c, 'url(#steelG)', rx=.03 * c, stroke=o, stroke_width=c * .03))
     # подводка воды снизу — к порту
-    if not big:
+    if not big and not GAME_SPRITE:
         s.append(R(cx - .075 * c, bot - .04 * c, .15 * c, .22 * c, 'url(#cylGd)', stroke=o, stroke_width=c * .035))
     # излив горячей воды справа снизу
     s.append(Pa(dd('M', cx + bw - .04 * c, bot - .10 * c, 'L', cx + bw + .12 * c, bot - .10 * c, 'Q', cx + bw + .20 * c, bot - .10 * c, cx + bw + .20 * c, bot - .02 * c,
@@ -707,14 +718,20 @@ def heater2(cx, cy, c, wet=False, big=False):
 def frame(lv, moves=0, active='head', no_lap=False, hud=True, skip=()):
     grid = lv['grid']
     H, W = len(grid), len(grid[0])
-    c = min(120, (1920 - 2 * 290) // W, 1080 // H)  # резерв 290 px под HUD с каждой стороны — как в game/board.lua
-    ox, oy = (1920 - W * c) // 2, (1080 - H * c) // 2
+    c, ox, oy = gen.geom(lv)  # геометрия поля — одна формула с game/board.lua (Board.geom)
     ml, mt = math.ceil(ox / c) + 1, math.ceil(oy / c) + 1
 
+    # шахта слива уходит вниз до края экрана, даже если слив не в нижнем ряду (03.10, Lao: «стенка под сливом абсурдна»);
+    # клетки стены под сливом недостижимы, так что это только картинка
+    shaft = {x: min(y for y in range(1, H + 1) if grid[y - 1][x - 1] == '~') for x in range(1, W + 1)
+             if any(grid[y - 1][x - 1] == '~' for y in range(1, H + 1))}
+
     def empty(x, y):
+        if x in shaft and y > shaft[x]:
+            return y <= H + mt
         if 1 <= x <= W and 1 <= y <= H:
             return grid[y - 1][x - 1] != '#'
-        return 1 <= x <= W and H < y <= H + mt and grid[H - 1][x - 1] == '~'
+        return False
     room_d = ' '.join(loop_d(simplify(lp), c, ox, oy, .20, .42) for lp in trace(empty, (1 - ml, W + ml), (1 - mt, H + mt)))
     terr_d = 'M -40 -40 H 1960 V 1120 H -40 Z ' + room_d
     extra = defs2(c, ox, oy, lv.get('tile', 'mint')) + ('<clipPath id="cRoom"><path d="%s" clip-rule="evenodd"/></clipPath>'
@@ -729,7 +746,7 @@ def frame(lv, moves=0, active='head', no_lap=False, hud=True, skip=()):
     for y in range(1, H + 1):
         for x in range(1, W + 1):
             if grid[y - 1][x - 1] == '~':      # слив — прежний (решётка в перспективе и воронка), решение Lao 03.10
-                s.append(drain2(ox + (x - .5) * c, oy + (y - .5) * c, c, 1100 if y == H else oy + y * c))
+                s.append(drain2(ox + (x - .5) * c, oy + (y - .5) * c, c, 1100))
     s.append(Pa(room_d, stroke=Q['ol'], stroke_width=.08 * c, stroke_linejoin='round', filter='url(#wob)'))
     wl = lambda x, y: 1 <= x <= W and 1 <= y <= H and grid[y - 1][x - 1] == '#'
 

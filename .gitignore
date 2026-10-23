@@ -8,3 +8,10 @@ build/shot*.png
 build/web/
 build/ui/
 build/review2/
+build/room/
+build/hero/
+build/fx_hi/
+build/fx3d_hi/
+build/menu/
+build/dist/
+build/keys/

@@ -45,12 +45,27 @@ local function spr(name, x, y, k, r, sx)
 end
 Board.spr = spr
 
+Board.FIELD_L, Board.FIELD_R = 270, 1920 - 170
+function Board.bottomDrains(def)
+  local g = def and def.grid
+  return g and g[#g]:find("~", 1, true) ~= nil or false
+end
+function Board.geom(W, H, drains)
+  local bot = H - 0.5 + (drains and 0.5 or 0)
+  local cs = math.floor(math.min((Board.FIELD_R - Board.FIELD_L) / (W - 1), 1080 / (bot - 0.5)))
+  local x0 = math.floor((Board.FIELD_L + Board.FIELD_R) / 2 - W * cs / 2)
+  local y0 = math.floor(540 - (0.5 + bot) / 2 * cs)
+  return cs, x0, y0
+end
+
 function Board.new(lvl, def)
   local self = setmetatable({ lvl = lvl, def = def }, Board)
-  local cs = math.min(120, math.floor((1920 - 2 * 290) / lvl.W), math.floor(1080 / lvl.H)) -- по бокам резерв 290 px под HUD; та же формула в art/gen.py geom и art/gen2.py frame
+  -- Геометрия поля (03.10, «экран используется не полностью»): HUD в колонках по краям (слева 270, справа 170 px),
+  -- поле — всё остальное; внешняя стена видна на полклетки, нижний ряд со сливами — целиком. Та же формула —
+  -- art/gen.py geom и art/gen2.py frame (фоны квартир рисуются под неё).
+  local cs, x0, y0 = Board.geom(lvl.W, lvl.H, Board.bottomDrains(def))
   self.cs, self.k = cs, cs / CR
-  self.x0 = math.floor((1920 - lvl.W * cs) / 2)
-  self.y0 = math.floor((1080 - lvl.H * cs) / 2)
+  self.x0, self.y0 = x0, y0
   self.bg = img(string.format("lvl%02d", def and def.id or 0))
   return self
 end
@@ -111,11 +126,15 @@ function Board:drawPiece(p, cx, cy, wet, alpha, stone)
   if p.kind == "fixture" then
     local pd
     for d = 1, 4 do if p.ports[d] then pd = d end end
-    -- прибор вписан в 0.80×0.92 клетки (art/export.py fit_box) и отодвинут от входа: подводка на свободном краю клетки
-    local ox, oy = 0, 0
-    if pd then ox, oy = -DIRV[pd][1] * 0.07 * self.cs, -DIRV[pd][2] * 0.07 * self.cs end
-    spr(string.format("fx_%s_%s", p.what or "bath", wet and "wet" or "dry"), cx + ox, cy + oy, k, 0, pd == 2 and -1 or 1)
-    if pd then spr(img("port_" .. p.ports[pd] .. "_fx") and ("port_" .. p.ports[pd] .. "_fx") or ("port_" .. p.ports[pd] .. "_fixed"), cx, cy, k, ANG[pd]) end
+    -- Прибор (03.10, «приборы мелкие, фитинги прилеплены нелепо»): растёт в соседние клетки-СТЕНЫ (сзади и по бокам),
+    -- никогда не заходит в свободные клетки поля; передний край — у стыка, от него к границе клетки идёт подводка
+    -- (стальная труба port_*_fx, рисуется ПОД прибором). Спрайт прибора вписан в 0.80×0.92 клетки (art/export.py fit_box).
+    local fx, fy, sc = cx, cy, 1
+    if pd then
+      fx, fy, sc = self:fixtureBox(cx, cy, pd, p.what or "bath")
+      spr(img("port_" .. p.ports[pd] .. "_fx") and ("port_" .. p.ports[pd] .. "_fx") or ("port_" .. p.ports[pd] .. "_fixed"), cx, cy, k, ANG[pd])
+    end
+    spr(string.format("fx_%s_%s", p.what or "bath", wet and "wet" or "dry"), fx, fy, k * sc, 0, pd == 2 and -1 or 1)
   elseif p.kind == "porcelain" then
     spr("porcelain", cx, cy, k)
   elseif p.kind == "fitting" then
@@ -125,6 +144,33 @@ function Board:drawPiece(p, cx, cy, wet, alpha, stone)
     else for d = 1, 4 do if p.ports[d] then spr("port_" .. p.ports[d], cx, cy, k, ANG[d]) end end end
   end
   if sh then lg.setShader() end
+end
+
+-- Где и каким рисовать прибор: передний край в FRONT клетки от центра в сторону стыка; назад и вбок — до края своей клетки
+-- или дальше, если там стена (прибор «стоит у стены»). Возвращает центр спрайта и множитель масштаба.
+local FX_W, FX_H, FRONT = 0.80, 0.92, 0.16
+local okS, FXS = pcall(require, "game.fx_sizes")
+function Board:fixtureBox(cx, cy, pd, what)
+  local lvl, cs = self.lvl, self.cs
+  local i = self:cellAt(cx, cy)
+  local function wall(c) return c == nil or c == 0 or lvl.cell[c] == R.WALL end
+  local opp = ({ 3, 4, 1, 2 })[pd]
+  local p1, p2 = ({ 2, 3, 4, 1 })[pd], ({ 4, 1, 2, 3 })[pd] -- боковые стороны
+  local nb = i and lvl.nb[i] or {}
+  local back = 0.46 + (wall(nb[opp]) and 0.62 or 0)
+  local s1 = 0.46 + (wall(nb[p1]) and 0.28 or 0)
+  local s2 = 0.46 + (wall(nb[p2]) and 0.28 or 0)
+  local vertical = (pd == 1 or pd == 3)
+  local fw, fh = FX_W, FX_H
+  if okS and FXS[what] then fw, fh = FXS[what][1], FXS[what][2] end
+  local adim, pdim = vertical and fh or fw, vertical and fw or fh
+  local sc = math.max(1, math.min((FRONT + back) / adim, (s1 + s2 - 0.04) / pdim, 1.9))
+  local along = FRONT - adim * sc / 2                     -- центр вдоль оси стыка (+ к стыку)
+  local across = 0
+  if s1 ~= s2 then across = (s1 > s2 and 1 or -1) * math.max(0, math.min(math.abs(s1 - s2) / 2, (pdim * sc - 0.88) / 2)) end
+  local ax, ay = DIRV[pd][1], DIRV[pd][2]
+  local qx, qy = DIRV[p1][1], DIRV[p1][2]
+  return cx + (ax * along + qx * across) * cs, cy + (ay * along + qy * across) * cs, sc
 end
 
 -- Сглаживание изломов пути (радиус — полклетки), как в генераторе арта.
@@ -185,14 +231,14 @@ local function dirOf(p, q)
 end
 
 -- pts — точки от ног к голове (центры клеток, конец может быть в пути); n — длина тела в клетках.
-function Board:drawLapidus(pts, n, active, wet, screwedHead, screwedFeet, dead, t)
+function Board:drawLapidus(pts, n, active, wet, screwedHead, screwedFeet, dead, t, noRing)
   local cs, k, np = self.cs, self.k, #pts
   if np < 2 then return end
   local a = dead and 0.45 or 1
   t = t or 0
   local head, feet = pts[np], pts[1]
   local hd, fd = dirOf(head, pts[np - 1]), dirOf(feet, pts[2])
-  if active and not dead then
+  if active and not dead and not noRing then
     local e = (active == "head") and head or feet
     for i = 1, 6 do setc(COL.glow, 0.05); lg.circle("fill", e[1], e[2], cs * (0.3 + i * 0.08)) end
     setc(COL.water, 0.85); lg.setLineWidth(cs * 0.035)
@@ -211,31 +257,34 @@ function Board:drawLapidus(pts, n, active, wet, screwedHead, screwedFeet, dead, 
     lg.pop()
   end
   stroke(COL.dark, w + 0.09 * cs, 0.05 * cs, 0.08 * cs, 0.35)
-  stroke(COL.ol, w + 0.09 * cs)
-  stroke(COL.hoseSh, w)
-  stroke(COL.hoseMid, w * 0.80, -0.035 * cs, -0.05 * cs)
-  stroke(COL.hose, w * 0.46, -0.06 * cs, -0.10 * cs)
   local L = cumul(flat)
   local per = 4 + 4 * (self.lvl.Lmax - n) / math.max(1, self.lvl.Lmax - self.lvl.Lmin)
-  local hw, o = w * 0.46, 0.035 * cs
-  for s = cs / per * 0.5, L[#L], cs / per do
-    local seg = subpath(flat, L, s, s + 1)
-    if #seg >= 4 then
-      local px, py = seg[1], seg[2]
-      local tx, ty = seg[#seg - 1] - px, seg[#seg] - py
+  -- Гофра (03.10, арт из Blender): бесшовная текстура одного шага ребра (art/blender/hose.py) натянута лентой вдоль тела;
+  -- шаг ребра cs/per растягивается с длиной, как прежде. Поперёк — вся ширина с обводкой (w + 0.09 клетки).
+  local tex = img("hose_tex")
+  if tex then
+    tex:setWrap("repeat", "clamp")
+    local half, step, np2 = (w + 0.09 * cs) / 2, cs / per, #flat / 2
+    local verts = {}
+    for i = 1, np2 do
+      local i0, i1 = math.max(1, i - 1), math.min(np2, i + 1)
+      local tx, ty = flat[2 * i1 - 1] - flat[2 * i0 - 1], flat[2 * i1] - flat[2 * i0]
       local tl = math.sqrt(tx * tx + ty * ty)
-      if tl > 1e-6 then tx, ty = tx / tl, ty / tl end
-      local nearHead = (px - head[1]) ^ 2 + (py - head[2]) ^ 2 < (0.45 * cs) ^ 2
-      local nearFeet = (px - feet[1]) ^ 2 + (py - feet[2]) ^ 2 < (0.40 * cs) ^ 2
-      if not nearHead and not nearFeet then
-        local ax, ay, bx, by = px + ty * hw, py - tx * hw, px - ty * hw, py + tx * hw
-        local mx, my = px + tx * 0.07 * cs, py + ty * 0.07 * cs
-        setc(COL.rib, a); lg.setLineWidth(cs * 0.03)
-        lg.line(ax, ay, (ax + mx) / 2 + tx * 0.02 * cs, (ay + my) / 2 + ty * 0.02 * cs, mx, my, (bx + mx) / 2 + tx * 0.02 * cs, (by + my) / 2 + ty * 0.02 * cs, bx, by)
-        lg.setColor(1, 1, 1, 0.7 * a); lg.setLineWidth(cs * 0.016)
-        lg.line(ax - tx * o, ay - ty * o, mx - tx * o, my - ty * o, bx - tx * o, by - ty * o)
-      end
+      if tl > 1e-6 then tx, ty = tx / tl, ty / tl else tx, ty = 1, 0 end
+      local x, y, u = flat[2 * i - 1], flat[2 * i], L[i] / step
+      verts[#verts + 1] = { x + ty * half, y - tx * half, u, 0, 1, 1, 1, a }
+      verts[#verts + 1] = { x - ty * half, y + tx * half, u, 1, 1, 1, 1, a }
     end
+    if #verts >= 4 then
+      local mesh = lg.newMesh(verts, "strip", "stream")
+      mesh:setTexture(tex)
+      lg.setColor(1, 1, 1, 1)
+      lg.draw(mesh)
+    end
+  else
+    stroke(COL.ol, w + 0.09 * cs)
+    stroke(COL.hoseSh, w)
+    stroke(COL.hose, w * 0.46, -0.06 * cs, -0.10 * cs)
   end
   if wet then
     local total, period = L[#L], cs * 0.32

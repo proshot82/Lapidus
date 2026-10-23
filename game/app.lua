@@ -16,6 +16,7 @@ function App.load(args)
   App.audio.init(App.save.settings)
   App.levels = require("game.levels").load()
   App.resize(love.graphics.getDimensions())
+  if argValue(App.args, "--hero") then return App.heroBatch(argValue(App.args, "--hero")) end
   App.shot = argValue(App.args, "--shot")
   App.autoplay = argValue(App.args, "--autoplay") and true or false
   App.demo = argValue(App.args, "--demo")
@@ -29,6 +30,28 @@ function App.load(args)
   else
     App.go("menu")
   end
+end
+
+-- Служебный режим для арта (art/hero_png.py): нарисовать Лапидуса движком (гофра — текстура из Blender) в PNG.
+-- Вход — Lua-файл `return { {out=, w=, h=, ox=, oy=, c=, Lmin=, Lmax=, pts={{x,y}…}, active=, wet=, sh=, sf=, ring=}, … }`.
+function App.heroBatch(path)
+  local Board = require("game.board")
+  local jobs = assert(loadstring(assert(io.open(path)):read("*a")))()
+  for _, j in ipairs(jobs) do
+    local cv = love.graphics.newCanvas(j.w, j.h)
+    love.graphics.setCanvas(cv)
+    love.graphics.clear(0, 0, 0, 0)
+    love.graphics.push()
+    love.graphics.translate(-j.ox, -j.oy)
+    local b = setmetatable({ cs = j.c, k = j.c / Board.CR, lvl = { Lmin = j.Lmin, Lmax = j.Lmax } }, Board)
+    b:drawLapidus(j.pts, #j.pts, j.active, j.wet, j.sh, j.sf, false, 0, not j.ring)
+    love.graphics.pop()
+    love.graphics.setCanvas()
+    local fh = assert(io.open(j.out, "wb"))
+    fh:write(cv:newImageData():encode("png"):getString())
+    fh:close()
+  end
+  love.event.quit()
 end
 
 function App.go(name, arg)
