@@ -8,7 +8,7 @@ Menu.__index = Menu
 function Menu.new(app)
   local self = setmetatable({ app = app, sel = 1, t = 0, bg = Board.img("scr_menu") }, Menu)
   self.items = { { id = "continue", label = "Продолжить" }, { id = "select", label = "Квартиры" }, { id = "passport", label = "Паспорт изделия" },
-                 { id = "sound", label = app.audio.on and "Звук: вкл" or "Звук: выкл" } }
+                 { id = "sound" } }
   if not UI.isMobile() then self.items[#self.items + 1] = { id = "quit", label = "Выход" } end
   return self
 end
@@ -29,7 +29,8 @@ function Menu:draw()
     if i == self.sel then UI.brass(x, y, w, h) else UI.plate(x, y, w, h) end
     lg.setFont(F.menu)
     if i == self.sel then lg.setColor(0.169, 0.129, 0.094) else UI.setc(UI.CREAM) end
-    lg.printf(it.label, x, y + h / 2 - F.menu:getHeight() / 2, w, "center")
+    local label = it.id == "sound" and (self.app.audio.on and "Звук: вкл" or "Звук: выкл") or it.label
+    lg.printf(label, x, y + h / 2 - F.menu:getHeight() / 2, w, "center")
   end
 end
 
@@ -38,13 +39,7 @@ function Menu:activate(id)
   if id == "continue" then App.play(App.continueIndex())
   elseif id == "select" then App.go("select")
   elseif id == "passport" then App.go("passport", { back = "menu" })
-  elseif id == "sound" then
-    local on = App.audio.toggle()
-    App.save.settings = App.save.settings or {}
-    App.save.settings.sound = on
-    require("game.save").write(App.save)
-    for _, it in ipairs(self.items) do if it.id == "sound" then it.label = on and "Звук: вкл" or "Звук: выкл" end end
-    App.audio.play("click", 0.7)
+  elseif id == "sound" then App.toggleSound()
   elseif id == "quit" then love.event.quit() end
 end
 

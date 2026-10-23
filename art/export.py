@@ -73,7 +73,7 @@ for dr in ('right', 'left', 'up', 'down'):
         sprite('feet_%s_%s' % (dr, 'on' if act else 'off'), heelL((X, Y), dr, CR, act, False))
 out('fluff', fluff2(X, Y, CR), 2 * CR, 2 * CR)
 out('drop', gen.drop(60, 70, 26), 120, 120)
-for k in ('undo', 'restart', 'hint', 'menu'):
+for k in ('undo', 'restart', 'hint', 'menu', 'sound_on', 'sound_off'):
     out('btn_%s' % k, button2(k, 72, 72), 144, 144)
 out('hud_plate', G(gen.E(130, 90, 112, 76, '#EFEADF', stroke=Q['ol'], stroke_width=5) + gen.E(130, 90, 98, 62, '#1F4E97')
                    + gen.E(130, 90, 90, 54, 'none', stroke='#FFFFFF', stroke_width=4) + C(30, 90, 7, '#B8B2A2', stroke=Q['ol'], stroke_width=2)

@@ -419,6 +419,14 @@ def button2(kind, x, y):
         s.append(Pg([(x + 1, y - 29), (x + 18, y - 18), (x + 1, y - 7)], wc))
     elif kind == 'hint':
         s.append(T(x, y + 20, '?', 60, wc, weight='bold', anchor='middle'))
+    elif kind in ('sound_on', 'sound_off'):  # динамик; вкл — волны, выкл — красный крест
+        s.append(Pg([(x - 28, y - 9), (x - 17, y - 9), (x - 3, y - 22), (x - 3, y + 22), (x - 17, y + 9), (x - 28, y + 9)], wc, stroke=wc, stroke_width=3, stroke_linejoin='round'))
+        if kind == 'sound_on':
+            for r in (12, 24):
+                s.append(Pa(dd('M', x + 1 + r * .64, y - r * .77, 'A', r, r, 0, 0, 1, x + 1 + r * .64, y + r * .77), stroke=wc, stroke_width=6, stroke_linecap='round'))
+        else:
+            for a, b in ((-1, -1), (-1, 1)):
+                s.append(Ln(x + 8, y + 12 * a * b, x + 30, y - 12 * a * b, '#D8483A', 7))
     else:
         for k in (-14, 0, 14):
             s.append(Ln(x - 20, y + k, x + 20, y + k, wc, 7))
